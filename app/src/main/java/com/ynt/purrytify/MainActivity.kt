@@ -31,10 +31,10 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_home, R.id.navigation_library, R.id.navigation_profile
             )
         )
-        val actionBar : Toolbar = findViewById(R.id.topAppBar)
-        setSupportActionBar(actionBar)
+//        val actionBar : Toolbar = findViewById(R.id.topAppBar)
+//        setSupportActionBar(actionBar)
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        setupActionBarWithNavController(navController, appBarConfiguration)
+//        setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
     }
 }
