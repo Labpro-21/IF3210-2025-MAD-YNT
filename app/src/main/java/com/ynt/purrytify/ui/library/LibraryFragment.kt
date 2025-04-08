@@ -1,11 +1,11 @@
 package com.ynt.purrytify.ui.library
 
+import android.app.Application
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -18,13 +18,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
@@ -67,8 +70,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.ynt.purrytify.R
+import com.ynt.purrytify.database.song.Song
 import com.ynt.purrytify.databinding.FragmentLibraryBinding
+import com.ynt.purrytify.repository.SongRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -248,11 +255,16 @@ fun AddSong(setShowPopupSong: (Boolean)->Unit){
         sheetState = sheetState,
         containerColor = colorResource(R.color.dark_gray),
         contentColor = colorResource(R.color.dark_gray),
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
         ){
         Column(
             modifier = Modifier
 
-        ){
+        ) {
             Text(
                 text = "Upload Song",
                 fontSize = 16.sp,
@@ -268,14 +280,7 @@ fun AddSong(setShowPopupSong: (Boolean)->Unit){
                     .padding(
                         horizontal = 0.dp
                     ),
-            ){
-//                Image(
-//                    imageVector = ImageVector.vectorResource(R.drawable.choose_image),
-//                    contentDescription = "Choose Image",
-//                    modifier = Modifier
-//                        .fillMaxWidth(1/2f)
-//                        .padding(horizontal = 0.dp)
-//                )
+            ) {
                 ImagePicker()
                 Spacer(
                     modifier = Modifier
@@ -288,8 +293,8 @@ fun AddSong(setShowPopupSong: (Boolean)->Unit){
                         .size(96.dp)
                 )
             }
-            AddSongTextField(title,"Title",false)
-            AddSongTextField(artist,"Artist",true)
+            AddSongTextField(title, "Title", false)
+            AddSongTextField(artist, "Artist", true)
         }
         Spacer(
             modifier = Modifier
@@ -302,9 +307,10 @@ fun AddSong(setShowPopupSong: (Boolean)->Unit){
                     start = 16.dp,
                     end = 16.dp,
                 ),
-        ){
-           CancelButton(coroutineScope,sheetState,setShowPopupSong)
-           SaveButton()
+        ) {
+            CancelButton(coroutineScope, sheetState, setShowPopupSong)
+            SaveButton()
+        }
         }
     }
 }
