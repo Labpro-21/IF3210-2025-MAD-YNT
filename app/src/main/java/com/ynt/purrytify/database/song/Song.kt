@@ -26,5 +26,9 @@ data class Song(
     var title: String? = null,
 
     @ColumnInfo(name = "artist")
-    var artist: String? = null
+    var artist: String? = null,
+
+    @ColumnInfo(name = "date_added")
+    var dateAdded: Long = System.currentTimeMillis()
+
 ) : Parcelable
