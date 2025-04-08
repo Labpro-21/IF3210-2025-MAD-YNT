@@ -68,5 +68,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.runtime.livedata)
     ksp(libs.room.compiler)
 }

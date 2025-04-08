@@ -1,6 +1,5 @@
 package com.ynt.purrytify.ui.library
 
-import android.app.Application
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -65,17 +64,18 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.ynt.purrytify.R
 import com.ynt.purrytify.database.song.Song
 import com.ynt.purrytify.databinding.FragmentLibraryBinding
-import com.ynt.purrytify.repository.SongRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -87,12 +87,14 @@ class LibraryFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
+    lateinit var libraryViewModel: LibraryViewModel
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val libraryViewModel =
+        libraryViewModel =
             ViewModelProvider(this).get(LibraryViewModel::class.java)
 
         _binding = FragmentLibraryBinding.inflate(inflater, container, false)
@@ -102,6 +104,7 @@ class LibraryFragment : Fragment() {
 //        libraryViewModel.text.observe(viewLifecycleOwner) {
 //            textView.text = it
 //        }
+
         return root
     }
 
@@ -110,7 +113,7 @@ class LibraryFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val libraryCompose: ComposeView = view.findViewById(R.id.library_compose_view)
         libraryCompose.setContent {
-            LibraryLayout()
+            LibraryLayout(libraryViewModel)
         }
 
     }
@@ -121,12 +124,13 @@ class LibraryFragment : Fragment() {
     }
 }
 
+
 @Composable
-fun LibraryLayout(){
-    val context = LocalContext.current
+fun LibraryLayout(viewModel: LibraryViewModel){
     val showPopUpAddSong = remember { mutableStateOf(false) }
+    val localContext = LocalContext.current
     if (showPopUpAddSong.value) {
-        AddSong(setShowPopupSong = { showPopUpAddSong.value = it })
+        AddSong(setShowPopupSong = { showPopUpAddSong.value = it }, viewModel)
     }
     Scaffold(
         topBar = {
@@ -141,6 +145,33 @@ fun LibraryLayout(){
         Box(
             modifier = Modifier.padding(innerPadding)
         ){
+            AndroidView(
+                modifier = Modifier,
+                factory = {
+                    val list = ArrayList<Song>()
+                    val view = View.inflate(it, R.layout.recyclerview_library, null).apply {
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    }
+                    val rvSongs: RecyclerView = view.findViewById(R.id.rv_songs)
+                    rvSongs.setHasFixedSize(true)
+                    for (i in 1..100){
+                    list.add(Song(
+                        artist = "SKIBIDIIII",
+                        title = "GYATTTT"
+                    ))
+                    }
+                    rvSongs.layoutManager = LinearLayoutManager(localContext)
+                    val listSongAdapter = ListSongAdapter(list)
+                    rvSongs.adapter = listSongAdapter
+
+                    view
+                },
+                update = { view ->
+                }
+            )
         }
     }
 }
@@ -239,7 +270,7 @@ fun LibraryButtons(){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddSong(setShowPopupSong: (Boolean)->Unit){
+fun AddSong(setShowPopupSong: (Boolean)->Unit,libraryViewModel: LibraryViewModel){
     val title = remember  { mutableStateOf("") }
     val artist = remember{ mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState()
@@ -309,7 +340,7 @@ fun AddSong(setShowPopupSong: (Boolean)->Unit){
                 ),
         ) {
             CancelButton(coroutineScope, sheetState, setShowPopupSong)
-            SaveButton()
+            SaveButton(libraryViewModel)
         }
         }
     }
@@ -317,10 +348,18 @@ fun AddSong(setShowPopupSong: (Boolean)->Unit){
 
 
 @Composable
-fun SaveButton(){
+fun SaveButton(libraryViewModel: LibraryViewModel){
     Button(
         colors = ButtonDefaults.buttonColors(colorResource(R.color.green)),
-        onClick = {},
+        onClick = {
+            libraryViewModel.insert(
+                Song(
+                    title = "hlo",
+                    artist = "skibidi",
+                    owner = "meong"
+                )
+            )
+        },
         modifier = Modifier
             .height(36.dp)
             .fillMaxWidth(1f)
@@ -430,11 +469,11 @@ fun ImagePicker() {
     }
 }
 
-@Preview(
-    showBackground = true,
-    backgroundColor = 0x000000,
-)
-@Composable
-fun preview(){
-    LibraryLayout()
-}
+//@Preview(
+//    showBackground = true,
+//    backgroundColor = 0x000000,
+//)
+//@Composable
+//fun preview(viewModel: LibraryViewModel){
+//    LibraryLayout(viewModel)
+//}
