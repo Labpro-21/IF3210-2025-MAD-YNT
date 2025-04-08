@@ -14,7 +14,7 @@ import com.ynt.purrytify.R
 import com.ynt.purrytify.database.song.Song
 
 
-class ListSongAdapter(val listSong: ArrayList<Song>) : RecyclerView.Adapter<ListSongAdapter.ListViewHolder>() {
+class ListSongAdapter(var listSong: List<Song>) : RecyclerView.Adapter<ListSongAdapter.ListViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListViewHolder {
         val view: View = LayoutInflater.from(parent.context).inflate(R.layout.card_song, parent, false)
@@ -45,8 +45,7 @@ class ListSongAdapter(val listSong: ArrayList<Song>) : RecyclerView.Adapter<List
         Log.d("ListSongAdapter", "setListSongs called with ${listSongs.size} songs")
         val diffCallback = SongDiffCallback(this.listSong, listSongs)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
-        this.listSong.clear()
-        this.listSong.addAll(listSongs)
+        this.listSong = listSongs
         diffResult.dispatchUpdatesTo(this)
     }
 

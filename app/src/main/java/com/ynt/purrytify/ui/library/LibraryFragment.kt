@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.compose.rememberAsyncImagePainter
@@ -128,6 +129,7 @@ class LibraryFragment : Fragment() {
 @Composable
 fun LibraryLayout(viewModel: LibraryViewModel){
     val showPopUpAddSong = remember { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
     val localContext = LocalContext.current
     if (showPopUpAddSong.value) {
         AddSong(setShowPopupSong = { showPopUpAddSong.value = it }, viewModel)
@@ -148,29 +150,29 @@ fun LibraryLayout(viewModel: LibraryViewModel){
             AndroidView(
                 modifier = Modifier,
                 factory = {
-                    val list = ArrayList<Song>()
                     val view = View.inflate(it, R.layout.recyclerview_library, null).apply {
                         layoutParams = ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
                     }
+
                     val rvSongs: RecyclerView = view.findViewById(R.id.rv_songs)
                     rvSongs.setHasFixedSize(true)
-                    for (i in 1..100){
-                    list.add(Song(
-                        artist = "SKIBIDIIII",
-                        title = "GYATTTT"
-                    ))
-                    }
                     rvSongs.layoutManager = LinearLayoutManager(localContext)
-                    val listSongAdapter = ListSongAdapter(list)
+
+                    val listSongAdapter = ListSongAdapter(emptyList())
                     rvSongs.adapter = listSongAdapter
+
+                    viewModel.getAllSongs().observe(lifecycleOwner) { songList ->
+                        if (songList != null) {
+                            listSongAdapter.setListSongs(songList)
+                        }
+                    }
 
                     view
                 },
-                update = { view ->
-                }
+//                update = { }
             )
         }
     }
