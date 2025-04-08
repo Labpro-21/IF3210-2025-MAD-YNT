@@ -17,6 +17,6 @@ interface SongDao {
     @Delete
     fun delete(song: Song)
 
-    @Query("SELECT * from song ORDER BY id ASC")
+    @Query("SELECT * from song ORDER BY date_added DESC")
     fun getAllSongs(): LiveData<List<Song>>
 }
