@@ -69,5 +69,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.runtime.livedata)
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.core:core-splashscreen:1.0.1")
     ksp(libs.room.compiler)
 }
