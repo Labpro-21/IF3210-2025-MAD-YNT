@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.cardview.widget.CardView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
@@ -24,6 +24,8 @@ class ListSongAdapter(var listSong: List<Song>) : RecyclerView.Adapter<ListSongA
     override fun onBindViewHolder(holder: ListViewHolder, position: Int) {
         val song = listSong[position]
         holder.imgPhoto.load(song.image)
+        holder.editButton.load(R.drawable.baseline_more_vert_24)
+        holder.likeButton.load(R.drawable.twotone_check_24)
         holder.tvTitle.text = song.title
         holder.tvArtist.text = song.artist
         holder.cardView.setOnClickListener({
@@ -38,7 +40,9 @@ class ListSongAdapter(var listSong: List<Song>) : RecyclerView.Adapter<ListSongA
         val imgPhoto: ImageView = itemView.findViewById(R.id.img_item_photo)
         val tvTitle: TextView = itemView.findViewById(R.id.tv_song_name)
         val tvArtist: TextView = itemView.findViewById(R.id.tv_artist_name)
-        val cardView: CardView = itemView.findViewById(R.id.card_view)
+        val cardPlay: ConstraintLayout = itemView.findViewById(R.id.card_play_area)
+        val editButton: ImageView = itemView.findViewById(R.id.card_edit_image)
+        val likeButton: ImageView = itemView.findViewById(R.id.card_like_image)
     }
 
     fun setListSongs(listSongs: List<Song>) {
