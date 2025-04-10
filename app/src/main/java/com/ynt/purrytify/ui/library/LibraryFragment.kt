@@ -1,7 +1,11 @@
 package com.ynt.purrytify.ui.library
 
+import android.content.Context
+import android.database.Cursor
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -79,6 +83,9 @@ import com.ynt.purrytify.database.song.Song
 import com.ynt.purrytify.databinding.FragmentLibraryBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 
 class LibraryFragment : Fragment() {
     private var _binding: FragmentLibraryBinding? = null
@@ -275,6 +282,8 @@ fun LibraryButtons(){
 fun AddSong(setShowPopupSong: (Boolean)->Unit,libraryViewModel: LibraryViewModel){
     val title = remember  { mutableStateOf("") }
     val artist = remember{ mutableStateOf("") }
+    val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
+    val selectedSongUri = remember { mutableStateOf<Uri?>(null) }
     val sheetState = rememberModalBottomSheetState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -314,17 +323,18 @@ fun AddSong(setShowPopupSong: (Boolean)->Unit,libraryViewModel: LibraryViewModel
                         horizontal = 0.dp
                     ),
             ) {
-                ImagePicker()
+                ImagePicker() {
+                    uri->
+                    selectedImageUri.value = uri
+                }
                 Spacer(
                     modifier = Modifier
                         .width(24.dp)
                 )
-                Image(
-                    imageVector = ImageVector.vectorResource(R.drawable.choose_song),
-                    contentDescription = "Choose Song",
-                    modifier = Modifier
-                        .size(96.dp)
-                )
+                SongPicker {
+                    uri->
+                    selectedSongUri.value = uri
+                }
             }
             AddSongTextField(title, "Title", false)
             AddSongTextField(artist, "Artist", true)
@@ -342,7 +352,12 @@ fun AddSong(setShowPopupSong: (Boolean)->Unit,libraryViewModel: LibraryViewModel
                 ),
         ) {
             CancelButton(coroutineScope, sheetState, setShowPopupSong)
-            SaveButton(libraryViewModel)
+            SaveButton(
+                title = title.value,
+                artist = artist.value,
+                libraryViewModel = libraryViewModel,
+                imageUri = selectedImageUri.value,
+                songUri = selectedSongUri.value)
         }
         }
     }
@@ -350,22 +365,48 @@ fun AddSong(setShowPopupSong: (Boolean)->Unit,libraryViewModel: LibraryViewModel
 
 
 @Composable
-fun SaveButton(libraryViewModel: LibraryViewModel){
+fun SaveButton(
+    title: String,
+    artist: String,
+    imageUri: Uri?,
+    songUri: Uri?,
+    libraryViewModel: LibraryViewModel
+) {
+    val context = LocalContext.current
+
     Button(
         colors = ButtonDefaults.buttonColors(colorResource(R.color.green)),
         onClick = {
-            libraryViewModel.insert(
-                Song(
-                    title = "hlo",
-                    artist = "skibidi",
-                    owner = "meong"
+            if (imageUri != null && songUri != null) {
+
+                val savedSongUri = copyUriToExternalStorage(context,songUri,getFileNameFromUri(context, songUri))
+                val savedImageUri = copyUriToStorage(context,imageUri)
+
+
+                libraryViewModel.insert(
+                    Song(
+                        title = title,
+                        artist = artist,
+                        owner = "meong",
+                        image = savedImageUri.toString(),
+                        audio = savedSongUri.toString()
+                    )
                 )
-            )
+            } else {
+                libraryViewModel.insert(
+                    Song(
+                        title = title,
+                        artist = artist,
+                        owner = "meong"
+                    )
+                )
+            }
         },
         modifier = Modifier
             .height(36.dp)
-            .fillMaxWidth(1f)
-            .padding(horizontal = 10.dp)) {
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp)
+    ) {
         Text(
             text = "Save",
             color = Color.White
@@ -427,12 +468,12 @@ fun AddSongTextField(inputText: MutableState<String>,labelText:String,isLast:Boo
 }
 
 @Composable
-fun ImagePicker() {
-    var imageUri = remember { mutableStateOf<Uri?>(null) }
-
+fun ImagePicker(onImagePicked: (Uri?) -> Unit) {
+    val imageUri = remember { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
+        onImagePicked(uri)
         imageUri.value = uri
     }
     Box(
@@ -464,12 +505,101 @@ fun ImagePicker() {
                     imageVector = ImageVector.vectorResource(R.drawable.choose_image),
                     contentDescription = "Choose Image",
                     modifier = Modifier
-                        .size(96.dp)
                         .padding(horizontal = 0.dp)
                 )
         }
     }
 }
+
+@Composable
+fun SongPicker(
+    onSongPicked: (Uri?) -> Unit
+) {
+    val context = LocalContext.current
+    val songUri = remember { mutableStateOf<Uri?>(null) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        songUri.value = uri
+        onSongPicked(uri)
+    }
+
+        Box(
+            modifier = Modifier
+                .size(96.dp)
+                .clickable { launcher.launch("audio/*") }
+        ){
+        if (songUri.value != null) {
+            val fileName = getFileNameFromUri(context, songUri.value!!)
+            Text(
+                text = "Selected: $fileName",
+                color = Color.White,
+                fontSize = 14.sp
+            )
+        } else {
+            Image(
+                    imageVector = ImageVector.vectorResource(R.drawable.choose_song),
+                    contentDescription = "Choose Song",
+                    modifier = Modifier
+                        .size(96.dp)
+                )
+        }
+    }
+}
+
+fun getFileNameFromUri(context: Context, uri: Uri): String {
+    var name = "unknown_file"
+    val cursor: Cursor? = context.contentResolver.query(uri, null, null, null, null)
+    cursor?.use {
+        val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        if (nameIndex != -1 && it.moveToFirst()) {
+            name = it.getString(nameIndex)
+        }
+    }
+    return name
+}
+
+fun copyUriToExternalStorage(context: Context, uri: Uri, filename: String): Uri? {
+    return try {
+        val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+        val outputDir = context.getExternalFilesDir("songs")
+        if (inputStream != null && outputDir != null) {
+            val outFile = File(outputDir, filename)
+            FileOutputStream(outFile).use { output ->
+                inputStream.copyTo(output)
+            }
+            Uri.fromFile(outFile)
+        } else {
+            null
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
+fun copyUriToStorage(context: Context, uri: Uri): Uri? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val fileName = "${System.currentTimeMillis()}.jpg"
+        val outputFile = File(context.filesDir, fileName)
+
+        inputStream?.use { input ->
+            FileOutputStream(outputFile).use { output ->
+                input.copyTo(output)
+            }
+        }
+        Uri.fromFile(outputFile)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
+
+
+
 
 //@Preview(
 //    showBackground = true,
