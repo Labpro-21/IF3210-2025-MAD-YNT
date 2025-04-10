@@ -357,20 +357,28 @@ fun AddSong(setShowPopupSong: (Boolean)->Unit,libraryViewModel: LibraryViewModel
                 artist = artist.value,
                 libraryViewModel = libraryViewModel,
                 imageUri = selectedImageUri.value,
-                songUri = selectedSongUri.value)
+                songUri = selectedSongUri.value,
+                coroutineScope = coroutineScope,
+                sheetState =sheetState,
+                setShowPopupSong = setShowPopupSong
+            )
         }
         }
     }
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SaveButton(
     title: String,
     artist: String,
     imageUri: Uri?,
     songUri: Uri?,
-    libraryViewModel: LibraryViewModel
+    libraryViewModel: LibraryViewModel,
+    coroutineScope: CoroutineScope,
+    sheetState: SheetState,
+    setShowPopupSong: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -401,7 +409,11 @@ fun SaveButton(
                     )
                 )
             }
-        },
+            coroutineScope.launch {
+                sheetState.hide()
+                setShowPopupSong(false)
+            }
+            },
         modifier = Modifier
             .height(36.dp)
             .fillMaxWidth()
