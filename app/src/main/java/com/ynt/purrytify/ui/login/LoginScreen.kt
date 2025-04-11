@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ynt.purrytify.data.model.LoginResponse
+import com.ynt.purrytify.utils.TokenStorage
 
 @Composable
 fun LoginScreen(
@@ -33,7 +34,12 @@ fun LoginScreen(
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
+    val tokenStorage = remember {TokenStorage(context)}
+    LaunchedEffect(Unit) {
+        if (!tokenStorage.getAccessToken().isNullOrEmpty()) {
+            onLoginSuccess()
+        }
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -77,17 +83,24 @@ fun LoginScreen(
 
                 is LoginState.Success -> {
                     val loginResponse = loginState.data
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = "Access Token:", color = Color.White)
-                        Text(text = loginResponse.accessToken, color = Color.Green)
+                    //uncomment untuk debug token
+//                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                        Text(text = "Access Token:", color = Color.White)
+//                        Text(text = loginResponse.accessToken, color = Color.Green)
+//
+//                        Spacer(modifier = Modifier.height(8.dp))
+//
+//                        Text(text = "Refresh Token:", color = Color.White)
+//                        Text(text = loginResponse.refreshToken, color = Color.Green)
+//                    }
 
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(text = "Refresh Token:", color = Color.White)
-                        Text(text = loginResponse.refreshToken, color = Color.Green)
+                    LaunchedEffect(Unit) {
+                        tokenStorage.saveTokens(
+                            accessToken = loginResponse.accessToken,
+                            refreshToken = loginResponse.refreshToken
+                        )
+                        onLoginSuccess()
                     }
-
-                    // LaunchedEffect(Unit) { onLoginSuccess() }
                 }
 
                 else -> {}

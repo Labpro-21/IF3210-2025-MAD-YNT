@@ -1,5 +1,6 @@
 package com.ynt.purrytify
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -13,6 +14,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.ynt.purrytify.databinding.ActivityMainBinding
 import com.ynt.purrytify.ui.login.LoginScreen
+import com.ynt.purrytify.utils.AppNavigation
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,7 +24,12 @@ class MainActivity : AppCompatActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         setContent {
-            LoginScreen()
+            AppNavigation(
+                onNavigateToDashboard = {
+                    startActivity(Intent(this, MainAppActivity::class.java))
+                    finish() // Close the login screen so back button doesn’t return to it
+                }
+            )
         }
 //        binding = ActivityMainBinding.inflate(layoutInflater)
 //        setContentView(binding.root)
