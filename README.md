@@ -69,5 +69,5 @@ androidx-constraintlayout
 | NIM          | Nama Anggota | Jam Pengerjaan |
 |--------------|--------------|-----------|
 | 13522036      | Akbar Al Fattah    | X   |
-| 13522088      | Muhamad Rafli Rasyiidin    | X   |
+| 13522088      | Muhamad Rafli Rasyiidin    | Header (1 jam), Navbar (1 jam), Profile (12 jam), Home (10 jam), Total: 24 jam   |
 | 13522100      | M. Hanief Fatkhan Nashrullah    |  RecyclerView(12 Jam), Setup Room Database(4 Jam), Setup Bottom Navigation Layout (6 Jam), Add Edit Delete Song(10 Jam), Network Sensing (2 Jam), Total: 34 Jam  |
