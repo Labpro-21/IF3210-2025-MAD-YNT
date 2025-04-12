@@ -18,6 +18,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val songRepo = SongRepository(application)
     val countSong = MutableLiveData<Int>()
     val countLiked = MutableLiveData<Int>()
+    val playedCount = MutableLiveData<Int>()
     //    private val _text = MutableLiveData<String>().apply {
 //        value = "This is profile Fragment"
 //    }
@@ -39,6 +40,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     }
                     songRepo.countLikedSong(username = response.body()?.username ?: "-").observeForever { count ->
                         countLiked.postValue(count)
+                    }
+                    songRepo.playedSongCount(username = response.body()?.username ?: "-").observeForever { count ->
+                        playedCount.postValue(count)
                     }
                 } else {
 //                    Log.d("ProfileViewModel", "ayam else")

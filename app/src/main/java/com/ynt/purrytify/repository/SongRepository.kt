@@ -34,4 +34,12 @@ class SongRepository(application: Application) {
     fun countLikedSong(username: String): LiveData<Int> {
         return mSongsDao.countSongLiked(username)
     }
+
+    fun playedSongCount(username: String): LiveData<Int> {
+        return mSongsDao.playedSongCount(username)
+    }
+
+    fun getNewSongs(username: String): LiveData<List<Song>> {
+        return mSongsDao.getNewSongs(username)
+    }
 }
