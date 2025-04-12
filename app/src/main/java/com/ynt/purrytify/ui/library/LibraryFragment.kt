@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -23,8 +24,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.ynt.purrytify.R
+import com.ynt.purrytify.database.song.Song
 import com.ynt.purrytify.databinding.FragmentLibraryBinding
 import com.ynt.purrytify.ui.library.ui.AddSong
+import com.ynt.purrytify.ui.library.ui.EditSong
 import com.ynt.purrytify.ui.library.ui.LibraryTopBar
 import com.ynt.purrytify.ui.library.ui.SongListRecyclerView
 import com.ynt.purrytify.utils.TokenStorage
@@ -79,12 +82,14 @@ class LibraryFragment : Fragment() {
 @Composable
 fun LibraryLayout(viewModel: LibraryViewModel){
     val showPopUpAddSong = remember { mutableStateOf(false) }
+    val showPopUpEditSong = remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val localContext = LocalContext.current
     val tokenStorage = remember { TokenStorage(localContext) }
     val token = tokenStorage.getAccessToken()
     val loggedInUser = viewModel.loggedInUser.observeAsState("")
     val selectedChoiceIndex = remember { mutableIntStateOf(0) }
+    val editedSong = remember { mutableStateOf<Song?>(null) }
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -130,8 +135,25 @@ fun LibraryLayout(viewModel: LibraryViewModel){
                     updateLikeSong = {
                         val songCopy = it.copy(isLiked = if(it.isLiked==1) 0 else 1)
                         viewModel.update(songCopy)
+                    },
+                    updateEditSong = {
+                        editedSong.value = it
+                        showPopUpEditSong.value = true
+                    },
+//                    TODO: Masukkan play song
+                    playSong = {
                     }
                 )
+                if (showPopUpEditSong.value && editedSong.value != null) {
+                    EditSong(
+                        setShowPopupSong = { showPopUpEditSong.value = it },
+                        libraryViewModel = viewModel,
+                        loggedInUser = loggedInUser.value,
+                        context = localContext,
+                        sheetState = sheetState,
+                        song = editedSong.value!!,
+                    )
+                }
             }
         }
     }

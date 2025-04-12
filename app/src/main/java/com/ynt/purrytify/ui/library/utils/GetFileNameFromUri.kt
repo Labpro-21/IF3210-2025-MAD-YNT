@@ -4,6 +4,8 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.provider.OpenableColumns
+import java.io.File
+import java.net.URLDecoder
 
 fun getFileNameFromUri(context: Context, uri: Uri): String {
     var name = "unknown_file"
@@ -16,3 +18,12 @@ fun getFileNameFromUri(context: Context, uri: Uri): String {
     }
     return name
 }
+
+fun getFileName(uri: Uri):String{
+    val path = uri.toString().removePrefix("file://")
+    val decodedPath = URLDecoder.decode(path, "UTF-8")
+    val fileName = File(decodedPath).name
+    return fileName
+}
+
+

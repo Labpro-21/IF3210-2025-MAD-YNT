@@ -17,7 +17,11 @@ import com.ynt.purrytify.R
 import com.ynt.purrytify.database.song.Song
 
 
-class ListSongAdapter(var listSong: List<Song>, var likeSong: (Song) -> Unit) : RecyclerView.Adapter<ListSongAdapter.ListViewHolder>() {
+class ListSongAdapter(var listSong: List<Song>,
+                      var likeSong: (Song) -> Unit,
+                      var editSong: (Song) -> Unit,
+                      var playSong: (Song) -> Unit
+) : RecyclerView.Adapter<ListSongAdapter.ListViewHolder>() {
 //    private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListViewHolder {
@@ -42,11 +46,14 @@ class ListSongAdapter(var listSong: List<Song>, var likeSong: (Song) -> Unit) : 
         }
         holder.tvTitle.text = song.title
         holder.tvArtist.text = song.artist
-        holder.cardPlay.setOnClickListener({
-            song.audio?.let { it1 -> playAudioFromUri(holder.itemView.context, it1.toUri()) }
-        })
         holder.likeButton.setOnClickListener({
             likeSong(song)
+        })
+        holder.editButton.setOnClickListener({
+            editSong(song)
+        })
+        holder.cardPlay.setOnClickListener({
+            playSong(song)
         })
 
     }
