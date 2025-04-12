@@ -16,6 +16,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,6 +43,7 @@ fun AddSong(
 ){
     val title = remember  { mutableStateOf("") }
     val artist = remember{ mutableStateOf("") }
+    val duration = remember { mutableIntStateOf(0) }
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val selectedSongUri = remember { mutableStateOf<Uri?>(null) }
     val coroutineScope = rememberCoroutineScope()
@@ -96,7 +98,10 @@ fun AddSong(
                         SongPicker(
                             songUri = selectedSongUri.value,
                             onSongPicked = { selectedSongUri.value = it },
-                            context = context
+                            context = context,
+                            title = title,
+                            artists = artist,
+                            duration = duration
                         )
                     }
                     AddSongTextField(title, "Title", false)
@@ -126,7 +131,8 @@ fun AddSong(
                         coroutineScope = coroutineScope,
                         sheetState = sheetState,
                         setShowPopupSong = setShowPopupSong,
-                        context = context
+                        context = context,
+                        duration = duration.value
                     )
                 }
             }

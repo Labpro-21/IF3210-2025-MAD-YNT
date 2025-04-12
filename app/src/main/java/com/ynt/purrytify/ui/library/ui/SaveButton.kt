@@ -28,6 +28,7 @@ fun SaveButton(
     imageUri: Uri?,
     songUri: Uri?,
     songOwner: String,
+    duration: Int,
     libraryViewModel: LibraryViewModel,
     coroutineScope: CoroutineScope,
     sheetState: SheetState,
@@ -49,7 +50,8 @@ fun SaveButton(
                 songOwner = songOwner,
                 coroutineScope = coroutineScope,
                 sheetState = sheetState,
-                setShowPopupSong = setShowPopupSong
+                setShowPopupSong = setShowPopupSong,
+                duration = duration
             )
         },
         modifier = Modifier

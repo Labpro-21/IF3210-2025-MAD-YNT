@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 fun saveButtonOnClick(
     songUri: Uri?,
     imageUri: Uri?,
+    duration: Int,
     context: Context,
     libraryViewModel: LibraryViewModel,
     title:String,
@@ -34,7 +35,8 @@ fun saveButtonOnClick(
                 artist = artist,
                 owner = songOwner,
                 image = savedImageUri.toString(),
-                audio = savedSongUri.toString()
+                audio = savedSongUri.toString(),
+                duration = duration
             )
         )
     }
