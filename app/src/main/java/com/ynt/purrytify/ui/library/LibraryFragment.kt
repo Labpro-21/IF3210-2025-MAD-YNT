@@ -59,10 +59,6 @@ class LibraryFragment : Fragment() {
         _binding = FragmentLibraryBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-//        val textView: TextView = binding.textLibrary
-//        libraryViewModel.text.observe(viewLifecycleOwner) {
-//            textView.text = it
-//        }
 
         return root
     }
@@ -130,8 +126,6 @@ fun LibraryLayout(viewModel: LibraryViewModel){
     if(showMediaPlayer.value){
         AudioPlayerScreen(playedSong.value!!,viewModel)
     } else {
-
-
         Scaffold(
             topBar = {
                 LibraryTopBar(
@@ -151,7 +145,7 @@ fun LibraryLayout(viewModel: LibraryViewModel){
                     SongListRecyclerView(
                         localContext = localContext,
                         lifecycleOwner = lifecycleOwner,
-                        loggedInUser = loggedInUser.value,
+                        loggedInUser = username,
                         viewModel = viewModel,
                         choice = selectedChoiceIndex.intValue,
                         updateLikeSong = {
@@ -172,7 +166,7 @@ fun LibraryLayout(viewModel: LibraryViewModel){
                         EditSong(
                             setShowPopupSong = { showPopUpEditSong.value = it },
                             libraryViewModel = viewModel,
-                            loggedInUser = loggedInUser.value,
+                            loggedInUser = username,
                             context = localContext,
                             sheetState = sheetState,
                             song = editedSong.value!!,
