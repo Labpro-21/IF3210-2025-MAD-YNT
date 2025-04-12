@@ -198,5 +198,9 @@ fun SongProfileDetail(viewModel: ProfileViewModel) {
             )
         }
     }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    LogoutButton()
 }
 
