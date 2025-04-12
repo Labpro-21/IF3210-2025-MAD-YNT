@@ -55,6 +55,10 @@ material
 androidx-constraintlayout
 
 ## Screenshot Aplikasi
+![image](https://github.com/user-attachments/assets/017b8f4f-3719-4293-b301-33d9d3755dc1)
+![image](https://github.com/user-attachments/assets/1ef4862d-f785-44ac-b132-0e59c9d30343)
+![image](https://github.com/user-attachments/assets/ff83eb73-e9b2-4b6f-84aa-7580dd984e81)
+![image](https://github.com/user-attachments/assets/115d25cd-6e33-4f86-87af-5c6cdd0024f4)
 
 ## Pembagian Kerja Anggota Kelompok
 
@@ -68,6 +72,6 @@ androidx-constraintlayout
 
 | NIM          | Nama Anggota | Jam Pengerjaan |
 |--------------|--------------|-----------|
-| 13522036      | Akbar Al Fattah    | X   |
+| 13522036      | Akbar Al Fattah    |Login(8 Jam), Logout (2 Jam), Background Service (12 Jam), Pemutaran Lagu (12 Jam), Total: 34 Jam |
 | 13522088      | Muhamad Rafli Rasyiidin    | Header (1 jam), Navbar (1 jam), Profile (12 jam), Home (10 jam), Total: 24 jam   |
 | 13522100      | M. Hanief Fatkhan Nashrullah    |  RecyclerView(12 Jam), Setup Room Database(4 Jam), Setup Bottom Navigation Layout (6 Jam), Add Edit Delete Song(10 Jam), Network Sensing (2 Jam), Total: 34 Jam  |
