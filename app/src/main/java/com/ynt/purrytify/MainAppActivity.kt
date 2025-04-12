@@ -2,16 +2,19 @@ package com.ynt.purrytify
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.ynt.purrytify.databinding.ActivityMainBinding
+import com.ynt.purrytify.ui.connection.ConnectivityViewModel
+import com.ynt.purrytify.utils.AndroidConnectivityObserver
 import com.ynt.purrytify.utils.isUserAuthorized
-import com.ynt.purrytify.utils.logout
+import kotlinx.coroutines.launch
 
 class MainAppActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -40,14 +43,26 @@ class MainAppActivity : AppCompatActivity() {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         navView.setupWithNavController(navController)
 
-        //ini buat testing logout, comment aja kalo mau buat component lain
-        val logoutButton = Button(this).apply {
-            text = "Logout"
-            setOnClickListener {
-                logout(this@MainAppActivity)
+        val networkSensing = binding.networkSensing
+        val connectivityViewModel = ConnectivityViewModel(
+            AndroidConnectivityObserver(applicationContext)
+        )
+        lifecycleScope.launch {
+            connectivityViewModel.isConnected.collect { connected ->
+                networkSensing.visibility = if (connected) View.GONE else View.VISIBLE
             }
         }
-        binding.root.addView(logoutButton)
+
+        //ini buat testing logout, comment aja kalo mau buat component lain
+//        val logoutButton = Button(this).apply {
+//            text = "Logout"
+//            setOnClickListener {
+//                logout(this@MainAppActivity)
+//            }
+//        }
+//        binding.root.addView(logoutButton)
+
+
     }
 
 }

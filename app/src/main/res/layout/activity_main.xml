@@ -7,6 +7,19 @@
     android:background="@color/black"
     >
 
+    <TextView
+        app:layout_constraintTop_toTopOf="parent"
+        android:id="@+id/network_sensing"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/holo_red_dark"
+        android:padding="8dp"
+        android:text="@string/no_internet_connection"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:visibility="gone" />
+
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/nav_view"
