@@ -34,6 +34,9 @@ data class Song(
     @ColumnInfo(name = "duration")
     var duration: Int = 0,
 
+    @ColumnInfo(name = "last_played")
+    var lastPlayed: Long = 0,
+
     @ColumnInfo(name = "date_added")
     var dateAdded: Long = System.currentTimeMillis()
 
