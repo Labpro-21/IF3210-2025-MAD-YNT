@@ -145,8 +145,8 @@ fun ProfileScreen(viewModel: ProfileViewModel) {
 
 @Composable
 fun SongProfileDetail(viewModel: ProfileViewModel) {
-//    val songCountState = viewModel.countSong.observeAsState()
-//    val songCount = songCountState.value ?: 0
+    val songCountState = viewModel.countSong.observeAsState(0)
+    val songCount = songCountState.value ?: 0
     Row (
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly
@@ -157,7 +157,7 @@ fun SongProfileDetail(viewModel: ProfileViewModel) {
                 .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("0",
+            Text("$songCount",
                 color = Color.White,
                 fontSize = 20.sp,
             )

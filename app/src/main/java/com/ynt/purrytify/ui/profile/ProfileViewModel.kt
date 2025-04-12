@@ -33,8 +33,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 if (response.isSuccessful) {
                     val data = response.body()
                     _data.value = Result.success(data)
-//                    val count = songRepo.countSongsPerUser(response.body()?.username ?: "-")
-//                    countSong.postValue(count)
+                    songRepo.countSongsPerUser(response.body()?.username ?: "-").observeForever { count ->
+                        countSong.postValue(count)
+                    }
                 } else {
 //                    Log.d("ProfileViewModel", "ayam else")
                     _data.value = Result.failure(Exception("Error: ${response.code()}"))

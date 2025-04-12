@@ -21,5 +21,5 @@ interface SongDao {
     fun getAllSongs(username: String): LiveData<List<Song>>
 
     @Query("SELECT COUNT(*) FROM song WHERE owner = :username")
-    fun countSongsPerUser(username: String): Int
+    fun countSongsPerUser(username: String): LiveData<Int>
 }
