@@ -30,6 +30,7 @@ import com.ynt.purrytify.ui.library.ui.AddSong
 import com.ynt.purrytify.ui.library.ui.EditSong
 import com.ynt.purrytify.ui.library.ui.LibraryTopBar
 import com.ynt.purrytify.ui.library.ui.SongListRecyclerView
+import com.ynt.purrytify.ui.player.AudioPlayerScreen
 import com.ynt.purrytify.utils.TokenStorage
 
 class LibraryFragment : Fragment() {
@@ -90,6 +91,8 @@ fun LibraryLayout(viewModel: LibraryViewModel){
     val loggedInUser = viewModel.loggedInUser.observeAsState("")
     val selectedChoiceIndex = remember { mutableIntStateOf(0) }
     val editedSong = remember { mutableStateOf<Song?>(null) }
+    val showMediaPlayer = remember { mutableStateOf(false) }
+    val playedSong = remember { mutableStateOf<Song?>(null) }
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -110,49 +113,57 @@ fun LibraryLayout(viewModel: LibraryViewModel){
             sheetState = sheetState,
         )
     }
-    Scaffold(
-        topBar = {
-            LibraryTopBar(
-                title = "Your Library",
-                onAddClick = { showPopUpAddSong.value = true },
-                selectedChoiceIndex = selectedChoiceIndex.intValue,
-                onChoiceSelected = {selectedChoiceIndex.intValue =  it}
-            )
+    if(showMediaPlayer.value){
+        AudioPlayerScreen(playedSong.value!!,viewModel)
+    } else {
 
-        },
-        containerColor = Color.Black
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier.padding(innerPadding),
-        ){
-            if (!loggedInUser.value.isNullOrEmpty()) {
-                SongListRecyclerView(
-                    localContext = localContext,
-                    lifecycleOwner = lifecycleOwner,
-                    loggedInUser = loggedInUser.value,
-                    viewModel = viewModel,
-                    choice = selectedChoiceIndex.intValue,
-                    updateLikeSong = {
-                        val songCopy = it.copy(isLiked = if(it.isLiked==1) 0 else 1)
-                        viewModel.update(songCopy)
-                    },
-                    updateEditSong = {
-                        editedSong.value = it
-                        showPopUpEditSong.value = true
-                    },
-//                    TODO: Masukkan play song
-                    playSong = {
-                    }
+
+        Scaffold(
+            topBar = {
+                LibraryTopBar(
+                    title = "Your Library",
+                    onAddClick = { showPopUpAddSong.value = true },
+                    selectedChoiceIndex = selectedChoiceIndex.intValue,
+                    onChoiceSelected = { selectedChoiceIndex.intValue = it }
                 )
-                if (showPopUpEditSong.value && editedSong.value != null) {
-                    EditSong(
-                        setShowPopupSong = { showPopUpEditSong.value = it },
-                        libraryViewModel = viewModel,
+
+            },
+            containerColor = Color.Black
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier.padding(innerPadding),
+            ) {
+                if (!loggedInUser.value.isNullOrEmpty()) {
+                    SongListRecyclerView(
+                        localContext = localContext,
+                        lifecycleOwner = lifecycleOwner,
                         loggedInUser = loggedInUser.value,
-                        context = localContext,
-                        sheetState = sheetState,
-                        song = editedSong.value!!,
+                        viewModel = viewModel,
+                        choice = selectedChoiceIndex.intValue,
+                        updateLikeSong = {
+                            val songCopy = it.copy(isLiked = if (it.isLiked == 1) 0 else 1)
+                            viewModel.update(songCopy)
+                        },
+                        updateEditSong = {
+                            editedSong.value = it
+                            showPopUpEditSong.value = true
+                        },
+//                    TODO: Masukkan play song
+                        playSong = {
+                            showMediaPlayer.value =true
+                            playedSong.value = it
+                        }
                     )
+                    if (showPopUpEditSong.value && editedSong.value != null) {
+                        EditSong(
+                            setShowPopupSong = { showPopUpEditSong.value = it },
+                            libraryViewModel = viewModel,
+                            loggedInUser = loggedInUser.value,
+                            context = localContext,
+                            sheetState = sheetState,
+                            song = editedSong.value!!,
+                        )
+                    }
                 }
             }
         }

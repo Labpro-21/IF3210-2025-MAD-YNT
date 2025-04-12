@@ -58,16 +58,16 @@ class AudioPlayerFragment : Fragment() {
                     AudioPlayerScreen(
                         song = songList[currentIndex.value],
                         viewModel = viewModel,
-                        onNext = {
-                            if (currentIndex.value < songList.lastIndex) {
-                                currentIndex.value += 1
-                            }
-                        },
-                        onPrevious = {
-                            if (currentIndex.value > 0) {
-                                currentIndex.value -= 1
-                            }
-                        }
+//                        onNext = {
+//                            if (currentIndex.value < songList.lastIndex) {
+//                                currentIndex.value += 1
+//                            }
+//                        },
+//                        onPrevious = {
+//                            if (currentIndex.value > 0) {
+//                                currentIndex.value -= 1
+//                            }
+//                        }
                     )
                 } else {
                     Text("No song loaded", color = Color.White)
@@ -81,8 +81,8 @@ class AudioPlayerFragment : Fragment() {
 fun AudioPlayerScreen(
     song: Song,
     viewModel: LibraryViewModel,
-    onNext: () -> Unit,
-    onPrevious: () -> Unit
+//    onNext: () -> Unit,
+//    onPrevious: () -> Unit
 ) {
     val context = LocalContext.current
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
@@ -188,7 +188,7 @@ fun AudioPlayerScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { onPrevious() }) {
+                IconButton(onClick = { /*onPrevious() */}) {
                     Icon(Icons.Default.SkipPrevious, contentDescription = null, tint = Color.White)
                 }
                 IconButton(onClick = {
@@ -206,7 +206,7 @@ fun AudioPlayerScreen(
                         modifier = Modifier.size(48.dp)
                     )
                 }
-                IconButton(onClick = { onNext() }) {
+                IconButton(onClick = { /*onNext()*/ }) {
                     Icon(Icons.Default.SkipNext, contentDescription = null, tint = Color.White)
                 }
             }
