@@ -1,15 +1,14 @@
 package com.ynt.purrytify.ui.library
 
 import android.content.Context
-import android.media.MediaPlayer
 import android.net.Uri
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -18,7 +17,7 @@ import com.ynt.purrytify.R
 import com.ynt.purrytify.database.song.Song
 
 
-class ListSongAdapter(var listSong: List<Song>) : RecyclerView.Adapter<ListSongAdapter.ListViewHolder>() {
+class ListSongAdapter(var listSong: List<Song>, var likeSong: (Song) -> Unit) : RecyclerView.Adapter<ListSongAdapter.ListViewHolder>() {
 //    private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListViewHolder {
@@ -31,10 +30,23 @@ class ListSongAdapter(var listSong: List<Song>) : RecyclerView.Adapter<ListSongA
         holder.imgPhoto.load(song.image)
         holder.editButton.load(R.drawable.baseline_more_vert_24)
         holder.likeButton.load(R.drawable.twotone_check_24)
+        if (song.isLiked==1) {
+            holder.likeButton.setColorFilter(
+                ContextCompat.getColor(holder.itemView.context, R.color.green),
+            )
+        }
+        else{
+            holder.likeButton.setColorFilter(
+                ContextCompat.getColor(holder.itemView.context,R.color.white)
+            )
+        }
         holder.tvTitle.text = song.title
         holder.tvArtist.text = song.artist
         holder.cardPlay.setOnClickListener({
             song.audio?.let { it1 -> playAudioFromUri(holder.itemView.context, it1.toUri()) }
+        })
+        holder.likeButton.setOnClickListener({
+            likeSong(song)
         })
 
     }
@@ -51,12 +63,12 @@ class ListSongAdapter(var listSong: List<Song>) : RecyclerView.Adapter<ListSongA
     }
 
     fun setListSongs(listSongs: List<Song>) {
-        Log.d("ListSongAdapter", "setListSongs called with ${listSongs.size} songs")
         val diffCallback = SongDiffCallback(this.listSong, listSongs)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
         this.listSong = listSongs
         diffResult.dispatchUpdatesTo(this)
     }
+
 
 
     private fun playAudioFromUri(context: Context, uri: Uri) {
