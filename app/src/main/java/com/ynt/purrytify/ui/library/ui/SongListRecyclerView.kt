@@ -21,7 +21,9 @@ fun SongListRecyclerView(
     lifecycleOwner: LifecycleOwner,
     loggedInUser: String,
     choice: Int,
-    updateLikeSong: (Song) -> Unit
+    updateLikeSong: (Song) -> Unit,
+    updateEditSong: (Song) -> Unit,
+    playSong:   (Song) -> Unit
 ){
     AndroidView(
         modifier = Modifier,
@@ -35,7 +37,7 @@ fun SongListRecyclerView(
             val rvSongs: RecyclerView = view.findViewById(R.id.rv_songs)
             rvSongs.setHasFixedSize(true)
             rvSongs.layoutManager = LinearLayoutManager(localContext)
-            val listSongAdapter = ListSongAdapter(emptyList()) {}
+            val listSongAdapter = ListSongAdapter(emptyList(),{},{},{})
             rvSongs.adapter = listSongAdapter
             viewModel.getAllSongs(loggedInUser).observe(lifecycleOwner) { songList ->
                 if (songList != null) {
@@ -48,7 +50,12 @@ fun SongListRecyclerView(
             val rvSongs: RecyclerView = view.findViewById(R.id.rv_songs)
             rvSongs.setHasFixedSize(true)
             rvSongs.layoutManager = LinearLayoutManager(localContext)
-            val listSongAdapter = ListSongAdapter(emptyList()) {song: Song -> updateLikeSong(song) }
+            val listSongAdapter = ListSongAdapter(
+                listSong = emptyList(),
+                likeSong = {song: Song -> updateLikeSong(song) },
+                editSong = {song: Song -> updateEditSong(song)},
+                playSong = {song: Song -> playSong(song)}
+            )
             rvSongs.adapter = listSongAdapter
             viewModel.getAllSongs(loggedInUser).observe(lifecycleOwner) { songList ->
                 val songFiltered = when(choice){
