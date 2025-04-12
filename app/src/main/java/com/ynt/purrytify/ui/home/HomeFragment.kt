@@ -4,12 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.ynt.purrytify.R
+import com.ynt.purrytify.database.song.Song
 import com.ynt.purrytify.databinding.FragmentHomeBinding
-import com.ynt.purrytify.ui.profile.ProfileViewModel
 import com.ynt.purrytify.utils.TokenStorage
 
 class HomeFragment : Fragment() {
@@ -74,12 +75,22 @@ fun HomeScreen(viewModel: HomeViewModel) {
     val context = LocalContext.current
     val token = remember { TokenStorage(context).getAccessToken() }
 
+    LaunchedEffect(token) {
+        viewModel.loadNewSongs(token)
+    }
+
+    val songsListState = viewModel.songList.observeAsState(emptyList())
+    val songList: List<Song> = songsListState.value
+
     Column (
         modifier = Modifier
-        .padding(30.dp),
+            .padding(30.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        NewSongs()
+        NewSongs(songList)
+
+        Spacer(modifier = Modifier.height(20.dp))
+
         RecentlyPlayed()
     }
 }
