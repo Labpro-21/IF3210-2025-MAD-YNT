@@ -16,4 +16,8 @@ interface APIService {
 
     @GET("/api/profile")
     suspend fun getProfile(@Header("Authorization") authHeader : String): Response<ProfileResponse>
+
+    @GET("/api/verify-token")
+    suspend fun verifyToken(@Header("Authorization") authHeader: String): Response<Void>
+
 }

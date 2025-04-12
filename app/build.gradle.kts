@@ -82,5 +82,6 @@ dependencies {
     // Lifecycle ViewModel + LiveData (if needed)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
     ksp(libs.room.compiler)
 }
