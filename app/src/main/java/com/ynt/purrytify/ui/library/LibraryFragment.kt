@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,7 @@ import com.ynt.purrytify.ui.library.ui.EditSong
 import com.ynt.purrytify.ui.library.ui.LibraryTopBar
 import com.ynt.purrytify.ui.library.ui.SongListRecyclerView
 import com.ynt.purrytify.utils.AndroidConnectivityObserver
+import com.ynt.purrytify.utils.CurrentUserHelper
 import com.ynt.purrytify.utils.TokenStorage
 import kotlinx.coroutines.launch
 
@@ -56,7 +58,6 @@ class LibraryFragment : Fragment() {
         _binding = FragmentLibraryBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-
 //        val textView: TextView = binding.textLibrary
 //        libraryViewModel.text.observe(viewLifecycleOwner) {
 //            textView.text = it
@@ -68,16 +69,14 @@ class LibraryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         val libraryCompose: ComposeView = view.findViewById(R.id.library_compose_view)
-
         val connectivityViewModel = ConnectivityViewModel(
             AndroidConnectivityObserver(requireContext())
         )
         lifecycleScope.launch {
             connectivityViewModel.isConnected.collect { connected ->
                 val layoutParams = libraryCompose.layoutParams as ViewGroup.MarginLayoutParams
-                layoutParams.topMargin = if (connected) 0 else 128
+                layoutParams.topMargin = if (connected) 0 else 100
                 libraryCompose.layoutParams = layoutParams
             }
         }
@@ -96,16 +95,17 @@ class LibraryFragment : Fragment() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryLayout(libraryViewModel: LibraryViewModel){
+fun LibraryLayout(viewModel: LibraryViewModel){
     val showPopUpAddSong = remember { mutableStateOf(false) }
     val showPopUpEditSong = remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val localContext = LocalContext.current
     val tokenStorage = remember { TokenStorage(localContext) }
     val token = tokenStorage.getAccessToken()
-    val loggedInUser = libraryViewModel.loggedInUser.observeAsState("")
+    val loggedInUser = viewModel.loggedInUser.observeAsState("")
     val selectedChoiceIndex = remember { mutableIntStateOf(0) }
     val editedSong = remember { mutableStateOf<Song?>(null) }
+    val sharedPref = CurrentUserHelper(localContext)
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -113,15 +113,23 @@ fun LibraryLayout(libraryViewModel: LibraryViewModel){
 
     LaunchedEffect(token) {
         if (!token.isNullOrEmpty()) {
-            libraryViewModel.loadUserProfile(token)
+            viewModel.loadUserProfile(token)
         }
     }
+    LaunchedEffect(loggedInUser.value) {
+        if (!loggedInUser.value.isNullOrEmpty() && loggedInUser.value != "Error fetching user data") {
+            sharedPref.saveString("username", loggedInUser.value)
+        }
+    }
+    val username = loggedInUser.value.takeIf {
+        !it.isNullOrEmpty() && it != "Error fetching user data"
+    } ?: sharedPref.getString("username")
 
     if (showPopUpAddSong.value) {
         AddSong(
             setShowPopupSong = { showPopUpAddSong.value = it },
-            libraryViewModel = libraryViewModel,
-            loggedInUser = loggedInUser.value,
+            libraryViewModel = viewModel,
+            loggedInUser = username,
             context = localContext,
             sheetState = sheetState,
         )
@@ -134,22 +142,23 @@ fun LibraryLayout(libraryViewModel: LibraryViewModel){
                 selectedChoiceIndex = selectedChoiceIndex.intValue,
                 onChoiceSelected = {selectedChoiceIndex.intValue =  it}
             )
+
         },
         containerColor = Color.Black
     ) { innerPadding ->
         Box(
             modifier = Modifier.padding(innerPadding),
         ){
-            if (!loggedInUser.value.isNullOrEmpty()) {
+            if (!username.isNullOrEmpty()) {
                 SongListRecyclerView(
                     localContext = localContext,
                     lifecycleOwner = lifecycleOwner,
-                    loggedInUser = loggedInUser.value,
-                    viewModel = libraryViewModel,
+                    loggedInUser = username,
+                    viewModel = viewModel,
                     choice = selectedChoiceIndex.intValue,
                     updateLikeSong = {
                         val songCopy = it.copy(isLiked = if(it.isLiked==1) 0 else 1)
-                        libraryViewModel.update(songCopy)
+                        viewModel.update(songCopy)
                     },
                     updateEditSong = {
                         editedSong.value = it
@@ -162,8 +171,8 @@ fun LibraryLayout(libraryViewModel: LibraryViewModel){
                 if (showPopUpEditSong.value && editedSong.value != null) {
                     EditSong(
                         setShowPopupSong = { showPopUpEditSong.value = it },
-                        libraryViewModel = libraryViewModel,
-                        loggedInUser = loggedInUser.value,
+                        libraryViewModel = viewModel,
+                        loggedInUser = username,
                         context = localContext,
                         sheetState = sheetState,
                         song = editedSong.value!!,
