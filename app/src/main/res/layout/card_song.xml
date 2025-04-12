@@ -21,7 +21,7 @@
         >
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="320dp"
+            android:layout_width="0dp"
             android:id="@+id/card_play_area"
             android:layout_height="90dp"
             card_view:layout_constraintBottom_toBottomOf="parent"
@@ -98,7 +98,7 @@
             android:id="@+id/card_edit_image"
             android:layout_width="32dp"
             android:layout_height="match_parent"
-            android:layout_marginEnd="12dp"
+            android:layout_marginEnd="30dp"
             android:contentDescription="Edit song"
             card_view:layout_constraintBottom_toBottomOf="parent"
             card_view:layout_constraintEnd_toEndOf="parent"

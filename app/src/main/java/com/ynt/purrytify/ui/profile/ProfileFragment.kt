@@ -1,14 +1,12 @@
 package com.ynt.purrytify.ui.profile
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,11 +32,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
-import coil.load
 import com.ynt.purrytify.R
 import com.ynt.purrytify.databinding.FragmentProfileBinding
-import com.ynt.purrytify.repository.SongRepository
+import com.ynt.purrytify.ui.connection.ConnectivityViewModel
+import com.ynt.purrytify.utils.AndroidConnectivityObserver
 import com.ynt.purrytify.utils.TokenStorage
 
 class ProfileFragment : Fragment() {
@@ -79,8 +79,32 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val profileCompose: ComposeView = view.findViewById(R.id.profile_compose_view)
         val profileViewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
+        val connectivityViewModel = ConnectivityViewModel(
+            AndroidConnectivityObserver(requireContext())
+        )
         profileCompose.setContent {
-            ProfileScreen(profileViewModel)
+            val viewModel = viewModel<ConnectivityViewModel> {
+                ConnectivityViewModel(
+                    connectivityObserver = AndroidConnectivityObserver(
+                        context = requireContext()
+                    )
+                )
+            }
+            val isConnected = viewModel.isConnected.collectAsStateWithLifecycle()
+            if (isConnected.value) ProfileScreen(profileViewModel)
+            else
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                ) {
+                    Text(
+                        text = "You are offline",
+                        fontSize = 36.sp,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                    )
+                }
         }
     }
 }
