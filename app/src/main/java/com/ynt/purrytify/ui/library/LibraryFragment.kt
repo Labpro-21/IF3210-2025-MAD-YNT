@@ -85,7 +85,10 @@ fun LibraryLayout(viewModel: LibraryViewModel){
     val token = tokenStorage.getAccessToken()
     val loggedInUser = viewModel.loggedInUser.observeAsState("")
     val selectedChoiceIndex = remember { mutableIntStateOf(0) }
-    val sheetState = rememberModalBottomSheetState()
+
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
 
     LaunchedEffect(token) {
         if (!token.isNullOrEmpty()) {
@@ -99,7 +102,7 @@ fun LibraryLayout(viewModel: LibraryViewModel){
             libraryViewModel = viewModel,
             loggedInUser = loggedInUser.value,
             context = localContext,
-            sheetState = sheetState
+            sheetState = sheetState,
         )
     }
     Scaffold(
@@ -122,22 +125,17 @@ fun LibraryLayout(viewModel: LibraryViewModel){
                     localContext = localContext,
                     lifecycleOwner = lifecycleOwner,
                     loggedInUser = loggedInUser.value,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    choice = selectedChoiceIndex.intValue,
+                    updateLikeSong = {
+                        val songCopy = it.copy(isLiked = if(it.isLiked==1) 0 else 1)
+                        viewModel.update(songCopy)
+                    }
                 )
             }
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
 
 //@Preview(
 //    showBackground = true,

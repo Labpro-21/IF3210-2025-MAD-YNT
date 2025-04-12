@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -39,7 +38,7 @@ fun AddSong(
     libraryViewModel: LibraryViewModel,
     loggedInUser: String,
     context: Context,
-    sheetState: SheetState
+    sheetState: SheetState,
 ){
     val title = remember  { mutableStateOf("") }
     val artist = remember{ mutableStateOf("") }
@@ -63,7 +62,6 @@ fun AddSong(
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxHeight()
                     .verticalScroll(rememberScrollState())
             ) {
                 Column(
@@ -114,6 +112,7 @@ fun AddSong(
                         .padding(
                             start = 16.dp,
                             end = 16.dp,
+                            bottom = 16.dp
                         ),
                 ) {
                     CancelButton(coroutineScope, sheetState, setShowPopupSong)

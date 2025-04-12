@@ -10,6 +10,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ynt.purrytify.R
+import com.ynt.purrytify.database.song.Song
 import com.ynt.purrytify.ui.library.LibraryViewModel
 import com.ynt.purrytify.ui.library.ListSongAdapter
 
@@ -18,7 +19,9 @@ fun SongListRecyclerView(
     localContext: Context,
     viewModel: LibraryViewModel,
     lifecycleOwner: LifecycleOwner,
-    loggedInUser: String
+    loggedInUser: String,
+    choice: Int,
+    updateLikeSong: (Song) -> Unit
 ){
     AndroidView(
         modifier = Modifier,
@@ -32,7 +35,7 @@ fun SongListRecyclerView(
             val rvSongs: RecyclerView = view.findViewById(R.id.rv_songs)
             rvSongs.setHasFixedSize(true)
             rvSongs.layoutManager = LinearLayoutManager(localContext)
-            val listSongAdapter = ListSongAdapter(emptyList())
+            val listSongAdapter = ListSongAdapter(emptyList()) {}
             rvSongs.adapter = listSongAdapter
             viewModel.getAllSongs(loggedInUser).observe(lifecycleOwner) { songList ->
                 if (songList != null) {
@@ -41,5 +44,22 @@ fun SongListRecyclerView(
             }
             view
         },
+        update = { view ->
+            val rvSongs: RecyclerView = view.findViewById(R.id.rv_songs)
+            rvSongs.setHasFixedSize(true)
+            rvSongs.layoutManager = LinearLayoutManager(localContext)
+            val listSongAdapter = ListSongAdapter(emptyList()) {song: Song -> updateLikeSong(song) }
+            rvSongs.adapter = listSongAdapter
+            viewModel.getAllSongs(loggedInUser).observe(lifecycleOwner) { songList ->
+                val songFiltered = when(choice){
+                    0 -> songList
+                    1 -> songList.filter { it.isLiked == 1 }
+                    else -> songList
+                }
+                if (songList != null) {
+                    listSongAdapter.setListSongs(songFiltered)
+                }
+            }
+        }
     )
 }
