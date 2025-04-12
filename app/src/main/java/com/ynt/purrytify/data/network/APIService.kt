@@ -15,5 +15,5 @@ interface APIService {
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
     @GET("/api/profile")
-    suspend fun getProfile(@Header("Authorization") authHeader: String): Response<ProfileResponse>
+    suspend fun getProfile(@Header("Authorization") authHeader : String): Response<ProfileResponse>
 }

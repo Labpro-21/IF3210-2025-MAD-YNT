@@ -19,4 +19,7 @@ interface SongDao {
 
     @Query("SELECT * FROM song WHERE owner = :username ORDER BY date_added DESC")
     fun getAllSongs(username: String): LiveData<List<Song>>
+
+    @Query("SELECT COUNT(*) FROM song WHERE owner = :username")
+    fun countSongsPerUser(username: String): Int
 }

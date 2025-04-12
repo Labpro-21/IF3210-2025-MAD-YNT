@@ -26,4 +26,8 @@ class SongRepository(application: Application) {
     fun update(song: Song) {
         executorService.execute { mSongsDao.update(song) }
     }
+
+    fun countSongsPerUser(username: String): Int {
+        return mSongsDao.countSongsPerUser(username)
+    }
 }
