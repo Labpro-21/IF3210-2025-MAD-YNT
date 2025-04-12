@@ -1,16 +1,14 @@
 package com.ynt.purrytify.ui.library
 
-import android.content.Context
-import android.database.Cursor
-import android.net.Uri
 import android.os.Bundle
-import android.provider.OpenableColumns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.livedata.observeAsState
@@ -30,9 +28,6 @@ import com.ynt.purrytify.ui.library.ui.AddSong
 import com.ynt.purrytify.ui.library.ui.LibraryTopBar
 import com.ynt.purrytify.ui.library.ui.SongListRecyclerView
 import com.ynt.purrytify.utils.TokenStorage
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
 
 class LibraryFragment : Fragment() {
     private var _binding: FragmentLibraryBinding? = null
@@ -80,6 +75,7 @@ class LibraryFragment : Fragment() {
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryLayout(viewModel: LibraryViewModel){
     val showPopUpAddSong = remember { mutableStateOf(false) }
@@ -89,6 +85,7 @@ fun LibraryLayout(viewModel: LibraryViewModel){
     val token = tokenStorage.getAccessToken()
     val loggedInUser = viewModel.loggedInUser.observeAsState("")
     val selectedChoiceIndex = remember { mutableIntStateOf(0) }
+    val sheetState = rememberModalBottomSheetState()
 
     LaunchedEffect(token) {
         if (!token.isNullOrEmpty()) {
@@ -96,13 +93,13 @@ fun LibraryLayout(viewModel: LibraryViewModel){
         }
     }
 
-
     if (showPopUpAddSong.value) {
         AddSong(
             setShowPopupSong = { showPopUpAddSong.value = it },
             libraryViewModel = viewModel,
             loggedInUser = loggedInUser.value,
-            context = localContext
+            context = localContext,
+            sheetState = sheetState
         )
     }
     Scaffold(
@@ -132,54 +129,11 @@ fun LibraryLayout(viewModel: LibraryViewModel){
     }
 }
 
-fun getFileNameFromUri(context: Context, uri: Uri): String {
-    var name = "unknown_file"
-    val cursor: Cursor? = context.contentResolver.query(uri, null, null, null, null)
-    cursor?.use {
-        val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-        if (nameIndex != -1 && it.moveToFirst()) {
-            name = it.getString(nameIndex)
-        }
-    }
-    return name
-}
 
-fun copyUriToExternalStorage(context: Context, uri: Uri, filename: String): Uri? {
-    return try {
-        val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
-        val outputDir = context.getExternalFilesDir("songs")
-        if (inputStream != null && outputDir != null) {
-            val outFile = File(outputDir, filename)
-            FileOutputStream(outFile).use { output ->
-                inputStream.copyTo(output)
-            }
-            Uri.fromFile(outFile)
-        } else {
-            null
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-}
 
-fun copyUriToStorage(context: Context, uri: Uri): Uri? {
-    return try {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        val fileName = "${System.currentTimeMillis()}.jpg"
-        val outputFile = File(context.filesDir, fileName)
 
-        inputStream?.use { input ->
-            FileOutputStream(outputFile).use { output ->
-                input.copyTo(output)
-            }
-        }
-        Uri.fromFile(outputFile)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
-}
+
+
 
 
 

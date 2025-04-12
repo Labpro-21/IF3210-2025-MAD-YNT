@@ -16,13 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.ynt.purrytify.R
-import com.ynt.purrytify.database.song.Song
 import com.ynt.purrytify.ui.library.LibraryViewModel
-import com.ynt.purrytify.ui.library.copyUriToExternalStorage
-import com.ynt.purrytify.ui.library.copyUriToStorage
-import com.ynt.purrytify.ui.library.getFileNameFromUri
+import com.ynt.purrytify.ui.library.utils.saveButtonOnClick
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,25 +39,18 @@ fun SaveButton(
         colors = ButtonDefaults.buttonColors(colorResource(R.color.green)),
         enabled = isButtonEnabled,
         onClick = {
-            if (songUri != null) {
-                val savedSongUri = copyUriToExternalStorage(context,songUri,
-                    getFileNameFromUri(context, songUri)
-                )
-                val savedImageUri = if(imageUri!=null) copyUriToStorage(context,imageUri) else null
-                libraryViewModel.insert(
-                    Song(
-                        title = title,
-                        artist = artist,
-                        owner = songOwner,
-                        image = savedImageUri.toString(),
-                        audio = savedSongUri.toString()
-                    )
-                )
-            }
-            coroutineScope.launch {
-                sheetState.hide()
-                setShowPopupSong(false)
-            }
+            saveButtonOnClick(
+                songUri = songUri,
+                imageUri = imageUri,
+                context = context,
+                libraryViewModel = libraryViewModel,
+                title = title,
+                artist = artist,
+                songOwner = songOwner,
+                coroutineScope = coroutineScope,
+                sheetState = sheetState,
+                setShowPopupSong = setShowPopupSong
+            )
         },
         modifier = Modifier
             .height(36.dp)

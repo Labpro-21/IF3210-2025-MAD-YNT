@@ -17,7 +17,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ynt.purrytify.R
-import com.ynt.purrytify.ui.library.getFileNameFromUri
+import com.ynt.purrytify.ui.library.utils.getFileNameFromUri
 
 @Composable
 fun SongPicker(
