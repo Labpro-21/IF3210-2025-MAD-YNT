@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
             AppNavigation(
                 onNavigateToDashboard = {
                     startActivity(Intent(this, MainAppActivity::class.java))
-                    finish() // Close the login screen so back button doesn’t return to it
+                    finish()
                 }
             )
         }

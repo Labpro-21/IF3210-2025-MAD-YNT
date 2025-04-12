@@ -70,17 +70,18 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.runtime.livedata)
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.core.splashscreen)
     // Retrofit and Gson
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+    implementation(libs.kotlinx.coroutines.android)
     // EncryptedSharedPreferences
-    implementation("androidx.security:security-crypto:1.1.0-alpha03")
+    implementation(libs.androidx.security.crypto)
     // Lifecycle ViewModel + LiveData (if needed)
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
     ksp(libs.room.compiler)
 }
