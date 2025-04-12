@@ -6,9 +6,11 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -50,7 +52,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -72,6 +76,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -81,6 +86,7 @@ import coil.request.ImageRequest
 import com.ynt.purrytify.R
 import com.ynt.purrytify.database.song.Song
 import com.ynt.purrytify.databinding.FragmentLibraryBinding
+import com.ynt.purrytify.utils.TokenStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
@@ -138,58 +144,86 @@ fun LibraryLayout(viewModel: LibraryViewModel){
     val showPopUpAddSong = remember { mutableStateOf(false) }
     val lifecycleOwner = LocalLifecycleOwner.current
     val localContext = LocalContext.current
+    val tokenStorage = remember { TokenStorage(localContext) }
+    val token = tokenStorage.getAccessToken()
+    val loggedInUser = viewModel.loggedInUser.observeAsState("")
+    LaunchedEffect(token) {
+        if (!token.isNullOrEmpty()) {
+            viewModel.loadUserProfile(token)
+        }
+    }
+
+
     if (showPopUpAddSong.value) {
-        AddSong(setShowPopupSong = { showPopUpAddSong.value = it }, viewModel)
+        AddSong(setShowPopupSong = { showPopUpAddSong.value = it }, viewModel, loggedInUser.value)
     }
     Scaffold(
         topBar = {
             LibraryTopBar(
                 title = "Your Library",
-                onAddClick = { showPopUpAddSong.value = true }
+                onAddClick = { showPopUpAddSong.value = true },
             )
 
         },
         containerColor = Color.Black
     ) { innerPadding ->
         Box(
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+
         ){
-            AndroidView(
-                modifier = Modifier,
-                factory = {
-                    val view = View.inflate(it, R.layout.recyclerview_library, null).apply {
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                    }
+            if (!loggedInUser.value.isNullOrEmpty()) {
+                SongListRecyclerView(
+                    localContext = localContext,
+                    lifecycleOwner = lifecycleOwner,
+                    loggedInUser = loggedInUser.value,
+                    viewModel = viewModel
+                )
+            } else {
 
-                    val rvSongs: RecyclerView = view.findViewById(R.id.rv_songs)
-                    rvSongs.setHasFixedSize(true)
-                    rvSongs.layoutManager = LinearLayoutManager(localContext)
-
-                    val listSongAdapter = ListSongAdapter(emptyList())
-                    rvSongs.adapter = listSongAdapter
-
-                    viewModel.getAllSongs().observe(lifecycleOwner) { songList ->
-                        if (songList != null) {
-                            listSongAdapter.setListSongs(songList)
-                        }
-                    }
-
-                    view
-                },
-//                update = { }
-            )
+            }
         }
     }
 }
 
+@Composable
+fun SongListRecyclerView(
+    localContext: Context,
+    viewModel: LibraryViewModel,
+    lifecycleOwner: LifecycleOwner,
+    loggedInUser: String
+    ){
+
+    AndroidView(
+        modifier = Modifier,
+        factory = {
+            val view = View.inflate(it, R.layout.recyclerview_library, null).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+            val rvSongs: RecyclerView = view.findViewById(R.id.rv_songs)
+            rvSongs.setHasFixedSize(true)
+            rvSongs.layoutManager = LinearLayoutManager(localContext)
+
+            val listSongAdapter = ListSongAdapter(emptyList())
+            rvSongs.adapter = listSongAdapter
+
+            viewModel.getAllSongs(loggedInUser).observe(lifecycleOwner) { songList ->
+//                Log.d("UsernameCheck", "Fetching songs for: ${loggedInUser}")
+                if (songList != null) {
+                    listSongAdapter.setListSongs(songList)
+                }
+            }
+
+            view
+        },
+    )}
 
 @Composable
 fun LibraryTopBar(
     title: String,
-    onAddClick: () -> Unit
+    onAddClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -279,14 +313,17 @@ fun LibraryButtons(){
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddSong(setShowPopupSong: (Boolean)->Unit,libraryViewModel: LibraryViewModel){
+fun AddSong(setShowPopupSong: (Boolean)->Unit,libraryViewModel: LibraryViewModel, loggedInUser: String){
     val title = remember  { mutableStateOf("") }
     val artist = remember{ mutableStateOf("") }
     val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
     val selectedSongUri = remember { mutableStateOf<Uri?>(null) }
     val sheetState = rememberModalBottomSheetState()
     val coroutineScope = rememberCoroutineScope()
-
+    if (loggedInUser == ""){
+        Toast.makeText(LocalContext.current, "You are not logged in", Toast.LENGTH_SHORT).show()
+        return
+    }
     ModalBottomSheet(
         onDismissRequest = {
             coroutineScope.launch {
@@ -358,6 +395,7 @@ fun AddSong(setShowPopupSong: (Boolean)->Unit,libraryViewModel: LibraryViewModel
                 libraryViewModel = libraryViewModel,
                 imageUri = selectedImageUri.value,
                 songUri = selectedSongUri.value,
+                songOwner = loggedInUser,
                 coroutineScope = coroutineScope,
                 sheetState =sheetState,
                 setShowPopupSong = setShowPopupSong
@@ -375,39 +413,38 @@ fun SaveButton(
     artist: String,
     imageUri: Uri?,
     songUri: Uri?,
+    songOwner: String,
     libraryViewModel: LibraryViewModel,
     coroutineScope: CoroutineScope,
     sheetState: SheetState,
     setShowPopupSong: (Boolean) -> Unit
 ) {
     val context = LocalContext.current
-
+    val isButtonEnabled = title.isNotBlank() && artist.isNotBlank() && songUri != null
     Button(
         colors = ButtonDefaults.buttonColors(colorResource(R.color.green)),
+        enabled = isButtonEnabled,
         onClick = {
-            if (imageUri != null && songUri != null) {
-
+            if (songUri != null) {
                 val savedSongUri = copyUriToExternalStorage(context,songUri,getFileNameFromUri(context, songUri))
-                val savedImageUri = copyUriToStorage(context,imageUri)
-
-
+                val savedImageUri = if(imageUri!=null) copyUriToStorage(context,imageUri) else null
                 libraryViewModel.insert(
                     Song(
                         title = title,
                         artist = artist,
-                        owner = "meong",
+                        owner = songOwner,
                         image = savedImageUri.toString(),
                         audio = savedSongUri.toString()
                     )
                 )
             } else {
-                libraryViewModel.insert(
-                    Song(
-                        title = title,
-                        artist = artist,
-                        owner = "meong"
-                    )
-                )
+//                libraryViewModel.insert(
+//                    Song(
+//                        title = title,
+//                        artist = artist,
+//                        owner = ""
+//                    )
+//                )
             }
             coroutineScope.launch {
                 sheetState.hide()
@@ -545,7 +582,7 @@ fun SongPicker(
         if (songUri.value != null) {
             val fileName = getFileNameFromUri(context, songUri.value!!)
             Text(
-                text = "Selected: $fileName",
+                text = "$fileName",
                 color = Color.White,
                 fontSize = 14.sp
             )

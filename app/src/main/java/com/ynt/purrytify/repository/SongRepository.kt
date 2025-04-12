@@ -15,7 +15,7 @@ class SongRepository(application: Application) {
         val db = SongRoomDatabase.getDatabase(application)
         mSongsDao = db.songDao()
     }
-    fun getAllSongs(): LiveData<List<Song>> = mSongsDao.getAllSongs()
+    fun getAllSongs(username: String): LiveData<List<Song>> = mSongsDao.getAllSongs(username)
 
     fun insert(song: Song) {
         executorService.execute { mSongsDao.insert(song) }
