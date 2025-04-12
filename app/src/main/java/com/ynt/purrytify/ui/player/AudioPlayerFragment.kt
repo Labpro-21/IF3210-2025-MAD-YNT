@@ -29,7 +29,6 @@ import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.database.song.Song
 import com.ynt.purrytify.ui.library.LibraryViewModel
 import kotlinx.coroutines.delay
-import kotlinx.parcelize.Parcelize
 
 class AudioPlayerFragment : Fragment() {
 
@@ -42,11 +41,36 @@ class AudioPlayerFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                val song = arguments?.getParcelable<Song>("song")
-                song?.let {
-                    AudioPlayerScreen(song = it, viewModel = viewModel)
-                } ?: run {
-                    Text("No song data provided", color = Color.White)
+                val songList = remember { mutableStateListOf<Song>() }
+                val currentIndex = remember { mutableIntStateOf(0) }
+
+                val bundleSongs = arguments?.getParcelableArrayList<Song>("songs")
+                val initialSong = arguments?.getParcelable<Song>("song")
+
+                LaunchedEffect(Unit) {
+                    if (bundleSongs != null && initialSong != null) {
+                        songList.addAll(bundleSongs)
+                        currentIndex.value = songList.indexOfFirst { it.id == initialSong.id }.coerceAtLeast(0)
+                    }
+                }
+
+                if (songList.isNotEmpty()) {
+                    AudioPlayerScreen(
+                        song = songList[currentIndex.value],
+                        viewModel = viewModel,
+                        onNext = {
+                            if (currentIndex.value < songList.lastIndex) {
+                                currentIndex.value += 1
+                            }
+                        },
+                        onPrevious = {
+                            if (currentIndex.value > 0) {
+                                currentIndex.value -= 1
+                            }
+                        }
+                    )
+                } else {
+                    Text("No song loaded", color = Color.White)
                 }
             }
         }
@@ -54,15 +78,20 @@ class AudioPlayerFragment : Fragment() {
 }
 
 @Composable
-fun AudioPlayerScreen(song: Song, viewModel: LibraryViewModel) {
+fun AudioPlayerScreen(
+    song: Song,
+    viewModel: LibraryViewModel,
+    onNext: () -> Unit,
+    onPrevious: () -> Unit
+) {
     val context = LocalContext.current
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
-    var isPlaying by remember { mutableStateOf(false) }
+    var isPlaying by remember { mutableStateOf(true) }
     var currentPosition by remember { mutableIntStateOf(0) }
     var duration by remember { mutableIntStateOf(song.duration) }
+
     val handler = remember { Handler(Looper.getMainLooper()) }
 
-    // MediaPlayer init
     LaunchedEffect(song) {
         mediaPlayer?.release()
         mediaPlayer = MediaPlayer().apply {
@@ -87,7 +116,6 @@ fun AudioPlayerScreen(song: Song, viewModel: LibraryViewModel) {
         }
     }
 
-    // UI
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -116,16 +144,8 @@ fun AudioPlayerScreen(song: Song, viewModel: LibraryViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = song.title ?: "Unknown Title",
-                color = Color.White,
-                fontSize = 24.sp
-            )
-            Text(
-                text = song.artist ?: "Unknown Artist",
-                color = Color.Gray,
-                fontSize = 16.sp
-            )
+            Text(song.title ?: "Unknown Title", color = Color.White, fontSize = 24.sp)
+            Text(song.artist ?: "Unknown Artist", color = Color.Gray, fontSize = 16.sp)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -142,14 +162,13 @@ fun AudioPlayerScreen(song: Song, viewModel: LibraryViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Seek Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = formatTime(currentPosition), color = Color.White, fontSize = 12.sp)
+                Text(formatTime(currentPosition), color = Color.White, fontSize = 12.sp)
                 Slider(
                     value = currentPosition.toFloat(),
                     onValueChange = {
@@ -159,7 +178,7 @@ fun AudioPlayerScreen(song: Song, viewModel: LibraryViewModel) {
                     valueRange = 0f..duration.toFloat(),
                     modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
                 )
-                Text(text = formatTime(duration), color = Color.White, fontSize = 12.sp)
+                Text(formatTime(duration), color = Color.White, fontSize = 12.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -169,7 +188,7 @@ fun AudioPlayerScreen(song: Song, viewModel: LibraryViewModel) {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { /* Previous song logic */ }) {
+                IconButton(onClick = { onPrevious() }) {
                     Icon(Icons.Default.SkipPrevious, contentDescription = null, tint = Color.White)
                 }
                 IconButton(onClick = {
@@ -187,7 +206,7 @@ fun AudioPlayerScreen(song: Song, viewModel: LibraryViewModel) {
                         modifier = Modifier.size(48.dp)
                     )
                 }
-                IconButton(onClick = { /* Next song logic */ }) {
+                IconButton(onClick = { onNext() }) {
                     Icon(Icons.Default.SkipNext, contentDescription = null, tint = Color.White)
                 }
             }
