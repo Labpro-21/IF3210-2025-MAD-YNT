@@ -44,15 +44,6 @@ class MainAppActivity : AppCompatActivity() {
             val navView: BottomNavigationView = binding.navView
             val navController = findNavController(R.id.nav_host_fragment_activity_main)
 
-            val appBarConfiguration = AppBarConfiguration(
-                setOf(
-                    R.id.navigation_home, R.id.navigation_library, R.id.navigation_profile
-                )
-            )
-
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        navView.setupWithNavController(navController)
-
         val networkSensing = binding.networkSensing
         val connectivityViewModel = ConnectivityViewModel(
             AndroidConnectivityObserver(applicationContext)
@@ -63,25 +54,8 @@ class MainAppActivity : AppCompatActivity() {
             }
         }
 
-        //ini buat testing logout, comment aja kalo mau buat component lain
-//        val logoutButton = Button(this).apply {
-//            text = "Logout"
-//            setOnClickListener {
-//                logout(this@MainAppActivity)
-//            }
-//        }
-//        binding.root.addView(logoutButton)
-
-
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             navView.setupWithNavController(navController)
-//            val logoutButton = Button(this@MainAppActivity).apply {
-//                text = "Logout"
-//                setOnClickListener {
-//                    logout(this@MainAppActivity)
-//                }
-//            }
-//            binding.root.addView(logoutButton)
         }
     }
 
