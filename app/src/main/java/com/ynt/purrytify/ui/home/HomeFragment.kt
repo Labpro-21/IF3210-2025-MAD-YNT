@@ -81,6 +81,8 @@ fun HomeScreen(viewModel: HomeViewModel) {
 
     val songsListState = viewModel.songList.observeAsState(emptyList())
     val songList: List<Song> = songsListState.value
+    val recentlySongState = viewModel.songListRecently.observeAsState(emptyList())
+    val recentlySong: List<Song> = recentlySongState.value
 
     Column (
         modifier = Modifier
@@ -91,6 +93,6 @@ fun HomeScreen(viewModel: HomeViewModel) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        RecentlyPlayed()
+        RecentlyPlayed(recentlySong)
     }
 }

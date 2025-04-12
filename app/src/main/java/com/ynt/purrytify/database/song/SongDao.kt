@@ -31,4 +31,7 @@ interface SongDao {
 
     @Query("SELECT * FROM song WHERE owner = :username ORDER BY date_added DESC LIMIT 10")
     fun getNewSongs(username: String): LiveData<List<Song>>
+
+    @Query("SELECT * FROM song WHERE owner = :username AND last_played != 0 ORDER BY last_played DESC LIMIT 10")
+    fun getRecentlyPlayed(username: String): LiveData<List<Song>>
 }

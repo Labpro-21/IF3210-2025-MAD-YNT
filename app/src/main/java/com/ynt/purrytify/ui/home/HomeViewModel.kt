@@ -14,13 +14,11 @@ import kotlinx.coroutines.launch
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val songRepo = SongRepository(application)
     val songList = MutableLiveData<List<Song>>()
+    val songListRecently = MutableLiveData<List<Song>>()
     private val api = RetrofitInstance.api
     private val _data = MutableLiveData<Result<ProfileResponse?>>()
     val data: LiveData<Result<ProfileResponse?>> = _data
-//    private val _text = MutableLiveData<String>().apply {
-//        value = "Home"
-//    }
-//    val text: LiveData<String> = _text
+
 
     fun loadNewSongs(token: String?) {
         viewModelScope.launch {
@@ -29,6 +27,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 if (response.isSuccessful) {
                     songRepo.getNewSongs(response.body()?.username ?: "-").observeForever { songs ->
                         songList.postValue(songs)
+                    }
+                    songRepo.getRecentlyPLayed(response.body()?.username ?: "-").observeForever { songs ->
+                        songListRecently.postValue(songs)
                     }
                 } else {
                     _data.value = Result.failure(Exception("Error: ${response.code()}"))
