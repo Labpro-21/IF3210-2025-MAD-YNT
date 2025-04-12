@@ -11,35 +11,26 @@ import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-fun saveButtonOnClick(
-    songUri: Uri?,
-    imageUri: Uri?,
-    duration: Int,
+fun editSaveButtonOnClick(
     context: Context,
     libraryViewModel: LibraryViewModel,
-    title:String,
-    artist:String,
-    songOwner:String,
     coroutineScope: CoroutineScope,
     sheetState: SheetState,
     setShowPopupSong: (Boolean) -> Unit,
+    song: Song,
+    imageUri: Uri?,
+    title: String,
+    artist: String,
 ){
-    if (songUri != null) {
-        val savedSongUri = copyUriToExternalStorage(context,songUri,
-            getFileNameFromUri(context, songUri)
-        )
+
         val savedImageUri = if(imageUri!=null) copyUriToStorage(context,imageUri) else null
-        libraryViewModel.insert(
-            Song(
-                title = title,
-                artist = artist,
-                owner = songOwner,
+        libraryViewModel.update(
+            song.copy(
                 image = savedImageUri.toString(),
-                audio = savedSongUri.toString(),
-                duration = duration
+                title = title,
+                artist = artist
             )
         )
-    }
     coroutineScope.launch {
         sheetState.hide()
         setShowPopupSong(false)

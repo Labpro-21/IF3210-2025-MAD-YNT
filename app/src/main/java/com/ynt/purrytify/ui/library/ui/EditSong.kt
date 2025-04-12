@@ -2,6 +2,7 @@ package com.ynt.purrytify.ui.library.ui
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,7 +17,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -28,25 +28,29 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import com.ynt.purrytify.R
+import com.ynt.purrytify.database.song.Song
 import com.ynt.purrytify.ui.library.LibraryViewModel
+import com.ynt.purrytify.ui.library.utils.getFileName
+import com.ynt.purrytify.ui.library.utils.getFileNameFromUri
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddSong(
+fun EditSong(
     setShowPopupSong: (Boolean)->Unit,
     libraryViewModel: LibraryViewModel,
     loggedInUser: String,
     context: Context,
     sheetState: SheetState,
+    song: Song
 ){
-    val title = remember  { mutableStateOf("") }
-    val artist = remember{ mutableStateOf("") }
-    val duration = remember { mutableIntStateOf(0) }
-    val selectedImageUri = remember { mutableStateOf<Uri?>(null) }
-    val selectedSongUri = remember { mutableStateOf<Uri?>(null) }
+    val title = remember  { mutableStateOf(song.title ?: "") }
+    val artist = remember{ mutableStateOf(song.artist ?: "") }
+    val selectedImageUri = remember { mutableStateOf(song.image?.toUri()) }
     val coroutineScope = rememberCoroutineScope()
+    val audioname = remember(song.audio) { getFileName(song.audio!!.toUri()) }
     if ((loggedInUser == "") || (loggedInUser == "Error fetching user data") ){
         Toast.makeText(LocalContext.current, "You are not logged in", Toast.LENGTH_SHORT).show()
         setShowPopupSong(false)
@@ -71,7 +75,7 @@ fun AddSong(
 
                 ) {
                     Text(
-                        text = "Upload Song",
+                        text = "Edit Song",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.White,
@@ -95,13 +99,11 @@ fun AddSong(
                             modifier = Modifier
                                 .width(24.dp)
                         )
-                        SongPicker(
-                            songUri = selectedSongUri.value,
-                            onSongPicked = { selectedSongUri.value = it },
-                            context = context,
-                            title = title,
-                            artists = artist,
-                            duration = duration
+                        Text(
+                            text = audioname,
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            modifier = Modifier.width(96.dp)
                         )
                     }
                     AddSongTextField(title, "Title", false)
@@ -120,19 +122,23 @@ fun AddSong(
                             bottom = 16.dp
                         ),
                 ) {
-                    CancelButton(coroutineScope, sheetState, setShowPopupSong)
-                    SaveButton(
-                        title = title.value,
-                        artist = artist.value,
+                    DeleteButton(
+                        coroutineScope =coroutineScope,
+                        sheetState =  sheetState,
+                        setShowPopupSong =  setShowPopupSong,
+                        song = song,
+                        libraryViewModel = libraryViewModel
+                    )
+                    EditSaveButton(
                         libraryViewModel = libraryViewModel,
-                        imageUri = selectedImageUri.value,
-                        songUri = selectedSongUri.value,
-                        songOwner = loggedInUser,
                         coroutineScope = coroutineScope,
                         sheetState = sheetState,
                         setShowPopupSong = setShowPopupSong,
                         context = context,
-                        duration = duration.value
+                        song = song,
+                        artist = artist.value,
+                        imageUri = selectedImageUri.value,
+                        title = title.value
                     )
                 }
             }
