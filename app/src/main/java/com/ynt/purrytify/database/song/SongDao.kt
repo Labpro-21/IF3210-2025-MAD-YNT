@@ -22,4 +22,7 @@ interface SongDao {
 
     @Query("SELECT COUNT(*) FROM song WHERE owner = :username")
     fun countSongsPerUser(username: String): LiveData<Int>
+
+    @Query("SELECT COUNT(*) FROM song WHERE owner = :username AND is_liked = 1")
+    fun countSongLiked(username: String): LiveData<Int>
 }
