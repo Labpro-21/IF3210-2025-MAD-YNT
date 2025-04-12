@@ -1,13 +1,43 @@
 package com.ynt.purrytify.ui.home
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.ynt.purrytify.data.model.ProfileResponse
+import com.ynt.purrytify.data.network.RetrofitInstance
+import com.ynt.purrytify.database.song.Song
+import com.ynt.purrytify.repository.SongRepository
+import kotlinx.coroutines.launch
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
+    private val songRepo = SongRepository(application)
+    val songList = MutableLiveData<List<Song>>()
+    val songListRecently = MutableLiveData<List<Song>>()
+    private val api = RetrofitInstance.api
+    private val _data = MutableLiveData<Result<ProfileResponse?>>()
+    val data: LiveData<Result<ProfileResponse?>> = _data
 
-    private val _text = MutableLiveData<String>().apply {
-        value = "This is home Fragment"
+
+    fun loadNewSongs(token: String?) {
+        viewModelScope.launch {
+            try {
+                val response = api.getProfile("Bearer $token")
+                if (response.isSuccessful) {
+                    songRepo.getNewSongs(response.body()?.username ?: "-").observeForever { songs ->
+                        songList.postValue(songs)
+                    }
+                    songRepo.getRecentlyPLayed(response.body()?.username ?: "-").observeForever { songs ->
+                        songListRecently.postValue(songs)
+                    }
+                } else {
+                    _data.value = Result.failure(Exception("Error: ${response.code()}"))
+                }
+            } catch (e: Exception) {
+                _data.value = Result.failure(e)
+            }
+
+        }
     }
-    val text: LiveData<String> = _text
 }
