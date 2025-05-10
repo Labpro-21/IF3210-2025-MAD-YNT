@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 
 import com.ynt.purrytify.MainActivity
-import com.ynt.purrytify.data.network.RetrofitInstance
+import com.ynt.purrytify.network.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException

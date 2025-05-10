@@ -5,7 +5,7 @@ import android.content.Intent
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.ynt.purrytify.MainActivity
-import com.ynt.purrytify.data.network.RetrofitInstance
+import com.ynt.purrytify.network.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
