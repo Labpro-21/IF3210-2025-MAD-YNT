@@ -6,7 +6,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -14,7 +13,7 @@ import com.ynt.purrytify.utils.Constants
 
 
 @Composable
-fun CustomNavBar(navController: NavController, isLoggedIn: MutableState<Boolean>){
+fun CustomNavBar(navController: NavController){
     NavigationBar {
         val navBackStackEntry = navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry.value?.destination?.route
