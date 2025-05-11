@@ -1,12 +1,13 @@
 package com.ynt.purrytify
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -120,16 +121,17 @@ fun MainApp(sessionManager: SessionManager) {
             if (showBottomBar) {
                 CustomNavBar(navController = navController)
             }
-        }
+        },
     ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = Screen.Login.route,
             modifier = Modifier.padding(innerPadding),
-            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(500)) },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(500)) },
-            popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(500)) },
-            popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(500)) }
+            enterTransition = { fadeIn(tween(300)) },
+            exitTransition = { fadeOut(tween(300)) },
+            popEnterTransition = { fadeIn(tween(300)) },
+            popExitTransition = { fadeOut(tween(300)) }
+
         ) {
             composable(Screen.Login.route) {
                 LoginScreen(
