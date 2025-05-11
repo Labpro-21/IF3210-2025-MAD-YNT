@@ -1,6 +1,7 @@
 package com.ynt.purrytify
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -22,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -89,7 +91,8 @@ fun MainApp(sessionManager: SessionManager) {
     val currentRoute = navBackStackEntry?.destination?.route
     val showBottomBar = currentRoute != Screen.Login.route
 
-    val isLoggedIn = remember { mutableStateOf(false) }
+    val isLoggedIn = rememberSaveable { mutableStateOf(false) }
+    val didAutoLogin = rememberSaveable { mutableStateOf(false) }
 
     val refreshScope = rememberCoroutineScope()
     var refreshJob by remember { mutableStateOf<Job?>(null) }
@@ -117,15 +120,14 @@ fun MainApp(sessionManager: SessionManager) {
         refreshJob = null
     }
 
-    LaunchedEffect(Unit) {
-        val loggedIn = sessionManager.isLoggedIn()
-        isLoggedIn.value = loggedIn
-
-        if (loggedIn) {
+    LaunchedEffect(isLoggedIn.value, didAutoLogin.value) {
+        if (isLoggedIn.value && !didAutoLogin.value) {
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
+                launchSingleTop = true
             }
             startRefreshLoop()
+            didAutoLogin.value = true
         }
     }
 
@@ -143,7 +145,7 @@ fun MainApp(sessionManager: SessionManager) {
                 CustomNavBar(navController = navController)
             }
         },
-        containerColor = Color(0xFF121212)
+        containerColor = Color.Black
     ) { innerPadding ->
         NavHost(
             navController = navController,
@@ -176,7 +178,8 @@ fun MainApp(sessionManager: SessionManager) {
 
             composable(Screen.Library.route) {
                 LibraryScreen(
-                    navController = navController
+                    navController = navController,
+                    sessionManager = sessionManager,
                 )
             }
 
