@@ -16,7 +16,6 @@ fun LibraryScreen(navController: NavController){
     val libraryViewModel: LibraryViewModel = viewModel()
     Box(
         modifier = Modifier.fillMaxSize()
-            .background(Color.Black)
     ){
         Text(
             text = "Testing",

@@ -14,7 +14,6 @@ import androidx.navigation.NavController
 fun ProfileScreen(navController: NavController){
     Box(
         modifier = Modifier.fillMaxSize()
-            .background(Color.Black)
     ){
         Text(
             text = "Testing",

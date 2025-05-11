@@ -14,7 +14,9 @@ import com.ynt.purrytify.utils.Constants
 
 @Composable
 fun CustomNavBar(navController: NavController){
-    NavigationBar {
+    NavigationBar(
+        containerColor = Color.Black
+    ) {
         val navBackStackEntry = navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry.value?.destination?.route
         Constants.BottomNavItems.forEach {

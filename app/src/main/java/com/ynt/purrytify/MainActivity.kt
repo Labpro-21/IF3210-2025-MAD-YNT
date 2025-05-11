@@ -4,24 +4,31 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -45,7 +52,21 @@ class MainActivity : ComponentActivity() {
         sessionManager = SessionManager(applicationContext)
         enableEdgeToEdge()
         setContent {
-            PurrytifyTheme {
+            val view = window.decorView
+            val darkIcons = false
+            SideEffect {
+                window.statusBarColor = Color(0xFF121212).toArgb()
+                window.navigationBarColor = Color.Black.toArgb()
+                val controller = WindowInsetsControllerCompat(window, view)
+                controller.isAppearanceLightStatusBars = darkIcons
+                controller.isAppearanceLightNavigationBars = darkIcons
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .safeDrawingPadding()
+            ) {
                 MainApp(sessionManager)
             }
         }
@@ -122,6 +143,7 @@ fun MainApp(sessionManager: SessionManager) {
                 CustomNavBar(navController = navController)
             }
         },
+        containerColor = Color(0xFF121212)
     ) { innerPadding ->
         NavHost(
             navController = navController,

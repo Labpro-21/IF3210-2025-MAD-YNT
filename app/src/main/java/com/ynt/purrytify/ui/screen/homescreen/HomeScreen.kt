@@ -15,7 +15,6 @@ import androidx.navigation.NavController
 fun HomeScreen(navController: NavController){
     Box(
         modifier = Modifier.fillMaxSize()
-            .background(Color.Black)
     ){
         Text(
             text = "Testing",
