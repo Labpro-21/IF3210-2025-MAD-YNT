@@ -55,6 +55,7 @@ fun LoginScreen(
 
     LaunchedEffect(Unit) {
         if (sessionManager.isLoggedIn()) {
+            sessionManager.refreshExpired()
             onLoginSuccess()
         } else {
             sessionManager.clearTokens()
