@@ -8,24 +8,44 @@ import com.ynt.purrytify.network.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
+import androidx.core.content.edit
 
 class SessionManager(private val context: Context) {
-    val tokenStorage = TokenStorage(context)
+    private val USER_CODE = "YNTUser"
+    private val user = context.getSharedPreferences(USER_CODE, Context.MODE_PRIVATE)
+    private val tokenStorage = TokenStorage(context)
 
-    fun getAccessToken(): String? = tokenStorage.getAccessToken()
-    fun getRefreshToken(): String? = tokenStorage.getRefreshToken()
-
-    fun isLoggedIn(): Boolean = !getAccessToken().isNullOrBlank()
-
-    fun logout() {
-        tokenStorage.clearTokens()
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        context.startActivity(intent)
+    fun setUser(value: String) {
+        user.edit { putString(USER_CODE, value) }
     }
 
-    suspend fun isTokenValid(): Boolean {
+    fun getUser(default: String = ""): String {
+        return user.getString(USER_CODE, default) ?: default
+    }
+
+    fun clearUser(){
+        user.edit { clear() }
+    }
+
+    private fun getAccessToken(): String? = tokenStorage.getAccessToken()
+    private fun getRefreshToken(): String? = tokenStorage.getRefreshToken()
+
+    fun saveTokens(accessToken: String,refreshToken: String){
+        tokenStorage.saveTokens(accessToken,refreshToken)
+    }
+
+    fun clearTokens(){
+        tokenStorage.clearTokens()
+    }
+
+    suspend fun isLoggedIn(): Boolean = (!getAccessToken().isNullOrBlank() && isTokenValid())
+
+    private fun logout() {
+        clearTokens()
+        clearUser()
+    }
+
+    private suspend fun isTokenValid(): Boolean {
         val accessToken = getAccessToken() ?: return false
         return withContext(Dispatchers.IO) {
             try {
@@ -39,7 +59,7 @@ class SessionManager(private val context: Context) {
         }
     }
 
-    suspend fun refreshToken(): Boolean {
+    private suspend fun refreshToken(): Boolean {
         val refreshToken = getRefreshToken() ?: return false
         return withContext(Dispatchers.IO) {
             try {
@@ -47,7 +67,7 @@ class SessionManager(private val context: Context) {
                 val response = RetrofitInstance.api.refreshToken(refreshTokenRequest)
                 if (response.isSuccessful) {
                     val body = response.body()
-                    if (body != null && !body.accessToken.isNullOrBlank()) {
+                    if (body != null && body.accessToken.isNotBlank()) {
                         tokenStorage.saveTokens(body.accessToken, body.refreshToken)
                         true
                     } else false
@@ -58,20 +78,17 @@ class SessionManager(private val context: Context) {
         }
     }
 
-    fun isTokenExpired(): Boolean {
+    private fun isTokenExpired(): Boolean {
         val token = getAccessToken() ?: return true
         return isJwtExpired(token)
     }
 
     suspend fun refreshExpired(): Boolean {
-        if (isTokenExpired()) {
-            val success = refreshToken()
-            if (!success) {
-                logout()
-                return false
-            }
+        val success = refreshToken()
+        if (!success) {
+            logout()
+            return false
         }
         return true
     }
-
 }

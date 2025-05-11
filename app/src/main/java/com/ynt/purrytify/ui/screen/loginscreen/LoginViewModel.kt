@@ -1,4 +1,4 @@
-package com.ynt.purrytify.ui.screen.loginscreen.component
+package com.ynt.purrytify.ui.screen.loginscreen
 
 import android.content.Context
 import androidx.lifecycle.ViewModel

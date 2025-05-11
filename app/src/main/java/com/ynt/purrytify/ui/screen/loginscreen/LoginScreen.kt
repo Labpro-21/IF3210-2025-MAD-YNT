@@ -29,15 +29,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ynt.purrytify.R
 import com.ynt.purrytify.ui.screen.loginscreen.component.EmailTextField
 import com.ynt.purrytify.ui.screen.loginscreen.component.LoginButton
-import com.ynt.purrytify.ui.screen.loginscreen.component.LoginState
-import com.ynt.purrytify.ui.screen.loginscreen.component.LoginViewModel
 import com.ynt.purrytify.ui.screen.loginscreen.component.PasswordTextField
 import com.ynt.purrytify.ui.screen.loginscreen.component.TitleText
-import com.ynt.purrytify.utils.TokenStorage
+import com.ynt.purrytify.utils.SessionManager
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit = {},
+    sessionManager: SessionManager,
     viewModel: LoginViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -45,12 +44,30 @@ fun LoginScreen(
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val tokenStorage = remember { TokenStorage(context) }
+    var isCheckingToken by remember { mutableStateOf(true) }
+
     LaunchedEffect(Unit) {
-        if (!tokenStorage.getAccessToken().isNullOrEmpty()) {
+        if (sessionManager.isLoggedIn()) {
             onLoginSuccess()
+        } else {
+            sessionManager.clearTokens()
+            sessionManager.clearUser()
+            isCheckingToken = false
         }
     }
+
+    if (isCheckingToken) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                color = Color(0xFF1BB452)
+            )
+        }
+        return
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -94,11 +111,12 @@ fun LoginScreen(
 
                 is LoginState.Success -> {
                     val loginResponse = loginState.data
-                    LaunchedEffect(Unit) {
-                        tokenStorage.saveTokens(
+                    LaunchedEffect(loginState) {
+                        sessionManager.saveTokens(
                             accessToken = loginResponse.accessToken,
                             refreshToken = loginResponse.refreshToken
                         )
+                        sessionManager.setUser(email)
                         onLoginSuccess()
                     }
                 }
