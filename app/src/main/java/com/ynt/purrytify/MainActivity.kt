@@ -1,7 +1,6 @@
 package com.ynt.purrytify
 
 import android.os.Bundle
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -36,7 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -55,9 +53,6 @@ import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
 import com.ynt.purrytify.utils.mediaplayer.SongPlayerLiveData
-import com.ynt.purrytify.utils.networksensing.AndroidConnectivityObserver
-import com.ynt.purrytify.utils.networksensing.ConnectivityViewModel
-import com.ynt.purrytify.utils.networksensing.ConnectivityViewModelFactory
 import com.ynt.purrytify.utils.queue.QueueManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
