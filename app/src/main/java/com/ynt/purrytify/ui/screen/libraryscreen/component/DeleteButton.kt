@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
+import com.ynt.purrytify.utils.queue.QueueManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -24,11 +25,13 @@ fun DeleteButton(
     sheetState: SheetState,
     setShowPopupSong: (Boolean) -> Unit,
     song: Song,
-    libraryViewModel: LibraryViewModel
+    libraryViewModel: LibraryViewModel,
+    queueManager: QueueManager
 ){
     Button(
         colors = ButtonDefaults.buttonColors(Color.Red),
         onClick = {
+            queueManager.removeSong(song)
             libraryViewModel.delete(song)
             coroutineScope.launch {
                 sheetState.hide()

@@ -13,13 +13,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -28,21 +31,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.net.toUri
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.ynt.purrytify.ui.component.CustomNavBar
+import com.ynt.purrytify.models.Song
+import com.ynt.purrytify.ui.component.BottomBar
 import com.ynt.purrytify.ui.screen.homescreen.HomeScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryScreen
+import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.loginscreen.LoginScreen
+import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.SessionManager
+import com.ynt.purrytify.utils.mediaplayer.SongPlayerLiveData
+import com.ynt.purrytify.utils.queue.QueueManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -82,13 +93,25 @@ sealed class Screen(val route: String) {
     data object Profile: Screen("profile")
 }
 
+enum class PlayerState {
+    STARTED, PAUSED, PLAYING, STOPPED
+}
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainApp(sessionManager: SessionManager) {
+fun MainApp(
+    sessionManager: SessionManager,
+    songPlayerLiveData: SongPlayerLiveData = viewModel(),
+    queueManager: QueueManager = remember { QueueManager() }
+) {
     val context = LocalContext.current
     val navController: NavHostController = rememberNavController()
+    val libraryViewModel: LibraryViewModel = viewModel()
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
     val showBottomBar = currentRoute != Screen.Login.route
 
     val isLoggedIn = rememberSaveable { mutableStateOf(false) }
@@ -97,13 +120,67 @@ fun MainApp(sessionManager: SessionManager) {
     val refreshScope = rememberCoroutineScope()
     var refreshJob by remember { mutableStateOf<Job?>(null) }
 
+    val currentSong = rememberSaveable{ mutableStateOf<Song?>(null) }
+    val currentSongPosition = rememberSaveable { mutableIntStateOf(0) }
+    val isPlaying = rememberSaveable { mutableStateOf(PlayerState.STOPPED) }
+
+    val showSongPlayerSheet = rememberSaveable { mutableStateOf(false) }
+    val showSongPlayerSheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true
+    )
+
+    val configuration = LocalConfiguration.current
+
+    LaunchedEffect(configuration.orientation){
+        with(songPlayerLiveData.songPlayer.value){
+            currentSongPosition.intValue = this?.getCurrentPosition()!!
+        }
+    }
+
+    LaunchedEffect(isPlaying.value) {
+        if (isPlaying.value == PlayerState.PLAYING) {
+            while (isPlaying.value == PlayerState.PLAYING) {
+                val position = songPlayerLiveData.songPlayer.value?.getCurrentPosition()
+                if (position != null) {
+                    currentSongPosition.intValue = position
+                }
+                delay(500)
+            }
+        }
+    }
+
+    LaunchedEffect(isPlaying.value) {
+        with(songPlayerLiveData.songPlayer.value) {
+            when (isPlaying.value) {
+                PlayerState.STOPPED -> {
+                }
+
+                PlayerState.PLAYING -> {
+                    this?.resumeAudio(currentSongPosition)
+                }
+
+                PlayerState.PAUSED -> {
+                    this?.pauseAudio(currentSongPosition)
+                }
+                PlayerState.STARTED -> {
+                    currentSong.value?.let { song ->
+                        this?.playAudioFromUri(
+                            context,
+                            song.audio?.toUri() ?: "".toUri(),
+                            isPlaying
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun startRefreshLoop() {
         refreshJob?.cancel()
         refreshJob = refreshScope.launch {
             while (isLoggedIn.value) {
                 delay(240_000L)
                 val success = sessionManager.refreshExpired()
-//                Log.d("TOKEN", "Refresh: $success")
                 if (!success) {
                     isLoggedIn.value = false
                     navController.navigate(Screen.Login.route) {
@@ -142,7 +219,37 @@ fun MainApp(sessionManager: SessionManager) {
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
-                CustomNavBar(navController = navController)
+                BottomBar(
+                    navController = navController,
+                    currentSong = currentSong,
+                    isPlaying = isPlaying,
+                    onSkip = {
+                        val nextSong = queueManager.skipToNext()
+                        currentSong.value = nextSong
+                        val songCopy = nextSong?.copy(lastPlayed = System.currentTimeMillis())
+                        if (songCopy != null) {
+                            libraryViewModel.update(songCopy)
+                        }
+                        currentSongPosition.intValue = 0
+                        if(queueManager.size.value==0){
+                            isPlaying.value = PlayerState.STOPPED
+                        }
+                        else{
+                            isPlaying.value = PlayerState.STARTED
+                        }
+                    },
+                    onPlay = {
+                        isPlaying.value = when (isPlaying.value){
+                            PlayerState.STOPPED -> PlayerState.STARTED
+                            PlayerState.PAUSED -> PlayerState.PLAYING
+                            PlayerState.STARTED -> PlayerState.PAUSED
+                            PlayerState.PLAYING -> PlayerState.PAUSED
+                        }
+                    },
+                    onClick = {
+                        showSongPlayerSheet.value = true
+                    }
+                )
             }
         },
         containerColor = Color.Black
@@ -180,6 +287,12 @@ fun MainApp(sessionManager: SessionManager) {
                 LibraryScreen(
                     navController = navController,
                     sessionManager = sessionManager,
+                    currentSong = currentSong,
+                    currentSongPosition = currentSongPosition,
+                    isPlaying = isPlaying,
+                    queueManager = queueManager,
+                    viewModel = libraryViewModel,
+                    showSongPlayerSheet = showSongPlayerSheet
                 )
             }
 
@@ -189,6 +302,18 @@ fun MainApp(sessionManager: SessionManager) {
                 )
             }
         }
+    }
+    if (showSongPlayerSheet.value) {
+        SongPlayerSheet(
+            setShowPopupSong = {showSongPlayerSheet.value = it},
+            queueManager = queueManager,
+            sheetState = showSongPlayerSheetState,
+            currentSong = currentSong,
+            libraryViewModel = libraryViewModel,
+            currentPosition = currentSongPosition,
+            isPlaying = isPlaying,
+            songPlayerLiveData = songPlayerLiveData
+        )
     }
 
     DisposableEffect(Unit) {

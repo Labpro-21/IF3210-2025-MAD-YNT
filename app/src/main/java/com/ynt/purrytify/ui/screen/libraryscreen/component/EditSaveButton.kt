@@ -11,6 +11,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
@@ -19,6 +20,7 @@ import com.ynt.purrytify.R
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.libraryscreen.utils.editSaveButtonOnClick
+import com.ynt.purrytify.utils.queue.QueueManager
 import kotlinx.coroutines.CoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,7 +34,9 @@ fun EditSaveButton(
     song: Song,
     title: String,
     artist:String,
-    imageUri: Uri?
+    imageUri: Uri?,
+    queueManager: QueueManager,
+    currentSong: MutableState<Song?>
 ) {
     val isButtonEnabled = title.isNotBlank() && artist.isNotBlank()
     Button(
@@ -48,7 +52,9 @@ fun EditSaveButton(
                 sheetState = sheetState,
                 setShowPopupSong = setShowPopupSong,
                 imageUri = imageUri,
-                song = song
+                song = song,
+                queueManager = queueManager,
+                currentSong = currentSong
             )
         },
         modifier = Modifier

@@ -29,16 +29,15 @@ fun saveButtonOnClick(
             getFileNameFromUri(context, songUri)
         )
         val savedImageUri = if(imageUri!=null) copyUriToStorage(context,imageUri) else null
-        libraryViewModel.insert(
-            Song(
-                title = title,
-                artist = artist,
-                owner = songOwner,
-                image = savedImageUri.toString(),
-                audio = savedSongUri.toString(),
-                duration = duration
-            )
+        val song = Song(
+            title = title,
+            artist = artist,
+            owner = songOwner,
+            image = savedImageUri.toString(),
+            audio = savedSongUri.toString(),
+            duration = duration
         )
+        libraryViewModel.insert(song)
     }
     coroutineScope.launch {
         sheetState.hide()

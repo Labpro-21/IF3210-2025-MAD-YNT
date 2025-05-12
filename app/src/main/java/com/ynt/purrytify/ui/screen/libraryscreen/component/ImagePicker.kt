@@ -47,7 +47,7 @@ fun ImagePicker(
                     model = ImageRequest.Builder(context)
                         .data(imageUri)
                         .crossfade(true)
-                        .size(512)
+                        .size(128)
                         .build()
                 )
                 ,
