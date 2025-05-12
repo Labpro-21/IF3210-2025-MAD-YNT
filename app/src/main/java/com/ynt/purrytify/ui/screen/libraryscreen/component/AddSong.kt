@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ynt.purrytify.R
+import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import kotlinx.coroutines.launch
 
@@ -132,7 +133,7 @@ fun AddSong(
                         sheetState = sheetState,
                         setShowPopupSong = setShowPopupSong,
                         context = context,
-                        duration = duration.value
+                        duration = duration.value,
                     )
                 }
             }

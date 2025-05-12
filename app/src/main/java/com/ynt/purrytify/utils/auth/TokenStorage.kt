@@ -1,4 +1,4 @@
-package com.ynt.purrytify.utils
+package com.ynt.purrytify.utils.auth
 
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences

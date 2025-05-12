@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.ynt.purrytify.R
+import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.libraryscreen.utils.saveButtonOnClick
 import kotlinx.coroutines.CoroutineScope
@@ -33,7 +34,7 @@ fun SaveButton(
     coroutineScope: CoroutineScope,
     sheetState: SheetState,
     setShowPopupSong: (Boolean) -> Unit,
-    context: Context
+    context: Context,
 ) {
     val isButtonEnabled = title.isNotBlank() && artist.isNotBlank() && songUri != null
     Button(
@@ -51,7 +52,7 @@ fun SaveButton(
                 coroutineScope = coroutineScope,
                 sheetState = sheetState,
                 setShowPopupSong = setShowPopupSong,
-                duration = duration
+                duration = duration,
             )
         },
         modifier = Modifier

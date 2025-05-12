@@ -31,6 +31,9 @@ class ListSongAdapter(var listSong: List<Song>,
         holder.imgPhoto.load(song.image)
         holder.editButton.load(R.drawable.baseline_more_vert_24)
         holder.likeButton.load(R.drawable.twotone_check_24)
+        holder.editButton.setColorFilter(
+            ContextCompat.getColor(holder.itemView.context,R.color.white)
+        )
         if (song.isLiked==1) {
             holder.likeButton.setColorFilter(
                 ContextCompat.getColor(holder.itemView.context, R.color.green),

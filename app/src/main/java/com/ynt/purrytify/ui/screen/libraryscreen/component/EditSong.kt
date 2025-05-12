@@ -15,6 +15,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -31,6 +32,7 @@ import com.ynt.purrytify.R
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.libraryscreen.utils.getFileName
+import com.ynt.purrytify.utils.queue.QueueManager
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,7 +43,9 @@ fun EditSong(
     loggedInUser: String,
     context: Context,
     sheetState: SheetState,
-    song: Song
+    song: Song,
+    queueManager: QueueManager,
+    currentSong: MutableState<Song?>
 ){
     val title = remember  { mutableStateOf(song.title ?: "") }
     val artist = remember{ mutableStateOf(song.artist ?: "") }
@@ -124,7 +128,8 @@ fun EditSong(
                         sheetState =  sheetState,
                         setShowPopupSong =  setShowPopupSong,
                         song = song,
-                        libraryViewModel = libraryViewModel
+                        libraryViewModel = libraryViewModel,
+                        queueManager = queueManager
                     )
                     EditSaveButton(
                         libraryViewModel = libraryViewModel,
@@ -135,7 +140,9 @@ fun EditSong(
                         song = song,
                         artist = artist.value,
                         imageUri = selectedImageUri.value,
-                        title = title.value
+                        title = title.value,
+                        queueManager = queueManager,
+                        currentSong = currentSong
                     )
                 }
             }

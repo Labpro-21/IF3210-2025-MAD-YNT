@@ -1,4 +1,4 @@
-package com.ynt.purrytify.utils
+package com.ynt.purrytify.utils.networksensing
 
 import kotlinx.coroutines.flow.Flow
 

@@ -30,7 +30,11 @@ fun CustomNavBar(navController: NavController){
                 },
                 onClick = {
                     navController.navigate(it.route){
-                        popUpTo(navController.graph.startDestinationId)
+                        popUpTo(navController.graph.startDestinationId){
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
                     }
                 },
                 alwaysShowLabel = false,
