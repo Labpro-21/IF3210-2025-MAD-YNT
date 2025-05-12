@@ -1,4 +1,4 @@
-package com.ynt.purrytify.utils
+package com.ynt.purrytify.utils.auth
 
 import android.util.Base64
 import org.json.JSONObject

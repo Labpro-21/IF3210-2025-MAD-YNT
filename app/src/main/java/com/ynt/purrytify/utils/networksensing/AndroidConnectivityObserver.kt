@@ -1,4 +1,4 @@
-package com.ynt.purrytify.utils
+package com.ynt.purrytify.utils.networksensing
 
 import android.content.Context
 import android.net.ConnectivityManager

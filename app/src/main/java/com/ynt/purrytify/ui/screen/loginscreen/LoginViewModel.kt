@@ -8,7 +8,7 @@ import com.ynt.purrytify.models.ErrorResponse
 import com.ynt.purrytify.models.LoginRequest
 import com.ynt.purrytify.models.LoginResponse
 import com.ynt.purrytify.network.RetrofitInstance
-import com.ynt.purrytify.utils.TokenStorage
+import com.ynt.purrytify.utils.auth.TokenStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch

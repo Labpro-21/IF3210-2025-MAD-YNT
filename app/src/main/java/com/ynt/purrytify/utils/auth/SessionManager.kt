@@ -1,8 +1,6 @@
-package com.ynt.purrytify.utils
+package com.ynt.purrytify.utils.auth
 
 import android.content.Context
-import android.content.Intent
-import com.ynt.purrytify.MainActivity
 import com.ynt.purrytify.models.RefreshTokenRequest
 import com.ynt.purrytify.network.RetrofitInstance
 import kotlinx.coroutines.Dispatchers

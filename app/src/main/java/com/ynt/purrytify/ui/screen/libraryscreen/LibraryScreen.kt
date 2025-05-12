@@ -24,7 +24,7 @@ import com.ynt.purrytify.ui.screen.libraryscreen.component.AddSong
 import com.ynt.purrytify.ui.screen.libraryscreen.component.EditSong
 import com.ynt.purrytify.ui.screen.libraryscreen.component.LibraryTopBar
 import com.ynt.purrytify.ui.screen.libraryscreen.component.SongListRecyclerView
-import com.ynt.purrytify.utils.SessionManager
+import com.ynt.purrytify.utils.auth.SessionManager
 import com.ynt.purrytify.utils.queue.QueueManager
 
 @OptIn(ExperimentalMaterial3Api::class)
