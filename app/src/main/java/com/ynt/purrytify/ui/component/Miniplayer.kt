@@ -1,9 +1,12 @@
 package com.ynt.purrytify.ui.component
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.Indication
+import androidx.compose.foundation.IndicationNodeFactory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -21,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -84,10 +88,11 @@ fun Miniplayer(
                 .padding(vertical = 12.dp, horizontal = 12.dp)
                 .weight(1f)
                 .clickable(
-                    onClick = {
-                        onClick()
-                    }
-                )
+                    indication = null,
+                    interactionSource = remember {MutableInteractionSource()}
+                ){
+                    onClick()
+                }
         ) {
             Text(
                 text = currentSong.value?.title ?: "Idle",
