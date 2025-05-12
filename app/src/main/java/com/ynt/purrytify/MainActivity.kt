@@ -170,7 +170,8 @@ fun MainApp(sessionManager: SessionManager) {
 
             composable(Screen.Home.route) {
                 HomeScreen(
-                    navController = navController
+                    navController = navController,
+                    sessionManager = sessionManager
                 )
             }
 
@@ -182,7 +183,8 @@ fun MainApp(sessionManager: SessionManager) {
 
             composable(Screen.Profile.route) {
                 ProfileScreen(
-                    navController = navController
+                    navController = navController,
+                    sessionManager = sessionManager,
                 )
             }
         }
