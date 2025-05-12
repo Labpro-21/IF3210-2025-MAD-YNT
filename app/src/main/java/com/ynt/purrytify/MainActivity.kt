@@ -45,6 +45,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.component.BottomBar
+import com.ynt.purrytify.ui.component.ConnectivityStatusBanner
 import com.ynt.purrytify.ui.screen.homescreen.HomeScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
@@ -54,6 +55,9 @@ import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
 import com.ynt.purrytify.utils.mediaplayer.SongPlayerLiveData
+import com.ynt.purrytify.utils.networksensing.AndroidConnectivityObserver
+import com.ynt.purrytify.utils.networksensing.ConnectivityViewModel
+import com.ynt.purrytify.utils.networksensing.ConnectivityViewModelFactory
 import com.ynt.purrytify.utils.queue.QueueManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -129,7 +133,6 @@ fun MainApp(
     val showSongPlayerSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
-
 
     val configuration = LocalConfiguration.current
 
@@ -219,6 +222,9 @@ fun MainApp(
     }
 
     Scaffold(
+        topBar = {
+            ConnectivityStatusBanner()
+        },
         bottomBar = {
             if (showBottomBar) {
                 BottomBar(
