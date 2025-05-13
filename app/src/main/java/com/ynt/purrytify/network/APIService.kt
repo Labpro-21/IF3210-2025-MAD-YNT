@@ -5,6 +5,7 @@ import com.ynt.purrytify.models.LoginResponse
 import com.ynt.purrytify.models.ProfileResponse
 import com.ynt.purrytify.models.RefreshTokenRequest
 import okhttp3.MultipartBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -27,10 +28,11 @@ interface APIService {
     @GET("/api/verify-token")
     suspend fun verifyToken(@Header("Authorization") authHeader: String): Response<Void>
 
+    @Multipart
     @PATCH("/api/profile")
     suspend fun editProfile(
         @Header("Authorization") authHeader: String,
-        @Part("location") location: MultipartBody.Part?,
+        @Part location: MultipartBody.Part?,
         @Part profilePhoto: MultipartBody.Part?
-    ): Response<Void>
+    ): Response<ResponseBody>
 }

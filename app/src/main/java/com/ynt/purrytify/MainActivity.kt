@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -191,7 +192,10 @@ fun MainApp(sessionManager: SessionManager) {
             }
 
             composable(Screen.EditProfile.route) {
-                EditProfileScreen(navController = navController)
+                EditProfileScreen(
+                    navController = navController,
+                    sessionManager = sessionManager
+                )
             }
         }
     }

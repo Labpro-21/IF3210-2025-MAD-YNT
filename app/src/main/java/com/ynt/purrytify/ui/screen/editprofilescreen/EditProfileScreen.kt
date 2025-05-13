@@ -31,16 +31,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.ui.screen.editprofilescreen.component.ChangePicturePopUp
 import com.ynt.purrytify.ui.screen.editprofilescreen.component.EditProfileHeader
 import com.ynt.purrytify.ui.screen.editprofilescreen.component.Maps
+import com.ynt.purrytify.utils.SessionManager
 import java.io.File
 
 @Composable
 fun EditProfileScreen(
     navController: NavController,
+    sessionManager: SessionManager,
+    viewModel: EditProfileViewModel = viewModel()
 ) {
     val context = LocalContext.current
     var imageUri by remember { mutableStateOf<Uri?>(null) }
@@ -62,6 +66,7 @@ fun EditProfileScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         imageUri = uri
+        viewModel.imageUri = uri
     }
 
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -69,6 +74,7 @@ fun EditProfileScreen(
     ) { success ->
         if (success) {
             imageUri = photoUri
+            viewModel.imageUri = photoUri
         }
     }
 
@@ -78,9 +84,9 @@ fun EditProfileScreen(
         ?.savedStateHandle
         ?.get<String>("photoURL")
 
-    val location = navController.previousBackStackEntry
-        ?.savedStateHandle
-        ?.get<String>("location")
+//    val location = navController.previousBackStackEntry
+//        ?.savedStateHandle
+//        ?.get<String>("location")
 
     val imageToDisplay = imageUri ?: photoURL
 
@@ -90,7 +96,11 @@ fun EditProfileScreen(
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
-        EditProfileHeader(navController = navController)
+        EditProfileHeader(
+            navController = navController,
+            viewModel = viewModel,
+            sessionManager = sessionManager
+        )
 
         Column(
             modifier = Modifier
@@ -131,16 +141,19 @@ fun EditProfileScreen(
                         onDismiss = { showDialog = false },
                         onSelectPicture = { launcher.launch("image/*") },
                         onTakePicture = {
-                            var uri = createImageUri()
+                            val uri = createImageUri()
                             photoUri = uri
                             cameraLauncher.launch(uri)
                         }
                     )
-
                 }
             }
 
-            Maps()
+            Maps(
+                onLocationSelected = { code ->
+                    viewModel.location = code
+                }
+            )
         }
     }
 }

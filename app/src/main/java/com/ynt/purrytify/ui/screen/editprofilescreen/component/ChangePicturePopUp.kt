@@ -1,10 +1,5 @@
 package com.ynt.purrytify.ui.screen.editprofilescreen.component
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,23 +21,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import android.Manifest
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
+import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ChangePicturePopUp(
     onDismiss: () -> Unit,
     onSelectPicture: () -> Unit,
-    onTakePicture: () -> Unit
+    onTakePicture: () -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
+//    val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var showBottomSheet by remember { mutableStateOf(false) }
+//    var showBottomSheet by remember { mutableStateOf(false) }
     val cameraPermissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
 
     ModalBottomSheet(
@@ -65,7 +58,9 @@ fun ChangePicturePopUp(
                     onClick = {
                         onSelectPicture()
                         onDismiss()
-                    }) {
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Choose Picture")
                 }
                 TextButton(
@@ -73,7 +68,9 @@ fun ChangePicturePopUp(
                         cameraPermissionState.launchPermissionRequest()
                         onTakePicture()
                         onDismiss()
-                }) {
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Text("Take Picture")
                 }
             }
