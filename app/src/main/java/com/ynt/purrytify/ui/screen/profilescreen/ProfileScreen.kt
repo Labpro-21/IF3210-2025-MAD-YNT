@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,19 +46,19 @@ fun ProfileScreen(
     }
 
     val result = viewModel.data.observeAsState().value
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(30.dp),
+            .padding(30.dp)
+            .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         result?.onSuccess { data ->
 
-            Spacer(modifier = Modifier.height(100.dp))
-            if (data != null) {
-                Log.d("PhotoURL", data.photoURL)
-            }
+//            Spacer(modifier = Modifier.height(100.dp))
+
             Image(
                 painter = rememberAsyncImagePainter(data?.photoURL),
                 contentDescription = "Profile Image",
@@ -82,7 +84,10 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(5.dp))
 
-            EditProfileButton {  }
+            EditProfileButton {
+                navController.currentBackStackEntry?.savedStateHandle?.set("photoURL", data?.photoURL)
+                navController.currentBackStackEntry?.savedStateHandle?.set("location", data?.location)
+                navController.navigate("editProfile") }
 
             Spacer(modifier = Modifier.height(50.dp))
 

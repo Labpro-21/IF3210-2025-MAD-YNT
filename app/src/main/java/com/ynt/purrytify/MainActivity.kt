@@ -38,6 +38,7 @@ import com.ynt.purrytify.ui.component.CustomNavBar
 import com.ynt.purrytify.ui.screen.homescreen.HomeScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryScreen
 import com.ynt.purrytify.ui.screen.loginscreen.LoginScreen
+import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.SessionManager
@@ -78,6 +79,7 @@ sealed class Screen(val route: String) {
     data object Library : Screen("library")
     data object Login : Screen("login")
     data object Profile: Screen("profile")
+    data object EditProfile: Screen("editProfile")
 }
 
 
@@ -186,6 +188,10 @@ fun MainApp(sessionManager: SessionManager) {
                     navController = navController,
                     sessionManager = sessionManager,
                 )
+            }
+
+            composable(Screen.EditProfile.route) {
+                EditProfileScreen(navController = navController)
             }
         }
     }
