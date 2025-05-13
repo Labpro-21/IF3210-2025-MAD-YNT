@@ -2,23 +2,21 @@ package com.ynt.purrytify.ui.screen.editprofilescreen
 
 import android.net.Uri
 import android.os.Environment
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +35,7 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.ui.screen.editprofilescreen.component.ChangePicturePopUp
 import com.ynt.purrytify.ui.screen.editprofilescreen.component.EditProfileHeader
+import com.ynt.purrytify.ui.screen.editprofilescreen.component.Maps
 import java.io.File
 
 @Composable
@@ -86,54 +85,62 @@ fun EditProfileScreen(
     val imageToDisplay = imageUri ?: photoURL
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
+
     ) {
         EditProfileHeader(navController = navController)
-        if (photoURL != null) {
-            Log.d("Picture", photoURL)
-        }
-        Box(modifier = Modifier.size(150.dp)) {
-            Image(
-                painter = rememberAsyncImagePainter(imageToDisplay),
-                contentDescription = "Profile Image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(150.dp)
-                    .clip(CircleShape)
-            )
 
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .size(40.dp)
-                    .background(Color.White, RoundedCornerShape(10.dp))
-                    .clickable(onClick = { showDialog = true }),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = "Back",
-                    tint = Color.Black,
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Box(modifier = Modifier.size(150.dp)) {
+                Image(
+                    painter = rememberAsyncImagePainter(imageToDisplay),
+                    contentDescription = "Profile Image",
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(30.dp)
-                        .align(Alignment.Center)
-                )
-            }
-
-            if (showDialog) {
-                ChangePicturePopUp(
-                    onDismiss = { showDialog = false },
-                    onSelectPicture = { launcher.launch("image/*") },
-                    onTakePicture = {
-                        var uri = createImageUri()
-                        photoUri = uri
-                        cameraLauncher.launch(uri)
-                    }
+                        .size(150.dp)
+                        .clip(CircleShape)
                 )
 
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(40.dp)
+                        .background(Color.White, RoundedCornerShape(10.dp))
+                        .clickable(onClick = { showDialog = true }),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = "Back",
+                        tint = Color.Black,
+                        modifier = Modifier
+                            .size(30.dp)
+                            .align(Alignment.Center)
+                    )
+                }
+
+                if (showDialog) {
+                    ChangePicturePopUp(
+                        onDismiss = { showDialog = false },
+                        onSelectPicture = { launcher.launch("image/*") },
+                        onTakePicture = {
+                            var uri = createImageUri()
+                            photoUri = uri
+                            cameraLauncher.launch(uri)
+                        }
+                    )
+
+                }
             }
+
+            Maps()
         }
-
-//        Maps
     }
 }
