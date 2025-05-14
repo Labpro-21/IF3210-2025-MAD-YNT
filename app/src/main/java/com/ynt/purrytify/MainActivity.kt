@@ -49,6 +49,7 @@ import com.ynt.purrytify.ui.screen.libraryscreen.LibraryScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.loginscreen.LoginScreen
 import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
+import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
@@ -91,6 +92,7 @@ sealed class Screen(val route: String) {
     data object Library : Screen("library")
     data object Login : Screen("login")
     data object Profile: Screen("profile")
+    data object EditProfile: Screen("editProfile")
 }
 
 enum class PlayerState {
@@ -282,7 +284,8 @@ fun MainApp(
 
             composable(Screen.Home.route) {
                 HomeScreen(
-                    navController = navController
+                    navController = navController,
+                    sessionManager = sessionManager
                 )
             }
 
@@ -301,7 +304,15 @@ fun MainApp(
 
             composable(Screen.Profile.route) {
                 ProfileScreen(
-                    navController = navController
+                    navController = navController,
+                    sessionManager = sessionManager,
+                )
+            }
+
+            composable(Screen.EditProfile.route) {
+                EditProfileScreen(
+                    navController = navController,
+                    sessionManager = sessionManager
                 )
             }
         }

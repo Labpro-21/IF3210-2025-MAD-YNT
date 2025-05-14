@@ -13,5 +13,5 @@ data class ProfileResponse(
     val updatedAt: Date
 ) {
     val photoURL: String
-        get() = "https://34.101.226.132:3000/uploads/profile-picture/$profilePhoto"
+        get() = "http://34.101.226.132:3000/uploads/profile-picture/$profilePhoto"
 }
