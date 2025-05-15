@@ -25,7 +25,7 @@ class SessionManager(private val context: Context) {
         user.edit { clear() }
     }
 
-    private fun getAccessToken(): String? = tokenStorage.getAccessToken()
+    fun getAccessToken(): String? = tokenStorage.getAccessToken()
     private fun getRefreshToken(): String? = tokenStorage.getRefreshToken()
 
     fun saveTokens(accessToken: String,refreshToken: String){
@@ -38,7 +38,7 @@ class SessionManager(private val context: Context) {
 
     suspend fun isLoggedIn(): Boolean = (!getAccessToken().isNullOrBlank() && isTokenValid())
 
-    private fun logout() {
+    fun logout() {
         clearTokens()
         clearUser()
     }

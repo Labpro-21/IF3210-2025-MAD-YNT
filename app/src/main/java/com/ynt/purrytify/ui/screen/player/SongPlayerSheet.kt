@@ -1,6 +1,9 @@
 package com.ynt.purrytify.ui.screen.player
 
-import android.content.Context
+import android.content.ContentResolver
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -28,7 +31,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderColors
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,11 +42,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.PlayerState
 import com.ynt.purrytify.R
@@ -53,6 +58,9 @@ import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.utils.mediaplayer.SongPlayerLiveData
 import com.ynt.purrytify.utils.queue.QueueManager
 import kotlinx.coroutines.launch
+import androidx.core.graphics.scale
+import androidx.core.graphics.get
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +78,11 @@ fun SongPlayerSheet(
     val coroutineScope = rememberCoroutineScope()
     val duration = currentSong.value?.duration
     val interactionSource = remember {MutableInteractionSource()}
+    val contentResolver = LocalContext.current.contentResolver
+    val imageBitmap = getBitmap(contentResolver,currentSong.value?.image?.toUri())
+    val dominantColor = getDominantColor(
+        bitmap = imageBitmap
+    )
     ModalBottomSheet(
         onDismissRequest = {
             coroutineScope.launch {
@@ -87,7 +100,7 @@ fun SongPlayerSheet(
                 .background(
                     brush = Brush.verticalGradient(
                         colorStops = arrayOf(
-                            0.0f to Color(0xFF166C00),
+                            0.0f to Color(dominantColor),
                             0.7f to Color(0xFF0F110E),
                             1.0f to Color(0xFF0F110E)
                         )
@@ -124,9 +137,9 @@ fun SongPlayerSheet(
                     currentSong.value!!.isLiked = updatedSong.isLiked
                 }) {
                     Icon(
-                        imageVector = if (currentSong.value?.isLiked ?: 0 == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        imageVector = if ((currentSong.value?.isLiked ?: 0) == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = null,
-                        tint = if (currentSong.value?.isLiked ?: 0 == 1) Color.Red else Color.White
+                        tint = if ((currentSong.value?.isLiked ?: 0) == 1) Color.Red else Color.White
                     )
                 }
 
@@ -147,7 +160,9 @@ fun SongPlayerSheet(
 
                         },
                         valueRange = 0f..(duration?.toFloat() ?: 0 ).toFloat(),
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 8.dp),
                         thumb = {
                             SliderDefaults.Thumb(
                                 interactionSource = interactionSource ,
@@ -244,3 +259,29 @@ fun formatTime(millis: Int): String {
     val seconds = (millis / 1000) % 60
     return String.format("%d:%02d", minutes, seconds)
 }
+
+fun getDominantColor(bitmap: Bitmap?): Int {
+    if (bitmap == null) return Color(0xFF1BB452).toArgb()
+    return try {
+        val newBitmap = bitmap.scale(1, 1)
+        val color = newBitmap[0, 0]
+        newBitmap.recycle()
+        color
+    } catch (e: Exception) {
+        Color(0xFF1BB452).toArgb()
+    }
+}
+
+fun getBitmap(contentResolver: ContentResolver, fileUri: Uri?): Bitmap? {
+    if (fileUri == null) return null
+    return try {
+        val source = ImageDecoder.createSource(contentResolver, fileUri)
+        ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+        }
+    } catch (e: Exception) {
+        null
+    }
+}
+
+

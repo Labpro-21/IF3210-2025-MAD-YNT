@@ -34,7 +34,7 @@ fun editSaveButtonOnClick(
         )
         libraryViewModel.update(songUpdate)
         queueManager.updateSong(songUpdate)
-        currentSong.value = songUpdate
+        if(currentSong.value?.id == songUpdate.id) currentSong.value = songUpdate
     coroutineScope.launch {
         sheetState.hide()
         setShowPopupSong(false)
