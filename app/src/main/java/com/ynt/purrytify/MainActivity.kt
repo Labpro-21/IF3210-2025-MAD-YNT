@@ -1,5 +1,6 @@
 package com.ynt.purrytify
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -48,6 +49,7 @@ import com.ynt.purrytify.ui.screen.homescreen.HomeScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.loginscreen.LoginScreen
+import com.ynt.purrytify.ui.screen.audioroutingscreen.AudioRoutingScreen
 import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
@@ -92,6 +94,7 @@ sealed class Screen(val route: String) {
     data object Library : Screen("library")
     data object Login : Screen("login")
     data object Profile: Screen("profile")
+    data object  AudioRouting: Screen("audiorouting")
     data object EditProfile: Screen("editProfile")
 }
 
@@ -315,8 +318,16 @@ fun MainApp(
                     sessionManager = sessionManager
                 )
             }
+
+            composable(Screen.AudioRouting.route) {
+                AudioRoutingScreen(
+                    navController = navController,
+                    songPlayerLiveData = songPlayerLiveData
+                )
+            }
         }
     }
+
     if (showSongPlayerSheet.value) {
         SongPlayerSheet(
             setShowPopupSong = {showSongPlayerSheet.value = it},
@@ -335,6 +346,7 @@ fun MainApp(
             stopRefreshLoop()
         }
     }
+
 }
 
 

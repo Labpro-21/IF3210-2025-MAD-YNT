@@ -21,10 +21,12 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.ynt.purrytify.R
 
 @Composable
 fun LibraryTopBar(
+    navController: NavController,
     title: String,
     onAddClick: () -> Unit,
     onChoiceSelected: (Int) -> Unit,
@@ -66,10 +68,22 @@ fun LibraryTopBar(
                 )
             }
         }
-        LibraryButtons(
-            selectedChoiceIndex = selectedChoiceIndex,
-            onChoiceSelected = onChoiceSelected
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ){
+            LibraryButtons(
+                selectedChoiceIndex = selectedChoiceIndex,
+                onChoiceSelected = onChoiceSelected
+            )
+            AudioRoutesButton(navController = navController)
+        }
+
+
+
     }
     HorizontalDivider(
         thickness = 2.dp,
