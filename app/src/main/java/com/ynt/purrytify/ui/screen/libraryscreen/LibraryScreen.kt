@@ -25,6 +25,7 @@ import com.ynt.purrytify.ui.screen.libraryscreen.component.LibraryTopBar
 import com.ynt.purrytify.ui.screen.libraryscreen.component.SongListRecyclerView
 import com.ynt.purrytify.utils.auth.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,6 +84,12 @@ fun LibraryScreen(
                 updateLikeSong = { song ->
                     val songCopy = song.copy(isLiked = if (song.isLiked == 1) 0 else 1)
                     viewModel.update(songCopy)
+                    if(songCopy.id == currentSong?.value?.id ?: null){
+                        currentSong?.update {
+                            songCopy
+                        }
+                    }
+
                 },
                 updateEditSong = { song ->
                     editedSong.value = song
