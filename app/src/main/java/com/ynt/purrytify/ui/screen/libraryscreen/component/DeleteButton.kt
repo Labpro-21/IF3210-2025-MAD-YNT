@@ -11,10 +11,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
-import com.ynt.purrytify.utils.queue.QueueManager
+import com.ynt.purrytify.utils.libraryscreenutils.deleteFileFromExternalStorage
+import com.ynt.purrytify.utils.libraryscreenutils.deleteFileFromStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -26,12 +29,13 @@ fun DeleteButton(
     setShowPopupSong: (Boolean) -> Unit,
     song: Song,
     libraryViewModel: LibraryViewModel,
-    queueManager: QueueManager
 ){
+    val context = LocalContext.current
     Button(
         colors = ButtonDefaults.buttonColors(Color.Red),
         onClick = {
-            queueManager.removeSong(song)
+            deleteFileFromExternalStorage(context, song.audio?.toUri() ?: "".toUri())
+            deleteFileFromStorage(song.image?.toUri() ?: "".toUri())
             libraryViewModel.delete(song)
             coroutineScope.launch {
                 sheetState.hide()

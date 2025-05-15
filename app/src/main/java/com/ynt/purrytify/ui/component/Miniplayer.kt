@@ -1,8 +1,6 @@
 package com.ynt.purrytify.ui.component
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.Indication
-import androidx.compose.foundation.IndicationNodeFactory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,17 +33,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.ynt.purrytify.PlayerState
 import com.ynt.purrytify.R
 import com.ynt.purrytify.models.Song
 
 @Composable
 fun Miniplayer(
-    currentSong: MutableState<Song?>,
+    currentSong: Song?,
     onPlay: () -> Unit,
     onSkip: () -> Unit,
     onClick: () -> Unit,
-    isPlaying: MutableState<PlayerState>,
+    isPlaying: Boolean,
 ) {
     val context = LocalContext.current
     Row(
@@ -61,7 +57,7 @@ fun Miniplayer(
         Image(
             painter = rememberAsyncImagePainter(
                 model = ImageRequest.Builder(context)
-                    .data(currentSong.value?.image)
+                    .data(currentSong?.image)
                     .crossfade(true)
                     .size(96)
                     .build()
@@ -95,13 +91,13 @@ fun Miniplayer(
                 }
         ) {
             Text(
-                text = currentSong.value?.title ?: "Idle",
+                text = currentSong?.title ?: "Idle",
                 fontSize = 16.sp,
                 color = Color.White,
                 modifier = Modifier.fillMaxHeight().weight(1f)
             )
             Text(
-                text = currentSong.value?.artist ?: "",
+                text = currentSong?.artist ?: "",
                 fontSize = 10.sp,
                 color = Color.LightGray,
                 modifier = Modifier.fillMaxHeight().weight(1f)
@@ -115,7 +111,7 @@ fun Miniplayer(
              onClick = onPlay
             ){
                 Icon(
-                    imageVector = if(isPlaying.value==PlayerState.STARTED || isPlaying.value==PlayerState.PLAYING) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    imageVector = if(isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                     contentDescription = "Play/Pause Song",
                     tint = Color.White
                 )

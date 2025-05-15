@@ -34,7 +34,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -51,15 +51,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
-import com.ynt.purrytify.PlayerState
 import com.ynt.purrytify.R
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
-import com.ynt.purrytify.utils.mediaplayer.SongPlayerLiveData
-import com.ynt.purrytify.utils.queue.QueueManager
 import kotlinx.coroutines.launch
 import androidx.core.graphics.scale
 import androidx.core.graphics.get
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,18 +67,20 @@ fun SongPlayerSheet(
     setShowPopupSong: (Boolean)->Unit,
     libraryViewModel: LibraryViewModel,
     sheetState: SheetState,
-    queueManager: QueueManager,
-    currentSong: MutableState<Song?>,
-    currentPosition: MutableState<Int>,
-    isPlaying: MutableState<PlayerState>,
-    songPlayerLiveData: SongPlayerLiveData
-
+    xcurrentSong: MutableStateFlow<Song>,
+    currentPosition: Float,
+    isPlaying: Boolean,
+    onPlayPause: ()->Unit,
+    onNext: ()->Unit,
+    onPrevious: ()->Unit,
+    onSeek: (pos: Float) -> Unit,
 ){
     val coroutineScope = rememberCoroutineScope()
-    val duration = currentSong.value?.duration
+    val currentSong = xcurrentSong.collectAsState().value
+    val duration = currentSong.duration
     val interactionSource = remember {MutableInteractionSource()}
     val contentResolver = LocalContext.current.contentResolver
-    val imageBitmap = getBitmap(contentResolver,currentSong.value?.image?.toUri())
+    val imageBitmap = getBitmap(contentResolver, currentSong.image?.toUri())
     val dominantColor = getDominantColor(
         bitmap = imageBitmap
     )
@@ -116,7 +117,7 @@ fun SongPlayerSheet(
                 Spacer(modifier = Modifier.height(96.dp))
 
                 Image(
-                    painter = rememberAsyncImagePainter(currentSong.value?.image),
+                    painter = rememberAsyncImagePainter(currentSong.image),
                     contentDescription = "Song Cover",
                     modifier = Modifier
                         .size(300.dp)
@@ -126,20 +127,20 @@ fun SongPlayerSheet(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(currentSong.value?.title ?: "Unknown Title", color = Color.White, fontSize = 24.sp)
-                Text(currentSong.value?.artist ?: "Unknown Artist", color = Color.Gray, fontSize = 16.sp)
+                Text(currentSong.title ?: "Unknown Title", color = Color.White, fontSize = 24.sp)
+                Text(currentSong.artist ?: "Unknown Artist", color = Color.Gray, fontSize = 16.sp)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 IconButton(onClick = {
-                    val updatedSong = currentSong.value?.copy(isLiked = if (currentSong.value!!.isLiked == 1) 0 else 1)
-                    libraryViewModel.update(updatedSong!!)
-                    currentSong.value!!.isLiked = updatedSong.isLiked
+                    val updatedSong = currentSong.copy(isLiked = if (currentSong.isLiked == 1) 0 else 1)
+                    libraryViewModel.update(updatedSong)
+                    xcurrentSong.update { updatedSong }
                 }) {
                     Icon(
-                        imageVector = if ((currentSong.value?.isLiked ?: 0) == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        imageVector = if (currentSong.isLiked == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = null,
-                        tint = if ((currentSong.value?.isLiked ?: 0) == 1) Color.Red else Color.White
+                        tint = if (currentSong.isLiked == 1) Color.Red else Color.White
                     )
                 }
 
@@ -151,15 +152,13 @@ fun SongPlayerSheet(
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(formatTime(currentPosition.value), color = Color.White, fontSize = 12.sp)
+                    Text(formatTime(currentPosition), color = Color.White, fontSize = 12.sp)
                     Slider(
-                        value = currentPosition.value.toFloat(),
+                        value = currentPosition,
                         onValueChange = {
-                            currentPosition.value = it.toInt()
-                            songPlayerLiveData.songPlayer.value?.seekAudio(currentPosition)
-
+                            onSeek(it)
                         },
-                        valueRange = 0f..(duration?.toFloat() ?: 0 ).toFloat(),
+                        valueRange = 0f..duration.toFloat(),
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 8.dp),
@@ -179,8 +178,8 @@ fun SongPlayerSheet(
                             inactiveTrackColor = Color.White
                         ),
 
-                    )
-                    Text(formatTime(duration!!), color = Color.White, fontSize = 12.sp)
+                        )
+                    Text(formatTime(duration.toFloat()), color = Color.White, fontSize = 12.sp)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -190,62 +189,18 @@ fun SongPlayerSheet(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = {
-                        val prevSong = queueManager.skipToPrevious()
-                        currentSong.value = prevSong
-                        val songCopy = prevSong?.copy(lastPlayed = System.currentTimeMillis())
-                        if (songCopy != null) {
-                            libraryViewModel.update(songCopy)
-                        }
-                        currentPosition.value = 0
-                        if (queueManager.size.value == 0) {
-                            isPlaying.value = PlayerState.STOPPED
-                        } else {
-                            isPlaying.value = PlayerState.STARTED
-
-                        }
-                    }) {
+                    IconButton(onClick = onPrevious) {
                         Icon(Icons.Default.SkipPrevious, contentDescription = null, tint = Color.White)
                     }
-                    IconButton(onClick = {
-                        when(isPlaying.value){
-                            PlayerState.PLAYING -> {
-                                isPlaying.value = PlayerState.PAUSED
-                            }
-                            PlayerState.PAUSED -> {
-                                isPlaying.value = PlayerState.PLAYING
-                            }
-                            PlayerState.STARTED -> {
-                                isPlaying.value = PlayerState.PAUSED
-                            }
-                            PlayerState.STOPPED -> {
-                                isPlaying.value = PlayerState.STARTED
-                            }
-                        }
-
-                    }) {
+                    IconButton(onClick = onPlayPause) {
                         Icon(
-                            imageVector = if (isPlaying.value == PlayerState.PLAYING) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(48.dp)
                         )
                     }
-                    IconButton(onClick = {
-                        val nextSong = queueManager.skipToNext()
-                        currentSong.value = nextSong
-                        val songCopy = nextSong?.copy(lastPlayed = System.currentTimeMillis())
-                        if (songCopy != null) {
-                            libraryViewModel.update(songCopy)
-                        }
-                        currentPosition.value = 0
-                        if (queueManager.size.value == 0) {
-                            isPlaying.value = PlayerState.STOPPED
-                        } else {
-                            isPlaying.value = PlayerState.STARTED
-
-                        }
-                    }) {
+                    IconButton(onClick = onNext) {
                         Icon(Icons.Default.SkipNext, contentDescription = null, tint = Color.White)
                     }
                 }
@@ -254,10 +209,10 @@ fun SongPlayerSheet(
     }
 }
 
-fun formatTime(millis: Int): String {
+fun formatTime(millis: Float): String {
     val minutes = (millis / 1000) / 60
     val seconds = (millis / 1000) % 60
-    return String.format("%d:%02d", minutes, seconds)
+    return String.format("%d:%02d", minutes.toInt(), seconds.toInt())
 }
 
 fun getDominantColor(bitmap: Bitmap?): Int {
@@ -283,5 +238,3 @@ fun getBitmap(contentResolver: ContentResolver, fileUri: Uri?): Bitmap? {
         null
     }
 }
-
-

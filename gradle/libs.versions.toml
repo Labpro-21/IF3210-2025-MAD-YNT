@@ -15,6 +15,7 @@ material = "1.10.0"
 constraintlayout = "2.1.4"
 lifecycleLivedataKtx = "2.6.1"
 lifecycleViewmodelKtx = "2.6.1"
+media = "1.7.0"
 navigationFragmentKtx = "2.6.0"
 navigationUiKtx = "2.6.0"
 accompanistPermissions = "0.28.0"
@@ -38,6 +39,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+androidx-media = { module = "androidx.media:media", version.ref = "media" }
 androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
