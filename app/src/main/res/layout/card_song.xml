@@ -82,7 +82,7 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <ImageView
-            android:layout_width="32dp"
+            android:layout_width="24dp"
             android:id="@+id/card_like_image"
             android:layout_height="match_parent"
             android:layout_marginEnd="10dp"
@@ -91,11 +91,11 @@
             card_view:layout_constraintEnd_toStartOf="@id/card_edit_image"
             card_view:layout_constraintTop_toTopOf="parent"
             card_view:tint="@color/white"
-            tools:src="@drawable/twotone_check_24" />
+            tools:src="@drawable/baseline_favorite_border_24" />
 
         <ImageView
             android:id="@+id/card_edit_image"
-            android:layout_width="32dp"
+            android:layout_width="24dp"
             android:layout_height="match_parent"
             android:layout_marginEnd="30dp"
             android:contentDescription="Edit song"
