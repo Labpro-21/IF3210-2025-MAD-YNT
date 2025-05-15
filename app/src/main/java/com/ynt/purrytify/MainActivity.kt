@@ -305,6 +305,7 @@ fun MainApp(
                 BottomBar(
                     navController = navController,
                     currentSong = currentSong,
+                    xcurrentDuration = xcurrentDuration,
                     isPlaying = isPlaying,
                     onSkip = onNext,
                     onPlay = onPlayPause,

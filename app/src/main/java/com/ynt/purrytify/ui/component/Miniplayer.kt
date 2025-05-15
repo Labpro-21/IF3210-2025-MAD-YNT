@@ -1,5 +1,6 @@
 package com.ynt.purrytify.ui.component
 
+import android.content.res.Resources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,8 +20,10 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,10 +34,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.room.util.TableInfo
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.ynt.purrytify.R
 import com.ynt.purrytify.models.Song
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun Miniplayer(
@@ -43,9 +48,10 @@ fun Miniplayer(
     onSkip: () -> Unit,
     onClick: () -> Unit,
     isPlaying: Boolean,
+    xcurrentDuration: MutableStateFlow<Float>
 ) {
     val context = LocalContext.current
-    Row(
+    Column(
         modifier = Modifier
             .height(64.dp)
             .fillMaxWidth()
@@ -54,78 +60,98 @@ fun Miniplayer(
             .background(Color(0xFF212121))
 
     ){
-        Image(
-            painter = rememberAsyncImagePainter(
-                model = ImageRequest.Builder(context)
-                    .data(currentSong?.image)
-                    .crossfade(true)
-                    .size(96)
-                    .build()
-            ),
-            contentDescription = "Currently Played",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .padding(start = 8.dp)
-                .size(56.dp)
-                .border(1.dp, color = colorResource(R.color.medium_dark_gray), shape = RoundedCornerShape(8.dp))
-                .clip(RoundedCornerShape(8.dp))
-                .align(Alignment.CenterVertically)
-                .clickable(
-                    onClick = {
+        Row(
+            Modifier.weight(0.9f)
+        ) {
+            Image(
+                painter = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(context)
+                        .data(currentSong?.image)
+                        .crossfade(true)
+                        .size(96)
+                        .build()
+                ),
+                contentDescription = "Currently Played",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .size(56.dp)
+                    .border(
+                        1.dp,
+                        color = colorResource(R.color.medium_dark_gray),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .clip(RoundedCornerShape(8.dp))
+                    .align(Alignment.CenterVertically)
+                    .clickable(
+                        onClick = {
+                            onClick()
+                        }
+                    )
+            )
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .fillMaxHeight()
+                    .padding(vertical = 12.dp, horizontal = 12.dp)
+                    .weight(1f)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
                         onClick()
                     }
+            ) {
+                Text(
+                    text = currentSong?.title ?: "Idle",
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
                 )
-        )
-
-        Column(
-            modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .fillMaxHeight()
-                .padding(vertical = 12.dp, horizontal = 12.dp)
-                .weight(1f)
-                .clickable(
-                    indication = null,
-                    interactionSource = remember {MutableInteractionSource()}
-                ){
-                    onClick()
+                Text(
+                    text = currentSong?.artist ?: "",
+                    fontSize = 10.sp,
+                    color = Color.LightGray,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .padding(horizontal = 8.dp)
+            ) {
+                IconButton(
+                    onClick = onPlay
+                ) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        contentDescription = "Play/Pause Song",
+                        tint = Color.White
+                    )
                 }
-        ) {
-            Text(
-                text = currentSong?.title ?: "Idle",
-                fontSize = 16.sp,
-                color = Color.White,
-                modifier = Modifier.fillMaxHeight().weight(1f)
-            )
-            Text(
-                text = currentSong?.artist ?: "",
-                fontSize = 10.sp,
-                color = Color.LightGray,
-                modifier = Modifier.fillMaxHeight().weight(1f)
-            )
-        }
-        Row(
-            modifier = Modifier.align(Alignment.CenterVertically)
-                .padding(horizontal = 8.dp)
-        ) {
-            IconButton(
-             onClick = onPlay
-            ){
-                Icon(
-                    imageVector = if(isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    contentDescription = "Play/Pause Song",
-                    tint = Color.White
-                )
-            }
-            IconButton(
-                onClick = onSkip
-            ){
-                Icon(
-                    imageVector = Icons.Filled.SkipNext,
-                    contentDescription = "Play Song",
-                    tint = Color.White
-                )
+                IconButton(
+                    onClick = onSkip
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.SkipNext,
+                        contentDescription = "Play Song",
+                        tint = Color.White
+                    )
+                }
             }
         }
-
+        val progress = xcurrentDuration.collectAsState().value / (currentSong?.duration ?: 1).toFloat()
+        LinearProgressIndicator(
+            progress = {progress},
+            modifier = Modifier.fillMaxWidth(),
+            color = colorResource(R.color.green),
+            trackColor = colorResource(R.color.medium_dark_gray)
+        )
     }
+
 }
