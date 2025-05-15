@@ -74,7 +74,8 @@ fun LibraryScreen(
                 title = "Your Library",
                 onAddClick = { showPopUpAddSong.value = true },
                 selectedChoiceIndex = selectedChoiceIndex.intValue,
-                onChoiceSelected = { selectedChoiceIndex.intValue = it }
+                onChoiceSelected = { selectedChoiceIndex.intValue = it },
+                navController = navController
             )
         },
         containerColor = Color.Black
