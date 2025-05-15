@@ -13,7 +13,9 @@ import com.ynt.purrytify.Screen
 import androidx.compose.material3.Icon
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import com.ynt.purrytify.R
 
 @Composable
 fun AudioRoutesButton(navController: NavController){
@@ -23,7 +25,7 @@ fun AudioRoutesButton(navController: NavController){
         Icon(
             Icons.Filled.Speaker,
             contentDescription = "Audio Routes",
-            tint = Color.Green,
+            tint = colorResource(R.color.green),
             modifier = Modifier.size(28.dp)
         )
     }

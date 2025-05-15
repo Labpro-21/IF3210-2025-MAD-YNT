@@ -1,5 +1,6 @@
 package com.ynt.purrytify
 
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity
@@ -314,11 +315,13 @@ fun MainApp(
 
             composable(Screen.AudioRouting.route) {
                 AudioRoutingScreen(
-                    navController = navController
+                    navController = navController,
+                    songPlayerLiveData = songPlayerLiveData
                 )
             }
         }
     }
+
     if (showSongPlayerSheet.value) {
         SongPlayerSheet(
             setShowPopupSong = {showSongPlayerSheet.value = it},
@@ -337,6 +340,7 @@ fun MainApp(
             stopRefreshLoop()
         }
     }
+
 }
 
 

@@ -1,6 +1,7 @@
 package com.ynt.purrytify.utils.mediaplayer
 
 import android.content.Context
+import android.media.AudioDeviceInfo
 import android.media.MediaPlayer
 import android.net.Uri
 import androidx.compose.runtime.MutableState
@@ -20,6 +21,7 @@ class SongPlayer {
                     it.release()
                     isPlaying.value = PlayerState.STOPPED
                 }
+                preferredDevice?.let { setPreferredDevice(it) }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -50,6 +52,12 @@ class SongPlayer {
 
     fun getCurrentPosition(): Int{
         return mediaPlayer?.currentPosition ?: 0;
+    }
+    private var preferredDevice: AudioDeviceInfo? = null
+
+    fun setPreferredOutputDevice(device: AudioDeviceInfo) {
+        preferredDevice = device
+        mediaPlayer?.setPreferredDevice(device)
     }
 }
 
