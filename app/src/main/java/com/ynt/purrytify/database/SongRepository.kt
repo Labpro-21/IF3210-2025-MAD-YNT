@@ -42,6 +42,6 @@ class SongRepository(application: Application) {
     }
 
     fun getRecentlyPLayed(username: String): LiveData<List<Song>> {
-        return mSongsDao.getRecentlyPlayed((username))
+        return mSongsDao.getRecentlyPlayed(username)
     }
 }

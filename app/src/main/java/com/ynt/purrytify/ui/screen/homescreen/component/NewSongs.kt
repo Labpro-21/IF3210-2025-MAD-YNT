@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
@@ -30,17 +31,16 @@ import com.ynt.purrytify.models.Song
 @Composable
 fun NewSongs(songList: List<Song>) {
     Column (
-        modifier = Modifier
-            .padding(0.dp),
         horizontalAlignment = Alignment.Start
     ) {
         Text(text = "New Songs",
             color = Color.White,
-            fontSize = 20.sp,
+            fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 10.dp, top = 20.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         NewSongsList(songList)
     }
@@ -51,7 +51,7 @@ fun NewSongsList(songList: List<Song>) {
     LazyRow (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp),
+            .padding(start = 10.dp, end = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(songList) { song ->
@@ -65,8 +65,7 @@ fun SongCard(song: Song) {
     Card(
         modifier = Modifier
             .width(120.dp)
-            .height(170.dp)
-            .padding(end = 12.dp),
+            .height(170.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
@@ -91,14 +90,17 @@ fun SongCard(song: Song) {
                 Text(
                     text = song.title ?: "",
                     color = Color.White,
-                    fontSize = 16.sp,
-                    maxLines = 1
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+
                 Text(
                     text = song.artist ?: "",
                     color = Color.LightGray,
                     fontSize = 12.sp,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

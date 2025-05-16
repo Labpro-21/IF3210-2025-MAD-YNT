@@ -51,6 +51,7 @@ import com.ynt.purrytify.ui.screen.loginscreen.LoginScreen
 import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
+import com.ynt.purrytify.ui.screen.topchartscreen.TopSongScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
 import com.ynt.purrytify.utils.mediaplayer.SongPlayerLiveData
@@ -93,6 +94,8 @@ sealed class Screen(val route: String) {
     data object Login : Screen("login")
     data object Profile: Screen("profile")
     data object EditProfile: Screen("editProfile")
+    data object TopGlobalCharts : Screen("topGlobalCharts")
+    data object TopRegionCharts : Screen("topRegionCharts")
 }
 
 enum class PlayerState {
@@ -306,6 +309,22 @@ fun MainApp(
                 ProfileScreen(
                     navController = navController,
                     sessionManager = sessionManager,
+                )
+            }
+
+            composable(Screen.TopGlobalCharts.route) {
+                TopSongScreen(
+                    navController = navController,
+                    isRegion = false,
+                    sessionManager = sessionManager
+                )
+            }
+
+            composable(Screen.TopRegionCharts.route) {
+                TopSongScreen(
+                    navController = navController,
+                    isRegion = true,
+                    sessionManager = sessionManager
                 )
             }
 
