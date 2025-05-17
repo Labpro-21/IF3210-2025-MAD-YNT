@@ -55,7 +55,20 @@ fun HomeScreen(
         }
 
         item {
-            NewSongs(songsList, onSongsLoaded)
+            NewSongs(
+                songList = songsList,
+                playSong = { selectedSong ->
+                    if(currentSong?.value?.id ?: null == selectedSong.id){
+                        showSongPlayerSheet.value = true
+                    }
+                    else{
+                        val songCopy = selectedSong.copy(lastPlayed = System.currentTimeMillis())
+                        viewModel.update(songCopy)
+                        onPlay(selectedSong)
+                    }
+                },
+                onSongsLoaded = onSongsLoaded
+            )
         }
 
         item {

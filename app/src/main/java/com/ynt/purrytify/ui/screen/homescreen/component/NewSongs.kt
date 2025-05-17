@@ -1,6 +1,8 @@
 package com.ynt.purrytify.ui.screen.homescreen.component
 
+import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +33,7 @@ import com.ynt.purrytify.models.Song
 @Composable
 fun NewSongs(
     songList: List<Song>,
+    playSong : (Song) -> Unit,
     onSongsLoaded: (List<Song>?) -> Unit = {}
 ) {
     Column (
@@ -45,12 +48,16 @@ fun NewSongs(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        NewSongsList(songList)
+        NewSongsList(songList, playSong, onSongsLoaded)
     }
 }
 
 @Composable
-fun NewSongsList(songList: List<Song>) {
+fun NewSongsList(
+    songList: List<Song>,
+    playSong : (Song) -> Unit,
+    onSongsLoaded: (List<Song>?) -> Unit = {}
+) {
     LazyRow (
         modifier = Modifier
             .fillMaxWidth()
@@ -58,17 +65,30 @@ fun NewSongsList(songList: List<Song>) {
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(songList) { song ->
-            SongCard(song)
+            SongCard(
+                song = song,
+                playSong = {
+                    onSongsLoaded(songList)
+                    songList.forEach { song ->
+                        Log.d("Song", song.title.toString())
+                    }
+                    playSong(song)
+                }
+            )
         }
     }
 }
 
 @Composable
-fun SongCard(song: Song) {
+fun SongCard(
+    song: Song,
+    playSong: (Song) -> Unit
+) {
     Card(
         modifier = Modifier
             .width(120.dp)
-            .height(170.dp),
+            .height(170.dp)
+            .clickable { playSong(song) },
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {

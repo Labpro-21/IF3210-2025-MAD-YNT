@@ -6,7 +6,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.ynt.purrytify.Screen
 import com.ynt.purrytify.database.SongRepository
 import com.ynt.purrytify.models.OnlineSong
 import com.ynt.purrytify.models.ProfileResponse
