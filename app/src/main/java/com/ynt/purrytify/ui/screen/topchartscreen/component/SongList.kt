@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -30,11 +28,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
+import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.models.OnlineSong
+import com.ynt.purrytify.ui.screen.topchartscreen.TopChartViewModel
+import com.ynt.purrytify.utils.auth.SessionManager
 
 @Composable
 fun SongList(
-    songList: List<OnlineSong>
+    downloadHelper : DownloadHelper,
+    songList : List<OnlineSong>,
+    viewModel : TopChartViewModel,
+    sessionManager: SessionManager
 ) {
     Column (
         modifier = Modifier
@@ -43,13 +47,23 @@ fun SongList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         songList.forEach() { song ->
-            OneSong(song)
+            OneSong(
+                song = song,
+                downloadHelper = downloadHelper,
+                viewModel = viewModel,
+                sessionManager
+            )
         }
     }
 }
 
 @Composable
-fun OneSong(song : OnlineSong) {
+fun OneSong(
+    song : OnlineSong,
+    downloadHelper: DownloadHelper,
+    viewModel: TopChartViewModel,
+    sessionManager: SessionManager
+) {
     var showSheet by remember { mutableStateOf(false) }
 
     Row(
@@ -101,7 +115,16 @@ fun OneSong(song : OnlineSong) {
 
         if (showSheet) {
             SongOptions(
-                onDismiss = { showSheet = false }
+                onDismiss = { showSheet = false },
+                onDownload = {
+                    var isDownloading = true
+                    downloadHelper.startDownload(
+                        song = song,
+                        viewModel = viewModel,
+                        user = sessionManager.getUser()
+                    )
+
+                },
             )
         }
     }

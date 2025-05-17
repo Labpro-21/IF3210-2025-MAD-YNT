@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.ui.screen.homescreen.component.ChartBox
 import com.ynt.purrytify.ui.screen.topchartscreen.component.BackButtonIcon
 import com.ynt.purrytify.ui.screen.topchartscreen.component.SongList
@@ -28,6 +29,7 @@ fun TopSongScreen(
     viewModel: TopChartViewModel = viewModel(),
     isRegion : Boolean,
     sessionManager: SessionManager,
+    downloadHelper: DownloadHelper
 ) {
     val topColor = Color(0xFF108B74)
     val bottomColor = Color(0xFF1E3264)
@@ -54,7 +56,10 @@ fun TopSongScreen(
                     bottomColor = bottomColor
                 )
 
-                BackButtonIcon(modifier = Modifier.align(Alignment.TopStart).padding(10.dp))
+                BackButtonIcon(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.align(Alignment.TopStart).padding(10.dp)
+                )
             }
 
             LaunchedEffect(Unit) {
@@ -63,7 +68,12 @@ fun TopSongScreen(
 
             val onlineListSong by viewModel.onlineSongs.observeAsState(emptyList())
 
-            SongList(onlineListSong)
+            SongList(
+                songList = onlineListSong,
+                downloadHelper = downloadHelper,
+                viewModel = viewModel,
+                sessionManager = sessionManager
+            )
         }
 
 

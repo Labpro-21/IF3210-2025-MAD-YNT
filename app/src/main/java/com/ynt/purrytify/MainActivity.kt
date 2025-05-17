@@ -41,6 +41,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.component.BottomBar
 import com.ynt.purrytify.ui.component.ConnectivityStatusBanner
@@ -62,9 +63,11 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var sessionManager: SessionManager
+    private lateinit var downloadHelper : DownloadHelper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sessionManager = SessionManager(applicationContext)
+        downloadHelper = DownloadHelper(this)
         enableEdgeToEdge()
         setContent {
             val view = window.decorView
@@ -82,7 +85,7 @@ class MainActivity : ComponentActivity() {
                     .background(Color.Black)
                     .safeDrawingPadding()
             ) {
-                MainApp(sessionManager)
+                MainApp(sessionManager, downloadHelper)
             }
         }
     }
@@ -107,6 +110,7 @@ enum class PlayerState {
 @Composable
 fun MainApp(
     sessionManager: SessionManager,
+    downloadHelper: DownloadHelper,
     songPlayerLiveData: SongPlayerLiveData = viewModel(),
     queueManager: QueueManager = remember { QueueManager() }
 ) {
@@ -316,7 +320,8 @@ fun MainApp(
                 TopSongScreen(
                     navController = navController,
                     isRegion = false,
-                    sessionManager = sessionManager
+                    sessionManager = sessionManager,
+                    downloadHelper = downloadHelper
                 )
             }
 
@@ -324,7 +329,8 @@ fun MainApp(
                 TopSongScreen(
                     navController = navController,
                     isRegion = true,
-                    sessionManager = sessionManager
+                    sessionManager = sessionManager,
+                    downloadHelper = downloadHelper
                 )
             }
 

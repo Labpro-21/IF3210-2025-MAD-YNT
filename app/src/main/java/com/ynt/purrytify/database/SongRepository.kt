@@ -44,4 +44,8 @@ class SongRepository(application: Application) {
     fun getRecentlyPLayed(username: String): LiveData<List<Song>> {
         return mSongsDao.getRecentlyPlayed(username)
     }
+
+    fun getAllSongsRaw(username: String) : List<Song> {
+        return mSongsDao.getAllSongsRaw(username)
+    }
 }

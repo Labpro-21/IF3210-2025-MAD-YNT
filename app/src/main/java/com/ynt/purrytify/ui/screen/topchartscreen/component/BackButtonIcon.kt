@@ -14,9 +14,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun BackButtonIcon(modifier: Modifier) {
+fun BackButtonIcon(
+    onClick : () -> (Unit),
+    modifier: Modifier
+    ) {
     IconButton(
-        onClick = { /* TODO: aksi back */ },
+        onClick = onClick,
         modifier = modifier
     ) {
         Icon(
