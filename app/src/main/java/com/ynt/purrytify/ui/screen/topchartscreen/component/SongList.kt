@@ -1,6 +1,7 @@
 package com.ynt.purrytify.ui.screen.topchartscreen.component
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,18 +28,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.models.OnlineSong
+import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.topchartscreen.TopChartViewModel
 import com.ynt.purrytify.utils.auth.SessionManager
+import com.ynt.purrytify.utils.downloadmanager.parseDurationToSeconds
 
 @Composable
 fun SongList(
     downloadHelper : DownloadHelper,
     songList : List<OnlineSong>,
     viewModel : TopChartViewModel,
-    sessionManager: SessionManager
+    sessionManager: SessionManager,
+    playSong : (Song) -> Unit
 ) {
     Column (
         modifier = Modifier
@@ -51,7 +56,8 @@ fun SongList(
                 song = song,
                 downloadHelper = downloadHelper,
                 viewModel = viewModel,
-                sessionManager
+                sessionManager = sessionManager,
+                playSong = playSong
             )
         }
     }
@@ -62,7 +68,8 @@ fun OneSong(
     song : OnlineSong,
     downloadHelper: DownloadHelper,
     viewModel: TopChartViewModel,
-    sessionManager: SessionManager
+    sessionManager: SessionManager,
+    playSong: (Song) -> Unit
 ) {
     var showSheet by remember { mutableStateOf(false) }
 
@@ -71,7 +78,17 @@ fun OneSong(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 10.dp)
-
+            .clickable { playSong(
+                Song(
+                    id = song.id,
+                    title = song.title,
+                    artist = song.artist,
+                    owner = sessionManager.getUser(),
+                    image = song.artwork,
+                    audio = song.url,
+                    duration = parseDurationToSeconds(song.duration)
+                )
+            ) }
     ) {
         Image(
             painter = rememberAsyncImagePainter(song.artwork),

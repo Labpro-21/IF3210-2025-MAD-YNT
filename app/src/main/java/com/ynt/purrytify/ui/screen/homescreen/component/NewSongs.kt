@@ -29,7 +29,10 @@ import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.models.Song
 
 @Composable
-fun NewSongs(songList: List<Song>) {
+fun NewSongs(
+    songList: List<Song>,
+    onSongsLoaded: (List<Song>?) -> Unit = {}
+) {
     Column (
         horizontalAlignment = Alignment.Start
     ) {

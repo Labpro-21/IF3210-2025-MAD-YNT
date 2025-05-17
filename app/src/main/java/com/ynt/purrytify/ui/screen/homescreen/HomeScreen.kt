@@ -7,23 +7,31 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.home.HomeViewModel
 import com.ynt.purrytify.ui.screen.homescreen.component.NewSongs
 import com.ynt.purrytify.ui.screen.homescreen.component.RecentlyPlayed
 import com.ynt.purrytify.ui.screen.homescreen.component.TopCharts
+import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.utils.auth.SessionManager
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun HomeScreen(
     navController: NavController,
     sessionManager: SessionManager,
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = viewModel(),
+    onSongsLoaded: (List<Song>?) -> Unit = {},
+    currentSong: MutableStateFlow<Song>?,
+    showSongPlayerSheet: MutableState<Boolean>,
+    onPlay: (song: Song)->Unit
 ) {
     LaunchedEffect(Unit) {
         viewModel.loadNewSongs(sessionManager)
@@ -47,7 +55,7 @@ fun HomeScreen(
         }
 
         item {
-            NewSongs(songsList)
+            NewSongs(songsList, onSongsLoaded)
         }
 
         item {
@@ -55,7 +63,20 @@ fun HomeScreen(
         }
 
         item {
-            RecentlyPlayed(recentlySong)
+            RecentlyPlayed(
+                songList = recentlySong,
+                playSong = { selectedSong ->
+                    if(currentSong?.value?.id ?: null == selectedSong.id){
+                        showSongPlayerSheet.value = true
+                    }
+                    else{
+                        val songCopy = selectedSong.copy(lastPlayed = System.currentTimeMillis())
+                        viewModel.update(songCopy)
+                        onPlay(selectedSong)
+                    }
+                },
+                onSongsLoaded = onSongsLoaded
+            )
         }
     }
 }

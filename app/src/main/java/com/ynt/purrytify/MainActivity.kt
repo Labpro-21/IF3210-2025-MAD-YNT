@@ -58,6 +58,7 @@ import com.ynt.purrytify.ui.screen.loginscreen.LoginScreen
 import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
 import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
+import com.ynt.purrytify.ui.screen.topchartscreen.TopChartViewModel
 import com.ynt.purrytify.ui.screen.topchartscreen.TopSongScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
@@ -129,6 +130,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private lateinit var downloadHelper : DownloadHelper
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sessionManager = SessionManager(applicationContext)
@@ -230,10 +232,11 @@ fun MainApp(
     val currentDuration by xcurrentDuration.collectAsState()
     val isPlaying by xisPlaying.collectAsState()
 
-    val context = LocalContext.current
+//    val context = LocalContext.current
     val navController: NavHostController = rememberNavController()
     val libraryViewModel: LibraryViewModel = viewModel()
-    val lifecycleOwner = LocalLifecycleOwner.current
+//    val lifecycleOwner = LocalLifecycleOwner.current
+//    val topChartViewModel: TopChartViewModel = viewModel()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -251,17 +254,17 @@ fun MainApp(
         skipPartiallyExpanded = true
     )
 
-    val username = remember(isLoggedIn.value) {
-        if (isLoggedIn.value) sessionManager.getUser() else null
-    }
+//    val username = remember(isLoggedIn.value) {
+//        if (isLoggedIn.value) sessionManager.getUser() else null
+//    }
 
-    LaunchedEffect(username) {
-        libraryViewModel.getAllSongs(username ?: "").observe(lifecycleOwner) { songList ->
-            if (songList != null) {
-                onSongsLoaded(songList)
-            }
-        }
-    }
+//    LaunchedEffect(username) {
+//        libraryViewModel.getAllSongs(username ?: "").observe(lifecycleOwner) { songList ->
+//            if (songList != null) {
+//                onSongsLoaded(songList)
+//            }
+//        }
+//    }
 
     fun startRefreshLoop() {
         refreshJob?.cancel()
@@ -351,7 +354,11 @@ fun MainApp(
             composable(Screen.Home.route) {
                 HomeScreen(
                     navController = navController,
-                    sessionManager = sessionManager
+                    sessionManager = sessionManager,
+                    onSongsLoaded = onSongsLoaded,
+                    showSongPlayerSheet = showSongPlayerSheet,
+                    onPlay = onPlay,
+                    currentSong = xcurrentSong
                 )
             }
 
@@ -362,7 +369,8 @@ fun MainApp(
                     viewModel = libraryViewModel,
                     showSongPlayerSheet = showSongPlayerSheet,
                     onPlay = onPlay,
-                    currentSong = xcurrentSong
+                    currentSong = xcurrentSong,
+                    onSongsLoaded = onSongsLoaded
                 )
             }
 
@@ -370,6 +378,7 @@ fun MainApp(
                 ProfileScreen(
                     navController = navController,
                     sessionManager = sessionManager,
+
                 )
             }
 
@@ -378,7 +387,11 @@ fun MainApp(
                     navController = navController,
                     isRegion = false,
                     sessionManager = sessionManager,
-                    downloadHelper = downloadHelper
+                    downloadHelper = downloadHelper,
+                    showSongPlayerSheet = showSongPlayerSheet,
+                    onPlay = onPlay,
+                    currentSong = xcurrentSong,
+                    onSongsLoaded = onSongsLoaded
                 )
             }
 
@@ -387,7 +400,11 @@ fun MainApp(
                     navController = navController,
                     isRegion = true,
                     sessionManager = sessionManager,
-                    downloadHelper = downloadHelper
+                    downloadHelper = downloadHelper,
+                    showSongPlayerSheet = showSongPlayerSheet,
+                    onPlay = onPlay,
+                    currentSong = xcurrentSong,
+                    onSongsLoaded = onSongsLoaded
                 )
             }
 

@@ -7,7 +7,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,7 +38,8 @@ fun LibraryScreen(
     currentSong: MutableStateFlow<Song>?,
     viewModel: LibraryViewModel = viewModel(),
     showSongPlayerSheet: MutableState<Boolean>,
-    onPlay: (song: Song)->Unit
+    onPlay: (song: Song)->Unit,
+    onSongsLoaded: (List<Song>?) -> Unit = {}
 ) {
     val showPopUpAddSong = remember { mutableStateOf(false) }
     val showPopUpEditSong = remember { mutableStateOf(false) }
@@ -46,6 +50,11 @@ fun LibraryScreen(
 
     val username = sessionManager.getUser()
 
+    val songList by viewModel.getAllSongs(username ?: "").observeAsState(emptyList())
+
+    LaunchedEffect(songList) {
+        onSongsLoaded(songList)
+    }
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true

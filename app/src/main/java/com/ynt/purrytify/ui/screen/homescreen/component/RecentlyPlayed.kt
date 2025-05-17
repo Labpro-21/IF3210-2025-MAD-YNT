@@ -1,6 +1,8 @@
 package com.ynt.purrytify.ui.screen.homescreen.component
 
+import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import coil.compose.rememberAsyncImagePainter
 
 @Composable
-fun RecentlyPlayed(songList: List<Song>) {
+fun RecentlyPlayed(
+    songList: List<Song>,
+    playSong : (Song) -> Unit,
+    onSongsLoaded: (List<Song>?) -> Unit = {}
+) {
     Column (
         horizontalAlignment = Alignment.Start
     ) {
@@ -40,12 +46,16 @@ fun RecentlyPlayed(songList: List<Song>) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        SongListVertical(songList)
+        SongListVertical(songList, playSong, onSongsLoaded)
     }
 }
 
 @Composable
-fun SongListVertical(songList: List<Song>) {
+fun SongListVertical(
+    songList: List<Song>,
+    playSong: (Song) -> Unit,
+    onSongsLoaded: (List<Song>?) -> Unit = {}
+) {
     Column (
         modifier = Modifier
             .fillMaxWidth()
@@ -53,18 +63,31 @@ fun SongListVertical(songList: List<Song>) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         songList.forEach { song ->
-            SongListItem(song)
+            SongListItem(
+                song = song,
+                playSong = {
+                    onSongsLoaded(songList)
+                    songList.forEach { song ->
+                        Log.d("Song", song.title.toString())
+                    }
+                    playSong(song)
+                }
+            )
         }
     }
 }
 
 @Composable
-fun SongListItem(song: Song) {
+fun SongListItem(
+    song: Song,
+    playSong: (Song) -> Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 10.dp)
+            .clickable { playSong(song) }
     ) {
         Image(
             painter = rememberAsyncImagePainter(song.image),

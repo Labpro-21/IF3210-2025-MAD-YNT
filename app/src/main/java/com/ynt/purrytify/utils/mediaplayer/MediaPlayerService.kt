@@ -22,6 +22,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 const val PREV = "prev"
 const val NEXT = "next"
@@ -50,6 +51,11 @@ class MediaPlayerService : Service() {
         fun getService() = this@MediaPlayerService
 
         fun setSongList(list: List<Song>?) {
+            if (list != null) {
+                list.forEach { song ->
+                    Log.d("Song Set", song.title.toString())
+                }
+            }
             try {
                 if (list == null) {
                     this@MediaPlayerService.songList = mutableListOf()
@@ -58,6 +64,9 @@ class MediaPlayerService : Service() {
                 this@MediaPlayerService.songList = list.toMutableList()
             } catch (e: Exception) {
                 this@MediaPlayerService.songList = mutableListOf()
+            }
+            songList.forEach { song ->
+                Log.d("Song List Set", song.title.toString())
             }
         }
 
@@ -87,8 +96,12 @@ class MediaPlayerService : Service() {
     }
 
     fun play(song: Song) {
-        val index = songList.indexOfFirst { it.id == currentSong.value.id }
+        val index = songList.indexOfFirst {
+            Log.d("INDEX IS", it.id.toString())
+            it.id == currentSong.value.id
+        }
         Log.d("INDEX IS","INDEX IS ${currentSong.value}")
+
         Log.d("INDEX IS","INDEX IS $index")
         Log.d("INDEX IS","INDEX IS $songList")
         try {
@@ -109,6 +122,7 @@ class MediaPlayerService : Service() {
                 true
             }
         } catch (e: Exception) {
+            Log.d("Play Exception", e.message.toString())
         }
     }
 
@@ -163,6 +177,7 @@ class MediaPlayerService : Service() {
 
     fun next() {
         try {
+            Log.d("Lengtho", songList.size.toString())
             val index = songList.indexOfFirst { it.id == currentSong.value.id }
             currentSong.value = when {
                 index >= 0 && index < songList.size - 1 -> songList[index + 1]

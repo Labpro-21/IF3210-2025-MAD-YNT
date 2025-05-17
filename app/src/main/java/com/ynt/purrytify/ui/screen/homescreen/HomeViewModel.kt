@@ -39,7 +39,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 _data.value = Result.failure(e)
             }
-
         }
+    }
+
+    fun update(song: Song) {
+        songRepo.update(song)
     }
 }
