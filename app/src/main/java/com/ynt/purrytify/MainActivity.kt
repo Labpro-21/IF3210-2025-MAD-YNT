@@ -47,6 +47,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.component.BottomBar
 import com.ynt.purrytify.ui.component.ConnectivityStatusBanner
@@ -57,6 +58,7 @@ import com.ynt.purrytify.ui.screen.loginscreen.LoginScreen
 import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
 import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
+import com.ynt.purrytify.ui.screen.topchartscreen.TopSongScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
 import com.ynt.purrytify.utils.mediaplayer.MediaPlayerService
@@ -126,9 +128,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private lateinit var downloadHelper : DownloadHelper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sessionManager = SessionManager(applicationContext)
+        downloadHelper = DownloadHelper(this)
         enableEdgeToEdge()
         val serviceIntent = Intent(this, MediaPlayerService::class.java)
         startService(serviceIntent)
@@ -174,7 +178,8 @@ class MainActivity : ComponentActivity() {
                     onNext = onNext,
                     onPrevious = onPrevious,
                     onPlay = play,
-                    onSeek = seek
+                    onSeek = seek,
+                    downloadHelper = downloadHelper
                 )
             }
         }
@@ -202,6 +207,8 @@ sealed class Screen(val route: String) {
     data object Login : Screen("login")
     data object Profile: Screen("profile")
     data object EditProfile: Screen("editProfile")
+    data object TopGlobalCharts : Screen("topGlobalCharts")
+    data object TopRegionCharts : Screen("topRegionCharts")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -216,7 +223,8 @@ fun MainApp(
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     onPlay: (song: Song) -> Unit,
-    onSeek: (pos: Float) -> Unit
+    onSeek: (pos: Float) -> Unit,
+    downloadHelper: DownloadHelper,
 ) {
     val currentSong by xcurrentSong.collectAsState()
     val currentDuration by xcurrentDuration.collectAsState()
@@ -325,6 +333,7 @@ fun MainApp(
             exitTransition = { fadeOut(tween(300)) },
             popEnterTransition = { fadeIn(tween(300)) },
             popExitTransition = { fadeOut(tween(300)) }
+
         ) {
             composable(Screen.Login.route) {
                 LoginScreen(
@@ -364,6 +373,24 @@ fun MainApp(
                 )
             }
 
+            composable(Screen.TopGlobalCharts.route) {
+                TopSongScreen(
+                    navController = navController,
+                    isRegion = false,
+                    sessionManager = sessionManager,
+                    downloadHelper = downloadHelper
+                )
+            }
+
+            composable(Screen.TopRegionCharts.route) {
+                TopSongScreen(
+                    navController = navController,
+                    isRegion = true,
+                    sessionManager = sessionManager,
+                    downloadHelper = downloadHelper
+                )
+            }
+
             composable(Screen.EditProfile.route) {
                 EditProfileScreen(
                     navController = navController,
@@ -394,7 +421,6 @@ fun MainApp(
         }
     }
 }
-
 
 
 @Composable

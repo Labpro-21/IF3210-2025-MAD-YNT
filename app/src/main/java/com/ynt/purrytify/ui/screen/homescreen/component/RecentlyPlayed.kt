@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,28 +29,30 @@ import coil.compose.rememberAsyncImagePainter
 @Composable
 fun RecentlyPlayed(songList: List<Song>) {
     Column (
-        modifier = Modifier
-            .padding(0.dp),
         horizontalAlignment = Alignment.Start
     ) {
         Text(text = "Recently Played",
             color = Color.White,
-            fontSize = 20.sp,
+            fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 10.dp)
         )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
         SongListVertical(songList)
     }
 }
 
 @Composable
 fun SongListVertical(songList: List<Song>) {
-    LazyColumn (
+    Column (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(start = 10.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(songList) { song ->
+        songList.forEach { song ->
             SongListItem(song)
         }
     }
@@ -61,7 +64,7 @@ fun SongListItem(song: Song) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(start = 10.dp)
     ) {
         Image(
             painter = rememberAsyncImagePainter(song.image),

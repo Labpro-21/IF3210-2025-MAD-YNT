@@ -28,7 +28,7 @@ fun EditProfileHeader(
     ) {
         BackButton(
             modifier = Modifier.weight(1f)
-        ) { navController.navigate("profile") }
+        ) { navController.popBackStack() }
 
         Text(
             text = "Edit Profile",
