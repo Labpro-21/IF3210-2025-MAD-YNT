@@ -27,16 +27,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 val response = RetrofitInstance.api.getProfile("Bearer ${sessionManager.getAccessToken()}")
                 if (response.isSuccessful) {
                     _data.value = Result.success(response.body())
-                    songRepo.getAllSongCount().observeForever { count ->
-                        Log.d("All Song Count", count.toString())
-                    }
-
-                    songRepo.getAllOwner().observeForever() { list ->
-                        val i = list.listIterator()
-                        for (item in i) {
-                            Log.d("Owner", item)
-                        }
-                    }
 
                     songRepo.countSongsPerUser(response.body()?.email ?: "-").observeForever { count ->
                         countSong.postValue(count)
