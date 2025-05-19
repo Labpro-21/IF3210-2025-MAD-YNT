@@ -7,7 +7,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -18,26 +21,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.ynt.purrytify.PlayerState
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.component.AddSong
 import com.ynt.purrytify.ui.screen.libraryscreen.component.EditSong
 import com.ynt.purrytify.ui.screen.libraryscreen.component.LibraryTopBar
 import com.ynt.purrytify.ui.screen.libraryscreen.component.SongListRecyclerView
 import com.ynt.purrytify.utils.auth.SessionManager
-import com.ynt.purrytify.utils.queue.QueueManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     navController: NavController,
     sessionManager: SessionManager,
+    currentSong: MutableStateFlow<Song>?,
     viewModel: LibraryViewModel = viewModel(),
-    currentSong: MutableState<Song?>,
-    currentSongPosition: MutableState<Int>,
-    isPlaying: MutableState<PlayerState>,
-    queueManager: QueueManager,
-    showSongPlayerSheet: MutableState<Boolean>
+    showSongPlayerSheet: MutableState<Boolean>,
+    onPlay: (song: Song)->Unit,
+    onSongsLoaded: (List<Song>?) -> Unit = {}
 ) {
     val showPopUpAddSong = remember { mutableStateOf(false) }
     val showPopUpEditSong = remember { mutableStateOf(false) }
@@ -48,10 +50,10 @@ fun LibraryScreen(
 
     val username = sessionManager.getUser()
 
-    viewModel.getAllSongs(username).observe(lifecycleOwner) { songList ->
-        if (songList != null) {
-            queueManager.addMultipleToQueue(songList)
-        }
+    val songList by viewModel.getAllSongs(username ?: "").observeAsState(emptyList())
+
+    LaunchedEffect(songList) {
+        onSongsLoaded(songList)
     }
 
     val sheetState = rememberModalBottomSheetState(
@@ -92,24 +94,25 @@ fun LibraryScreen(
                 updateLikeSong = { song ->
                     val songCopy = song.copy(isLiked = if (song.isLiked == 1) 0 else 1)
                     viewModel.update(songCopy)
-                    currentSong.value?.isLiked = songCopy.isLiked
+                    if(songCopy.id == currentSong?.value?.id ?: null){
+                        currentSong?.update {
+                            songCopy
+                        }
+                    }
+
                 },
                 updateEditSong = { song ->
                     editedSong.value = song
                     showPopUpEditSong.value = true
                 },
                 playSong = { selectedSong ->
-                    if(currentSong.value?.id==selectedSong.id){
+                    if(currentSong?.value?.id ?: null == selectedSong.id){
                         showSongPlayerSheet.value = true
                     }
-                    else {
+                    else{
                         val songCopy = selectedSong.copy(lastPlayed = System.currentTimeMillis())
                         viewModel.update(songCopy)
-                        Log.d("LIST SONG", "${queueManager.getQueueAsList()}")
-                        queueManager.setCurrentSong(selectedSong)
-                        currentSong.value = queueManager.getCurrentSong()
-                        currentSongPosition.value = 0
-                        isPlaying.value = PlayerState.STARTED
+                        onPlay(selectedSong)
                     }
                 }
             )
@@ -122,7 +125,6 @@ fun LibraryScreen(
                     context = localContext,
                     sheetState = sheetState,
                     song = editedSong.value!!,
-                    queueManager = queueManager,
                     currentSong = currentSong
                 )
             }

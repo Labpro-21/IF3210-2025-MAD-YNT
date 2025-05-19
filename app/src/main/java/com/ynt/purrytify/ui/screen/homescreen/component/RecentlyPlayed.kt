@@ -1,11 +1,14 @@
 package com.ynt.purrytify.ui.screen.homescreen.component
 
+import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,42 +29,65 @@ import androidx.compose.ui.text.font.FontWeight
 import coil.compose.rememberAsyncImagePainter
 
 @Composable
-fun RecentlyPlayed(songList: List<Song>) {
+fun RecentlyPlayed(
+    songList: List<Song>,
+    playSong : (Song) -> Unit,
+    onSongsLoaded: (List<Song>?) -> Unit = {}
+) {
     Column (
-        modifier = Modifier
-            .padding(0.dp),
         horizontalAlignment = Alignment.Start
     ) {
         Text(text = "Recently Played",
             color = Color.White,
-            fontSize = 20.sp,
+            fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 10.dp)
         )
-        SongListVertical(songList)
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        SongListVertical(songList, playSong, onSongsLoaded)
     }
 }
 
 @Composable
-fun SongListVertical(songList: List<Song>) {
-    LazyColumn (
+fun SongListVertical(
+    songList: List<Song>,
+    playSong: (Song) -> Unit,
+    onSongsLoaded: (List<Song>?) -> Unit = {}
+) {
+    Column (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(start = 10.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(songList) { song ->
-            SongListItem(song)
+        songList.forEach { song ->
+            SongListItem(
+                song = song,
+                playSong = {
+                    onSongsLoaded(songList)
+                    songList.forEach { song ->
+                        Log.d("Song", song.title.toString())
+                    }
+                    playSong(song)
+                }
+            )
         }
     }
 }
 
 @Composable
-fun SongListItem(song: Song) {
+fun SongListItem(
+    song: Song,
+    playSong: (Song) -> Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(start = 10.dp)
+            .clickable { playSong(song) }
     ) {
         Image(
             painter = rememberAsyncImagePainter(song.image),

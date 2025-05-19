@@ -1,7 +1,13 @@
 package com.ynt.purrytify
 
 import android.os.Build
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -21,8 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -31,17 +37,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.net.toUri
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.component.BottomBar
 import com.ynt.purrytify.ui.component.ConnectivityStatusBanner
@@ -52,21 +59,89 @@ import com.ynt.purrytify.ui.screen.loginscreen.LoginScreen
 import com.ynt.purrytify.ui.screen.audioroutingscreen.AudioRoutingScreen
 import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
+import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
+import com.ynt.purrytify.ui.screen.topchartscreen.TopChartViewModel
+import com.ynt.purrytify.ui.screen.topchartscreen.TopSongScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
-import com.ynt.purrytify.utils.mediaplayer.SongPlayerLiveData
-import com.ynt.purrytify.utils.queue.QueueManager
+import com.ynt.purrytify.utils.mediaplayer.MediaPlayerService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var sessionManager: SessionManager
+
+    private val xisPlaying = MutableStateFlow(false)
+    private val xcurrentDuration = MutableStateFlow(0f)
+    private val xcurrentSong = MutableStateFlow(Song())
+    private var mediaBinder: MediaPlayerService.MediaBinder? = null
+    private var service: MediaPlayerService? = null
+
+    private var isBound = false
+
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
+            try {
+                mediaBinder = p1 as? MediaPlayerService.MediaBinder
+                if (mediaBinder == null) {
+                    Log.e("MainActivity", "Failed to cast binder to MediaBinder")
+                    return
+                }
+                service = mediaBinder!!.getService()
+                lifecycleScope.launch {
+                    try {
+                        mediaBinder?.isPlaying()?.collectLatest {
+                            xisPlaying.value = it
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error collecting isPlaying", e)
+                    }
+                }
+                lifecycleScope.launch {
+                    try {
+                        mediaBinder?.currentDuration()?.collectLatest {
+                            xcurrentDuration.value = it
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error collecting currentDuration", e)
+                    }
+                }
+                lifecycleScope.launch {
+                    try {
+                        mediaBinder?.getCurrentSong()?.collectLatest {
+                            xcurrentSong.value = it
+                        }
+                    } catch (e: Exception) {
+                        Log.e("MainActivity", "Error collecting currentSong", e)
+                    }
+                }
+                isBound = true
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error in onServiceConnected", e)
+            }
+        }
+
+        override fun onServiceDisconnected(p0: ComponentName?) {
+            isBound = false
+            mediaBinder = null
+            service = null
+        }
+    }
+
+    private lateinit var downloadHelper : DownloadHelper
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sessionManager = SessionManager(applicationContext)
+        downloadHelper = DownloadHelper(this)
         enableEdgeToEdge()
+        val serviceIntent = Intent(this, MediaPlayerService::class.java)
+        startService(serviceIntent)
+
         setContent {
             val view = window.decorView
             val darkIcons = false
@@ -83,8 +158,50 @@ class MainActivity : ComponentActivity() {
                     .background(Color.Black)
                     .safeDrawingPadding()
             ) {
-                MainApp(sessionManager)
+                val play: (song: Song) -> Unit = { mediaBinder?.setCurrentSong(it) }
+                val seek: (pos: Float) -> Unit = {service?.seekTo(it)}
+                val onPlayPause: ()->Unit = { service?.playPause() }
+                val onNext: ()->Unit = { service?.next() }
+                val onPrevious: ()->Unit = { service?.previous() }
+                MainApp(
+                    sessionManager = sessionManager,
+                    xcurrentSong = xcurrentSong,
+                    xcurrentDuration = xcurrentDuration,
+                    xisPlaying = xisPlaying,
+                    onSongsLoaded = { songs ->
+                        if (!songs.isNullOrEmpty()) {
+                            mediaBinder?.let { binder ->
+                                try {
+                                    binder.setSongList(songs)
+                                } catch (e: Exception) {
+                                    Log.e("MainActivity", "Error setting song list", e)
+                                }
+                            }
+                        }
+                    },
+                    onPlayPause = onPlayPause,
+                    onNext = onNext,
+                    onPrevious = onPrevious,
+                    onPlay = play,
+                    onSeek = seek,
+                    downloadHelper = downloadHelper
+                )
             }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Intent(this, MediaPlayerService::class.java).also { intent ->
+            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (isBound) {
+            unbindService(connection)
+            isBound = false
         }
     }
 }
@@ -96,23 +213,34 @@ sealed class Screen(val route: String) {
     data object Profile: Screen("profile")
     data object  AudioRouting: Screen("audiorouting")
     data object EditProfile: Screen("editProfile")
+    data object TopGlobalCharts : Screen("topGlobalCharts")
+    data object TopRegionCharts : Screen("topRegionCharts")
 }
-
-enum class PlayerState {
-    STARTED, PAUSED, PLAYING, STOPPED
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainApp(
     sessionManager: SessionManager,
-    songPlayerLiveData: SongPlayerLiveData = viewModel(),
-    queueManager: QueueManager = remember { QueueManager() }
+    xcurrentSong: MutableStateFlow<Song>,
+    xcurrentDuration: MutableStateFlow<Float>,
+    xisPlaying: MutableStateFlow<Boolean>,
+    onSongsLoaded: (List<Song>?) -> Unit = {},
+    onPlayPause: () -> Unit,
+    onNext: () -> Unit,
+    onPrevious: () -> Unit,
+    onPlay: (song: Song) -> Unit,
+    onSeek: (pos: Float) -> Unit,
+    downloadHelper: DownloadHelper,
 ) {
-    val context = LocalContext.current
+    val currentSong by xcurrentSong.collectAsState()
+    val currentDuration by xcurrentDuration.collectAsState()
+    val isPlaying by xisPlaying.collectAsState()
+
+//    val context = LocalContext.current
     val navController: NavHostController = rememberNavController()
     val libraryViewModel: LibraryViewModel = viewModel()
+//    val lifecycleOwner = LocalLifecycleOwner.current
+//    val topChartViewModel: TopChartViewModel = viewModel()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -125,60 +253,22 @@ fun MainApp(
     val refreshScope = rememberCoroutineScope()
     var refreshJob by remember { mutableStateOf<Job?>(null) }
 
-    val currentSong = rememberSaveable{ mutableStateOf<Song?>(null) }
-    val currentSongPosition = rememberSaveable { mutableIntStateOf(0) }
-    val isPlaying = rememberSaveable { mutableStateOf(PlayerState.STOPPED) }
-
     val showSongPlayerSheet = rememberSaveable { mutableStateOf(false) }
     val showSongPlayerSheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
 
-    val configuration = LocalConfiguration.current
+//    val username = remember(isLoggedIn.value) {
+//        if (isLoggedIn.value) sessionManager.getUser() else null
+//    }
 
-    LaunchedEffect(configuration.orientation){
-        with(songPlayerLiveData.songPlayer.value){
-            currentSongPosition.intValue = this?.getCurrentPosition()!!
-        }
-    }
-
-    LaunchedEffect(isPlaying.value) {
-        if (isPlaying.value == PlayerState.PLAYING) {
-            while (isPlaying.value == PlayerState.PLAYING) {
-                val position = songPlayerLiveData.songPlayer.value?.getCurrentPosition()
-                if (position != null) {
-                    currentSongPosition.intValue = position
-                }
-                delay(500)
-            }
-        }
-    }
-
-    LaunchedEffect(isPlaying.value) {
-        with(songPlayerLiveData.songPlayer.value) {
-            when (isPlaying.value) {
-                PlayerState.STOPPED -> {
-                }
-
-                PlayerState.PLAYING -> {
-                    this?.resumeAudio(currentSongPosition)
-                }
-
-                PlayerState.PAUSED -> {
-                    this?.pauseAudio(currentSongPosition)
-                }
-                PlayerState.STARTED -> {
-                    currentSong.value?.let { song ->
-                        this?.playAudioFromUri(
-                            context,
-                            song.audio?.toUri() ?: "".toUri(),
-                            isPlaying
-                        )
-                    }
-                }
-            }
-        }
-    }
+//    LaunchedEffect(username) {
+//        libraryViewModel.getAllSongs(username ?: "").observe(lifecycleOwner) { songList ->
+//            if (songList != null) {
+//                onSongsLoaded(songList)
+//            }
+//        }
+//    }
 
     fun startRefreshLoop() {
         refreshJob?.cancel()
@@ -230,30 +320,10 @@ fun MainApp(
                 BottomBar(
                     navController = navController,
                     currentSong = currentSong,
+                    xcurrentDuration = xcurrentDuration,
                     isPlaying = isPlaying,
-                    onSkip = {
-                        val nextSong = queueManager.skipToNext()
-                        currentSong.value = nextSong
-                        val songCopy = nextSong?.copy(lastPlayed = System.currentTimeMillis())
-                        if (songCopy != null) {
-                            libraryViewModel.update(songCopy)
-                        }
-                        currentSongPosition.intValue = 0
-                        if(queueManager.size.value==0){
-                            isPlaying.value = PlayerState.STOPPED
-                        }
-                        else{
-                            isPlaying.value = PlayerState.STARTED
-                        }
-                    },
-                    onPlay = {
-                        isPlaying.value = when (isPlaying.value){
-                            PlayerState.STOPPED -> PlayerState.STARTED
-                            PlayerState.PAUSED -> PlayerState.PLAYING
-                            PlayerState.STARTED -> PlayerState.PAUSED
-                            PlayerState.PLAYING -> PlayerState.PAUSED
-                        }
-                    },
+                    onSkip = onNext,
+                    onPlay = onPlayPause,
                     onClick = {
                         showSongPlayerSheet.value = true
                     }
@@ -288,7 +358,11 @@ fun MainApp(
             composable(Screen.Home.route) {
                 HomeScreen(
                     navController = navController,
-                    sessionManager = sessionManager
+                    sessionManager = sessionManager,
+                    onSongsLoaded = onSongsLoaded,
+                    showSongPlayerSheet = showSongPlayerSheet,
+                    onPlay = onPlay,
+                    currentSong = xcurrentSong
                 )
             }
 
@@ -296,12 +370,11 @@ fun MainApp(
                 LibraryScreen(
                     navController = navController,
                     sessionManager = sessionManager,
-                    currentSong = currentSong,
-                    currentSongPosition = currentSongPosition,
-                    isPlaying = isPlaying,
-                    queueManager = queueManager,
                     viewModel = libraryViewModel,
-                    showSongPlayerSheet = showSongPlayerSheet
+                    showSongPlayerSheet = showSongPlayerSheet,
+                    onPlay = onPlay,
+                    currentSong = xcurrentSong,
+                    onSongsLoaded = onSongsLoaded
                 )
             }
 
@@ -309,6 +382,33 @@ fun MainApp(
                 ProfileScreen(
                     navController = navController,
                     sessionManager = sessionManager,
+
+                )
+            }
+
+            composable(Screen.TopGlobalCharts.route) {
+                TopSongScreen(
+                    navController = navController,
+                    isRegion = false,
+                    sessionManager = sessionManager,
+                    downloadHelper = downloadHelper,
+                    showSongPlayerSheet = showSongPlayerSheet,
+                    onPlay = onPlay,
+                    currentSong = xcurrentSong,
+                    onSongsLoaded = onSongsLoaded
+                )
+            }
+
+            composable(Screen.TopRegionCharts.route) {
+                TopSongScreen(
+                    navController = navController,
+                    isRegion = true,
+                    sessionManager = sessionManager,
+                    downloadHelper = downloadHelper,
+                    showSongPlayerSheet = showSongPlayerSheet,
+                    onPlay = onPlay,
+                    currentSong = xcurrentSong,
+                    onSongsLoaded = onSongsLoaded
                 )
             }
 
@@ -330,14 +430,16 @@ fun MainApp(
 
     if (showSongPlayerSheet.value) {
         SongPlayerSheet(
-            setShowPopupSong = {showSongPlayerSheet.value = it},
-            queueManager = queueManager,
+            setShowPopupSong = { showSongPlayerSheet.value = it },
             sheetState = showSongPlayerSheetState,
-            currentSong = currentSong,
+            xcurrentSong = xcurrentSong,
             libraryViewModel = libraryViewModel,
-            currentPosition = currentSongPosition,
+            currentPosition = currentDuration,
             isPlaying = isPlaying,
-            songPlayerLiveData = songPlayerLiveData
+            onPlayPause = onPlayPause,
+            onNext = onNext,
+            onPrevious = onPrevious,
+            onSeek = onSeek
         )
     }
 

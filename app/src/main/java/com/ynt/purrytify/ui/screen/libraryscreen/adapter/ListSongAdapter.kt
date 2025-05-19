@@ -30,16 +30,17 @@ class ListSongAdapter(var listSong: List<Song>,
         val song = listSong[position]
         holder.imgPhoto.load(song.image)
         holder.editButton.load(R.drawable.baseline_more_vert_24)
-        holder.likeButton.load(R.drawable.twotone_check_24)
         holder.editButton.setColorFilter(
             ContextCompat.getColor(holder.itemView.context,R.color.white)
         )
         if (song.isLiked==1) {
+            holder.likeButton.load(R.drawable.baseline_favorite_24)
             holder.likeButton.setColorFilter(
-                ContextCompat.getColor(holder.itemView.context, R.color.green),
+                ContextCompat.getColor(holder.itemView.context, R.color.red),
             )
         }
         else{
+            holder.likeButton.load(R.drawable.baseline_favorite_border_24)
             holder.likeButton.setColorFilter(
                 ContextCompat.getColor(holder.itemView.context,R.color.white)
             )

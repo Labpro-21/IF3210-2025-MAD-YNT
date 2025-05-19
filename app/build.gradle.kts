@@ -72,6 +72,9 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.core.splashscreen)
+
+    implementation(libs.androidx.media)
+
     // Retrofit and Gson
     implementation(libs.retrofit)
     implementation(libs.converter.gson)

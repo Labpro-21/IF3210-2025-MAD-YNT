@@ -32,7 +32,7 @@ import com.ynt.purrytify.R
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.libraryscreen.utils.getFileName
-import com.ynt.purrytify.utils.queue.QueueManager
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,8 +44,7 @@ fun EditSong(
     context: Context,
     sheetState: SheetState,
     song: Song,
-    queueManager: QueueManager,
-    currentSong: MutableState<Song?>
+    currentSong: MutableStateFlow<Song>?
 ){
     val title = remember  { mutableStateOf(song.title ?: "") }
     val artist = remember{ mutableStateOf(song.artist ?: "") }
@@ -129,7 +128,6 @@ fun EditSong(
                         setShowPopupSong =  setShowPopupSong,
                         song = song,
                         libraryViewModel = libraryViewModel,
-                        queueManager = queueManager
                     )
                     EditSaveButton(
                         libraryViewModel = libraryViewModel,
@@ -141,7 +139,6 @@ fun EditSong(
                         artist = artist.value,
                         imageUri = selectedImageUri.value,
                         title = title.value,
-                        queueManager = queueManager,
                         currentSong = currentSong
                     )
                 }

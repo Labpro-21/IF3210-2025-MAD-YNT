@@ -1,6 +1,8 @@
 package com.ynt.purrytify.ui.screen.homescreen.component
 
+import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,51 +24,71 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.models.Song
 
 @Composable
-fun NewSongs(songList: List<Song>) {
+fun NewSongs(
+    songList: List<Song>,
+    playSong : (Song) -> Unit,
+    onSongsLoaded: (List<Song>?) -> Unit = {}
+) {
     Column (
-        modifier = Modifier
-            .padding(0.dp),
         horizontalAlignment = Alignment.Start
     ) {
         Text(text = "New Songs",
             color = Color.White,
-            fontSize = 20.sp,
+            fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 10.dp, top = 20.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        NewSongsList(songList)
+        NewSongsList(songList, playSong, onSongsLoaded)
     }
 }
 
 @Composable
-fun NewSongsList(songList: List<Song>) {
+fun NewSongsList(
+    songList: List<Song>,
+    playSong : (Song) -> Unit,
+    onSongsLoaded: (List<Song>?) -> Unit = {}
+) {
     LazyRow (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp),
+            .padding(start = 10.dp, end = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(songList) { song ->
-            SongCard(song)
+            SongCard(
+                song = song,
+                playSong = {
+                    onSongsLoaded(songList)
+                    songList.forEach { song ->
+                        Log.d("Song", song.title.toString())
+                    }
+                    playSong(song)
+                }
+            )
         }
     }
 }
 
 @Composable
-fun SongCard(song: Song) {
+fun SongCard(
+    song: Song,
+    playSong: (Song) -> Unit
+) {
     Card(
         modifier = Modifier
             .width(120.dp)
             .height(170.dp)
-            .padding(end = 12.dp),
+            .clickable { playSong(song) },
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
@@ -91,14 +113,17 @@ fun SongCard(song: Song) {
                 Text(
                     text = song.title ?: "",
                     color = Color.White,
-                    fontSize = 16.sp,
-                    maxLines = 1
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+
                 Text(
                     text = song.artist ?: "",
                     color = Color.LightGray,
                     fontSize = 12.sp,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
