@@ -46,8 +46,6 @@ fun AudioRoutingScreen(
 ) {
     val context = LocalContext.current
     val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
-    // Filter audio output devices
     val outputDevices = remember {
         audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS).filter {
             when (it.type) {
@@ -60,13 +58,9 @@ fun AudioRoutingScreen(
             }
         }
     }
-
-    // Track selected device
     var selectedDeviceId by remember {
         mutableStateOf(getSelectedAudioDeviceId(context))
     }
-
-    // Apply saved preferred output device
     LaunchedEffect(outputDevices) {
         val savedId = getSelectedAudioDeviceId(context)
         val savedDevice = outputDevices.find { it.id == savedId }
@@ -83,8 +77,6 @@ fun AudioRoutingScreen(
             }
         }
     }
-
-    // UI
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -112,8 +104,6 @@ fun AudioRoutingScreen(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-
-        // List devices
         outputDevices.forEach { device ->
             val isSelected = selectedDeviceId == device.id
             val textColor = if (isSelected) colorResource(R.color.green) else Color.White
