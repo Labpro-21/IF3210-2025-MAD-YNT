@@ -26,7 +26,6 @@ import com.ynt.purrytify.R
 
 @Composable
 fun LibraryTopBar(
-    navController: NavController,
     title: String,
     onAddClick: () -> Unit,
     onChoiceSelected: (Int) -> Unit,

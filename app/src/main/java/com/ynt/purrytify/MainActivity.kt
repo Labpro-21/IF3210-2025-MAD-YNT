@@ -217,7 +217,6 @@ sealed class Screen(val route: String) {
     data object Library : Screen("library")
     data object Login : Screen("login")
     data object Profile: Screen("profile")
-    data object  AudioRouting: Screen("audiorouting")
     data object EditProfile: Screen("editProfile")
     data object TopGlobalCharts : Screen("topGlobalCharts")
     data object TopRegionCharts : Screen("topRegionCharts")
