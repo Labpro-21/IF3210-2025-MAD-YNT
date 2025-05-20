@@ -14,6 +14,7 @@ import com.ynt.purrytify.CHANNEL_ID
 import com.ynt.purrytify.R
 import com.ynt.purrytify.models.Song
 import android.Manifest.permission.POST_NOTIFICATIONS
+import android.media.AudioDeviceInfo
 import android.util.Log
 import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
@@ -78,6 +79,10 @@ class MediaPlayerService : Service() {
         fun currentDuration() = this@MediaPlayerService.currentDuration
         fun isPlaying() = this@MediaPlayerService.isPlaying
         fun getCurrentSong() = this@MediaPlayerService.currentSong
+
+        fun setPreferredOutputDevice(device: AudioDeviceInfo) {
+            this@MediaPlayerService.setPreferredOutputDevice(device)
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder {
@@ -258,5 +263,12 @@ class MediaPlayerService : Service() {
 
     fun previous() {
         prev()
+    }
+
+    private var preferredDevice: AudioDeviceInfo? = null
+
+    fun setPreferredOutputDevice(device: AudioDeviceInfo) {
+        preferredDevice = device
+        mediaPlayer?.setPreferredDevice(device)
     }
 }

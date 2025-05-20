@@ -31,6 +31,7 @@ fun LibraryTopBar(
     onAddClick: () -> Unit,
     onChoiceSelected: (Int) -> Unit,
     selectedChoiceIndex: Int,
+    navController: NavController
 ) {
     Column(
         modifier = Modifier
@@ -81,7 +82,6 @@ fun LibraryTopBar(
             )
             AudioRoutesButton(navController = navController)
         }
-
 
 
     }

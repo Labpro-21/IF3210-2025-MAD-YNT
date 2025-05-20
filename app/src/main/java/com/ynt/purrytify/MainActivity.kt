@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -34,13 +35,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -52,6 +52,7 @@ import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.component.BottomBar
 import com.ynt.purrytify.ui.component.ConnectivityStatusBanner
+import com.ynt.purrytify.ui.screen.audioroutingscreen.AudioRoutingScreen
 import com.ynt.purrytify.ui.screen.homescreen.HomeScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
@@ -61,7 +62,6 @@ import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
 import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
-import com.ynt.purrytify.ui.screen.topchartscreen.TopChartViewModel
 import com.ynt.purrytify.ui.screen.topchartscreen.TopSongScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
@@ -78,15 +78,16 @@ class MainActivity : ComponentActivity() {
     private val xisPlaying = MutableStateFlow(false)
     private val xcurrentDuration = MutableStateFlow(0f)
     private val xcurrentSong = MutableStateFlow(Song())
-    private var mediaBinder: MediaPlayerService.MediaBinder? = null
+    private val _mediaBinder = mutableStateOf<MediaPlayerService.MediaBinder?>(null)
+    private val mediaBinder get() = _mediaBinder.value
     private var service: MediaPlayerService? = null
 
     private var isBound = false
-
+    private val isServiceReady = MutableStateFlow(false)
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
             try {
-                mediaBinder = p1 as? MediaPlayerService.MediaBinder
+                _mediaBinder.value = p1 as? MediaPlayerService.MediaBinder
                 if (mediaBinder == null) {
                     Log.e("MainActivity", "Failed to cast binder to MediaBinder")
                     return
@@ -120,6 +121,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 isBound = true
+                isServiceReady.value = true
             } catch (e: Exception) {
                 Log.e("MainActivity", "Error in onServiceConnected", e)
             }
@@ -127,8 +129,9 @@ class MainActivity : ComponentActivity() {
 
         override fun onServiceDisconnected(p0: ComponentName?) {
             isBound = false
-            mediaBinder = null
+            _mediaBinder.value = null
             service = null
+            isServiceReady.value = false
         }
     }
 
@@ -184,7 +187,9 @@ class MainActivity : ComponentActivity() {
                     onPrevious = onPrevious,
                     onPlay = play,
                     onSeek = seek,
-                    downloadHelper = downloadHelper
+                    downloadHelper = downloadHelper,
+                    mediaBinder = _mediaBinder.value,
+                    isServiceReady = isServiceReady,
                 )
             }
         }
@@ -204,6 +209,7 @@ class MainActivity : ComponentActivity() {
             isBound = false
         }
     }
+
 }
 
 sealed class Screen(val route: String) {
@@ -215,6 +221,7 @@ sealed class Screen(val route: String) {
     data object EditProfile: Screen("editProfile")
     data object TopGlobalCharts : Screen("topGlobalCharts")
     data object TopRegionCharts : Screen("topRegionCharts")
+    data object AudioRouting : Screen("audioRouting")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -231,6 +238,8 @@ fun MainApp(
     onPlay: (song: Song) -> Unit,
     onSeek: (pos: Float) -> Unit,
     downloadHelper: DownloadHelper,
+    mediaBinder: MediaPlayerService.MediaBinder?,
+    isServiceReady: MutableStateFlow<Boolean>,
 ) {
     val currentSong by xcurrentSong.collectAsState()
     val currentDuration by xcurrentDuration.collectAsState()
@@ -420,10 +429,17 @@ fun MainApp(
             }
 
             composable(Screen.AudioRouting.route) {
-                AudioRoutingScreen(
-                    navController = navController,
-                    songPlayerLiveData = songPlayerLiveData
-                )
+                val ready by isServiceReady.collectAsState()
+                if (ready && mediaBinder != null) {
+                    AudioRoutingScreen(
+                        mediaBinder = mediaBinder,
+                        navController = navController
+                    )
+                } else {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
         }
     }
