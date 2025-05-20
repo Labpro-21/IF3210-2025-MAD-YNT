@@ -15,4 +15,6 @@ fun getSelectedAudioDeviceId(context: Context): Int? {
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     return if (prefs.contains(SELECTED_DEVICE_ID_KEY)) prefs.getInt(SELECTED_DEVICE_ID_KEY, -1)
         .takeIf { it != -1 } else null
+
 }
+

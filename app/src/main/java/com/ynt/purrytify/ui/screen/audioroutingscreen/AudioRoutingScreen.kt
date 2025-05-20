@@ -42,10 +42,12 @@ import androidx.compose.runtime.setValue
 @Composable
 fun AudioRoutingScreen(
     mediaBinder: MediaPlayerService.MediaBinder,
+
     navController: NavController
 ) {
     val context = LocalContext.current
     val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
     val outputDevices = remember {
         audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS).filter {
             when (it.type) {
@@ -58,9 +60,11 @@ fun AudioRoutingScreen(
             }
         }
     }
+
     var selectedDeviceId by remember {
         mutableStateOf(getSelectedAudioDeviceId(context))
     }
+
     LaunchedEffect(outputDevices) {
         val savedId = getSelectedAudioDeviceId(context)
         val savedDevice = outputDevices.find { it.id == savedId }
@@ -77,6 +81,8 @@ fun AudioRoutingScreen(
             }
         }
     }
+
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -108,7 +114,6 @@ fun AudioRoutingScreen(
             val isSelected = selectedDeviceId == device.id
             val textColor = if (isSelected) colorResource(R.color.green) else Color.White
             val connectedStatus = if (isSelected) "Connected" else "Disconnected"
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -119,6 +124,7 @@ fun AudioRoutingScreen(
                     }
                     .padding(8.dp)
             ) {
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

@@ -1,5 +1,6 @@
 package com.ynt.purrytify
 
+import android.os.Build
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -56,6 +57,8 @@ import com.ynt.purrytify.ui.screen.homescreen.HomeScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.loginscreen.LoginScreen
+import com.ynt.purrytify.ui.screen.audioroutingscreen.AudioRoutingScreen
+import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
 import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
@@ -214,6 +217,7 @@ sealed class Screen(val route: String) {
     data object Library : Screen("library")
     data object Login : Screen("login")
     data object Profile: Screen("profile")
+    data object  AudioRouting: Screen("audiorouting")
     data object EditProfile: Screen("editProfile")
     data object TopGlobalCharts : Screen("topGlobalCharts")
     data object TopRegionCharts : Screen("topRegionCharts")
@@ -460,6 +464,7 @@ fun MainApp(
             stopRefreshLoop()
         }
     }
+
 }
 
 

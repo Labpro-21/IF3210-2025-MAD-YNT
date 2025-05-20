@@ -26,6 +26,7 @@ import com.ynt.purrytify.R
 
 @Composable
 fun LibraryTopBar(
+    navController: NavController,
     title: String,
     onAddClick: () -> Unit,
     onChoiceSelected: (Int) -> Unit,
@@ -81,6 +82,8 @@ fun LibraryTopBar(
             )
             AudioRoutesButton(navController = navController)
         }
+
+
     }
     HorizontalDivider(
         thickness = 2.dp,
