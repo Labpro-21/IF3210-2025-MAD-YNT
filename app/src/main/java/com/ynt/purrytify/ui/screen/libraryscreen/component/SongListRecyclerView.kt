@@ -66,6 +66,7 @@ fun SongListRecyclerView(
                 if (songList != null) {
                     listSongAdapter.setListSongs(songFiltered)
                 }
+                rvSongs.scrollToPosition(0)
             }
         }
     )
