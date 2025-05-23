@@ -1,6 +1,7 @@
 package com.ynt.purrytify.ui.screen.audioroutingscreen
 
 import android.content.Context
+import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.os.Build
@@ -34,6 +35,7 @@ import com.ynt.purrytify.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
@@ -41,23 +43,44 @@ import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 @RequiresApi(Build.VERSION_CODES.M)
 @Composable
 fun AudioRoutingScreen(
-//    mediaBinder: MediaPlayerService.MediaBinder,
     playbackViewModel: PlaybackViewModel,
     navController: NavController
 ) {
     val context = LocalContext.current
-    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    val audioManager = remember { context.getSystemService(Context.AUDIO_SERVICE) as AudioManager }
 
-    val outputDevices = remember {
-        audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS).filter {
-            when (it.type) {
-                AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
-                AudioDeviceInfo.TYPE_BUILTIN_SPEAKER,
-                AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
-                AudioDeviceInfo.TYPE_WIRED_HEADSET,
-                AudioDeviceInfo.TYPE_USB_HEADSET -> true
-                else -> false
+    val outputDevicesState = remember { mutableStateOf(listOf<AudioDeviceInfo>()) }
+
+    DisposableEffect(audioManager) {
+        val callback = object : AudioDeviceCallback() {
+            override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>) {
+                updateOutputDevices()
             }
+
+            override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>) {
+                updateOutputDevices()
+            }
+
+            fun updateOutputDevices() {
+                val devices = audioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS).filter {
+                    when (it.type) {
+                        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+                        AudioDeviceInfo.TYPE_BUILTIN_SPEAKER,
+                        AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+                        AudioDeviceInfo.TYPE_WIRED_HEADSET,
+                        AudioDeviceInfo.TYPE_USB_HEADSET -> true
+                        else -> false
+                    }
+                }
+                outputDevicesState.value = devices
+            }
+        }
+
+        callback.updateOutputDevices()
+        audioManager.registerAudioDeviceCallback(callback, null)
+
+        onDispose {
+            audioManager.unregisterAudioDeviceCallback(callback)
         }
     }
 
@@ -65,35 +88,26 @@ fun AudioRoutingScreen(
         mutableStateOf(playbackViewModel.selectedDeviceId.value)
     }
 
-    LaunchedEffect(outputDevices) {
+    LaunchedEffect(outputDevicesState.value) {
         val savedId = playbackViewModel.selectedDeviceId.value
-        val savedDevice = outputDevices.find { it.id == savedId }
-
+        val savedDevice = outputDevicesState.value.find { it.id == savedId }
         if (savedDevice != null) {
             selectedDeviceId = savedDevice.id
-//            mediaBinder.setPreferredOutputDevice(savedDevice)
             playbackViewModel.setPreferredOutputDevice(savedDevice)
         } else {
-            val builtInSpeaker = outputDevices.find { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+            val builtInSpeaker = outputDevicesState.value.find { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
             builtInSpeaker?.let {
                 selectedDeviceId = it.id
-//                mediaBinder.setPreferredOutputDevice(it)
                 playbackViewModel.setPreferredOutputDevice(it)
             }
         }
     }
 
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.Black)
-            .padding(
-                top = 25.dp,
-                start = 18.dp,
-                end = 18.dp,
-                bottom = 12.dp,
-            )
+            .padding(top = 25.dp, start = 18.dp, end = 18.dp, bottom = 12.dp)
     ) {
         Row(
             modifier = Modifier
@@ -111,7 +125,8 @@ fun AudioRoutingScreen(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
-        outputDevices.forEach { device ->
+
+        outputDevicesState.value.forEach { device ->
             val isSelected = selectedDeviceId == device.id
             val textColor = if (isSelected) colorResource(R.color.green) else Color.White
             val connectedStatus = if (isSelected) "Connected" else "Disconnected"
@@ -120,12 +135,10 @@ fun AudioRoutingScreen(
                     .fillMaxWidth()
                     .clickable {
                         selectedDeviceId = device.id
-//                        mediaBinder.setPreferredOutputDevice(device)
                         playbackViewModel.setPreferredOutputDevice(device)
                     }
                     .padding(8.dp)
             ) {
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
