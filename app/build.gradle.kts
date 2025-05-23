@@ -93,4 +93,9 @@ dependencies {
     implementation(libs.maps.compose)
     implementation((libs.play.services.maps))
     ksp(libs.room.compiler)
+
+    // Exoplayer
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.session)
 }

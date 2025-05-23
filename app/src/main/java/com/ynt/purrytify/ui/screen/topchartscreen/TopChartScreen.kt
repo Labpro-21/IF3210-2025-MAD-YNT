@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.ui.screen.homescreen.component.ChartBox
+import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 import com.ynt.purrytify.ui.screen.topchartscreen.component.BackButtonIcon
 import com.ynt.purrytify.ui.screen.topchartscreen.component.SongList
 import com.ynt.purrytify.utils.auth.SessionManager
@@ -31,13 +32,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 fun TopSongScreen(
     navController: NavController,
     viewModel: TopChartViewModel = viewModel(),
+    playbackViewModel: PlaybackViewModel,
     isRegion : Boolean,
     sessionManager: SessionManager,
     downloadHelper: DownloadHelper,
-    currentSong: MutableStateFlow<Song>?,
     showSongPlayerSheet: MutableState<Boolean>,
-    onPlay: (song: Song)->Unit,
-    onSongsLoaded: (List<Song>?) -> Unit = {},
 ) {
     val topColor = Color(0xFF108B74)
     val bottomColor = Color(0xFF1E3264)
@@ -77,15 +76,13 @@ fun TopSongScreen(
             val onlineListSong by viewModel.onlineSongs.observeAsState(emptyList())
 
             LaunchedEffect(onlineListSong) {
-                val listSong = viewModel.convertOnlineSongToSong()
-                if (listSong != null) {
-                    listSong.forEach { song ->
-                        song.title?.let { Log.d("Online Song", it) }
-                        song.audio?.let { Log.d("Online Song", it) }
-                    }
+                val listSong = viewModel.convertOnlineSongToSong(onlineListSong)
+                if(isRegion){
+                    playbackViewModel.syncOnline(listSong, viewModel.currentRegion.value ?: "")
                 }
-                onSongsLoaded(listSong)
-                Log.d("Testingg", "here")
+                else {
+                    playbackViewModel.syncOnline(listSong, "GLOBAL")
+                }
             }
 
             SongList(
@@ -94,18 +91,17 @@ fun TopSongScreen(
                 viewModel = viewModel,
                 sessionManager = sessionManager,
                 playSong = { selectedSong ->
-                    if(currentSong?.value?.id ?: null == selectedSong.id){
+                    if(playbackViewModel.currentSong?.id ?: null == selectedSong.id){
                         showSongPlayerSheet.value = true
                     }
                     else{
+                        playbackViewModel.setOnline(if (isRegion) viewModel.currentRegion.value ?: "" else "GLOBAL")
                         val songCopy = selectedSong.copy(lastPlayed = System.currentTimeMillis())
                         viewModel.update(songCopy)
-                        onPlay(selectedSong)
+                        playbackViewModel.playSongById(selectedSong.id.toString())
                     }
                 }
             )
         }
-
-
     }
 }

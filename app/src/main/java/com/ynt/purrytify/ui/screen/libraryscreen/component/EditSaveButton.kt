@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.ynt.purrytify.R
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
+import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 import com.ynt.purrytify.utils.libraryscreenutils.editSaveButtonOnClick
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 @Composable
 fun EditSaveButton(
     libraryViewModel: LibraryViewModel,
+    playbackViewModel: PlaybackViewModel,
     coroutineScope: CoroutineScope,
     sheetState: SheetState,
     setShowPopupSong: (Boolean) -> Unit,
@@ -34,7 +36,6 @@ fun EditSaveButton(
     title: String,
     artist:String,
     imageUri: Uri?,
-    currentSong: MutableStateFlow<Song>?
 ) {
     val isButtonEnabled = title.isNotBlank() && artist.isNotBlank()
     Button(
@@ -51,7 +52,7 @@ fun EditSaveButton(
                 setShowPopupSong = setShowPopupSong,
                 imageUri = imageUri,
                 song = song,
-                currentSong = currentSong
+                playbackViewModel = playbackViewModel
             )
         },
         modifier = Modifier

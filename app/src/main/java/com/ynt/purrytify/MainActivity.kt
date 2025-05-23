@@ -1,13 +1,7 @@
 package com.ynt.purrytify
 
-import android.os.Build
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Bundle
-import android.os.IBinder
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,10 +13,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -35,14 +27,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -57,94 +49,29 @@ import com.ynt.purrytify.ui.screen.homescreen.HomeScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.loginscreen.LoginScreen
-import com.ynt.purrytify.ui.screen.audioroutingscreen.AudioRoutingScreen
 import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
-import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
+import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
 import com.ynt.purrytify.ui.screen.topchartscreen.TopSongScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
-import com.ynt.purrytify.utils.mediaplayer.MediaPlayerService
+import com.ynt.purrytify.utils.mediaplayer.PlaybackService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private lateinit var sessionManager: SessionManager
-
-    private val xisPlaying = MutableStateFlow(false)
-    private val xcurrentDuration = MutableStateFlow(0f)
-    private val xcurrentSong = MutableStateFlow(Song())
-    private val _mediaBinder = mutableStateOf<MediaPlayerService.MediaBinder?>(null)
-    private val mediaBinder get() = _mediaBinder.value
-    private var service: MediaPlayerService? = null
-
-    private var isBound = false
-    private val isServiceReady = MutableStateFlow(false)
-    private val connection = object : ServiceConnection {
-        override fun onServiceConnected(p0: ComponentName?, p1: IBinder?) {
-            try {
-                _mediaBinder.value = p1 as? MediaPlayerService.MediaBinder
-                if (mediaBinder == null) {
-                    Log.e("MainActivity", "Failed to cast binder to MediaBinder")
-                    return
-                }
-                service = mediaBinder!!.getService()
-                lifecycleScope.launch {
-                    try {
-                        mediaBinder?.isPlaying()?.collectLatest {
-                            xisPlaying.value = it
-                        }
-                    } catch (e: Exception) {
-                        Log.e("MainActivity", "Error collecting isPlaying", e)
-                    }
-                }
-                lifecycleScope.launch {
-                    try {
-                        mediaBinder?.currentDuration()?.collectLatest {
-                            xcurrentDuration.value = it
-                        }
-                    } catch (e: Exception) {
-                        Log.e("MainActivity", "Error collecting currentDuration", e)
-                    }
-                }
-                lifecycleScope.launch {
-                    try {
-                        mediaBinder?.getCurrentSong()?.collectLatest {
-                            xcurrentSong.value = it
-                        }
-                    } catch (e: Exception) {
-                        Log.e("MainActivity", "Error collecting currentSong", e)
-                    }
-                }
-                isBound = true
-                isServiceReady.value = true
-            } catch (e: Exception) {
-                Log.e("MainActivity", "Error in onServiceConnected", e)
-            }
-        }
-
-        override fun onServiceDisconnected(p0: ComponentName?) {
-            isBound = false
-            _mediaBinder.value = null
-            service = null
-            isServiceReady.value = false
-        }
-    }
-
     private lateinit var downloadHelper : DownloadHelper
 
+    @androidx.annotation.OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sessionManager = SessionManager(applicationContext)
         downloadHelper = DownloadHelper(this)
         enableEdgeToEdge()
-        val serviceIntent = Intent(this, MediaPlayerService::class.java)
-        startService(serviceIntent)
-
         setContent {
             val view = window.decorView
             val darkIcons = false
@@ -161,52 +88,11 @@ class MainActivity : ComponentActivity() {
                     .background(Color.Black)
                     .safeDrawingPadding()
             ) {
-                val play: (song: Song) -> Unit = { mediaBinder?.setCurrentSong(it) }
-                val seek: (pos: Float) -> Unit = {service?.seekTo(it)}
-                val onPlayPause: ()->Unit = { service?.playPause() }
-                val onNext: ()->Unit = { service?.next() }
-                val onPrevious: ()->Unit = { service?.previous() }
                 MainApp(
                     sessionManager = sessionManager,
-                    xcurrentSong = xcurrentSong,
-                    xcurrentDuration = xcurrentDuration,
-                    xisPlaying = xisPlaying,
-                    onSongsLoaded = { songs ->
-                        if (!songs.isNullOrEmpty()) {
-                            mediaBinder?.let { binder ->
-                                try {
-                                    binder.setSongList(songs)
-                                } catch (e: Exception) {
-                                    Log.e("MainActivity", "Error setting song list", e)
-                                }
-                            }
-                        }
-                    },
-                    onPlayPause = onPlayPause,
-                    onNext = onNext,
-                    onPrevious = onPrevious,
-                    onPlay = play,
-                    onSeek = seek,
                     downloadHelper = downloadHelper,
-                    mediaBinder = _mediaBinder.value,
-                    isServiceReady = isServiceReady,
                 )
             }
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        Intent(this, MediaPlayerService::class.java).also { intent ->
-            bindService(intent, connection, Context.BIND_AUTO_CREATE)
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        if (isBound) {
-            unbindService(connection)
-            isBound = false
         }
     }
 
@@ -223,32 +109,17 @@ sealed class Screen(val route: String) {
     data object AudioRouting : Screen("audioRouting")
 }
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainApp(
     sessionManager: SessionManager,
-    xcurrentSong: MutableStateFlow<Song>,
-    xcurrentDuration: MutableStateFlow<Float>,
-    xisPlaying: MutableStateFlow<Boolean>,
-    onSongsLoaded: (List<Song>?) -> Unit = {},
-    onPlayPause: () -> Unit,
-    onNext: () -> Unit,
-    onPrevious: () -> Unit,
-    onPlay: (song: Song) -> Unit,
-    onSeek: (pos: Float) -> Unit,
     downloadHelper: DownloadHelper,
-    mediaBinder: MediaPlayerService.MediaBinder?,
-    isServiceReady: MutableStateFlow<Boolean>,
 ) {
-    val currentSong by xcurrentSong.collectAsState()
-    val currentDuration by xcurrentDuration.collectAsState()
-    val isPlaying by xisPlaying.collectAsState()
-
-//    val context = LocalContext.current
     val navController: NavHostController = rememberNavController()
     val libraryViewModel: LibraryViewModel = viewModel()
-//    val lifecycleOwner = LocalLifecycleOwner.current
-//    val topChartViewModel: TopChartViewModel = viewModel()
+    val playbackViewModel: PlaybackViewModel = viewModel()
+    val context =  LocalContext.current
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -266,17 +137,9 @@ fun MainApp(
         skipPartiallyExpanded = true
     )
 
-//    val username = remember(isLoggedIn.value) {
-//        if (isLoggedIn.value) sessionManager.getUser() else null
-//    }
-
-//    LaunchedEffect(username) {
-//        libraryViewModel.getAllSongs(username ?: "").observe(lifecycleOwner) { songList ->
-//            if (songList != null) {
-//                onSongsLoaded(songList)
-//            }
-//        }
-//    }
+    LaunchedEffect(Unit) {
+        playbackViewModel.connect()
+    }
 
     fun startRefreshLoop() {
         refreshJob?.cancel()
@@ -327,11 +190,7 @@ fun MainApp(
             if (showBottomBar) {
                 BottomBar(
                     navController = navController,
-                    currentSong = currentSong,
-                    xcurrentDuration = xcurrentDuration,
-                    isPlaying = isPlaying,
-                    onSkip = onNext,
-                    onPlay = onPlayPause,
+                    playbackViewModel = playbackViewModel,
                     onClick = {
                         showSongPlayerSheet.value = true
                     }
@@ -367,10 +226,9 @@ fun MainApp(
                 HomeScreen(
                     navController = navController,
                     sessionManager = sessionManager,
-                    onSongsLoaded = onSongsLoaded,
                     showSongPlayerSheet = showSongPlayerSheet,
-                    onPlay = onPlay,
-                    currentSong = xcurrentSong
+                    playbackViewModel = playbackViewModel,
+                    libraryViewModel = libraryViewModel
                 )
             }
 
@@ -379,10 +237,8 @@ fun MainApp(
                     navController = navController,
                     sessionManager = sessionManager,
                     viewModel = libraryViewModel,
+                    playbackViewModel = playbackViewModel,
                     showSongPlayerSheet = showSongPlayerSheet,
-                    onPlay = onPlay,
-                    currentSong = xcurrentSong,
-                    onSongsLoaded = onSongsLoaded
                 )
             }
 
@@ -390,7 +246,6 @@ fun MainApp(
                 ProfileScreen(
                     navController = navController,
                     sessionManager = sessionManager,
-
                 )
             }
 
@@ -401,9 +256,7 @@ fun MainApp(
                     sessionManager = sessionManager,
                     downloadHelper = downloadHelper,
                     showSongPlayerSheet = showSongPlayerSheet,
-                    onPlay = onPlay,
-                    currentSong = xcurrentSong,
-                    onSongsLoaded = onSongsLoaded
+                    playbackViewModel = playbackViewModel,
                 )
             }
 
@@ -414,9 +267,7 @@ fun MainApp(
                     sessionManager = sessionManager,
                     downloadHelper = downloadHelper,
                     showSongPlayerSheet = showSongPlayerSheet,
-                    onPlay = onPlay,
-                    currentSong = xcurrentSong,
-                    onSongsLoaded = onSongsLoaded
+                    playbackViewModel = playbackViewModel
                 )
             }
 
@@ -428,17 +279,10 @@ fun MainApp(
             }
 
             composable(Screen.AudioRouting.route) {
-                val ready by isServiceReady.collectAsState()
-                if (ready && mediaBinder != null) {
-                    AudioRoutingScreen(
-                        mediaBinder = mediaBinder,
-                        navController = navController
-                    )
-                } else {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
+                AudioRoutingScreen(
+                    playbackViewModel = playbackViewModel,
+                    navController = navController
+                )
             }
         }
     }
@@ -447,14 +291,8 @@ fun MainApp(
         SongPlayerSheet(
             setShowPopupSong = { showSongPlayerSheet.value = it },
             sheetState = showSongPlayerSheetState,
-            xcurrentSong = xcurrentSong,
             libraryViewModel = libraryViewModel,
-            currentPosition = currentDuration,
-            isPlaying = isPlaying,
-            onPlayPause = onPlayPause,
-            onNext = onNext,
-            onPrevious = onPrevious,
-            onSeek = onSeek
+            playbackViewModel = playbackViewModel
         )
     }
 
@@ -466,14 +304,6 @@ fun MainApp(
 
 }
 
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
 
 @Preview(showBackground = true)
 @Composable

@@ -67,7 +67,6 @@ fun ProfileScreen(
                     .clip(CircleShape)
                 )
 
-            Log.d("profile image", data?.photoURL ?: "jir")
 
             Spacer(modifier = Modifier.height(16.dp))
 

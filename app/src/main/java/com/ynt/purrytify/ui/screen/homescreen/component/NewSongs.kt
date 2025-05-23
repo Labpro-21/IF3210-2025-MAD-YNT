@@ -29,12 +29,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.models.Song
+import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 
 @Composable
 fun NewSongs(
     songList: List<Song>,
-    playSong : (Song) -> Unit,
-    onSongsLoaded: (List<Song>?) -> Unit = {}
+    playbackViewModel: PlaybackViewModel
 ) {
     Column (
         horizontalAlignment = Alignment.Start
@@ -48,15 +48,14 @@ fun NewSongs(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        NewSongsList(songList, playSong, onSongsLoaded)
+        NewSongsList(songList,playbackViewModel)
     }
 }
 
 @Composable
 fun NewSongsList(
     songList: List<Song>,
-    playSong : (Song) -> Unit,
-    onSongsLoaded: (List<Song>?) -> Unit = {}
+    playbackViewModel: PlaybackViewModel
 ) {
     LazyRow (
         modifier = Modifier
@@ -67,13 +66,7 @@ fun NewSongsList(
         items(songList) { song ->
             SongCard(
                 song = song,
-                playSong = {
-                    onSongsLoaded(songList)
-                    songList.forEach { song ->
-                        Log.d("Song", song.title.toString())
-                    }
-                    playSong(song)
-                }
+                playbackViewModel = playbackViewModel
             )
         }
     }
@@ -82,13 +75,16 @@ fun NewSongsList(
 @Composable
 fun SongCard(
     song: Song,
-    playSong: (Song) -> Unit
+    playbackViewModel: PlaybackViewModel
 ) {
     Card(
         modifier = Modifier
             .width(120.dp)
             .height(170.dp)
-            .clickable { playSong(song) },
+            .clickable {
+                playbackViewModel.setLocal()
+                playbackViewModel.playSongById(song.id.toString())
+                       },
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {

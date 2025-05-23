@@ -57,8 +57,6 @@ import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import kotlinx.coroutines.launch
 import androidx.core.graphics.scale
 import androidx.core.graphics.get
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,20 +65,14 @@ fun SongPlayerSheet(
     setShowPopupSong: (Boolean)->Unit,
     libraryViewModel: LibraryViewModel,
     sheetState: SheetState,
-    xcurrentSong: MutableStateFlow<Song>,
-    currentPosition: Float,
-    isPlaying: Boolean,
-    onPlayPause: ()->Unit,
-    onNext: ()->Unit,
-    onPrevious: ()->Unit,
-    onSeek: (pos: Float) -> Unit,
+    playbackViewModel: PlaybackViewModel,
 ){
     val coroutineScope = rememberCoroutineScope()
-    val currentSong = xcurrentSong.collectAsState().value
-    val duration = currentSong.duration
     val interactionSource = remember {MutableInteractionSource()}
+    val currentPosition = if(playbackViewModel.currentPosition.toFloat() >= 0) playbackViewModel.currentPosition.toFloat() else 0f
+    val duration = if(playbackViewModel.duration.toFloat() >= 0) playbackViewModel.duration.toFloat() else 0f
     val contentResolver = LocalContext.current.contentResolver
-    val imageBitmap = getBitmap(contentResolver, currentSong.image?.toUri())
+    val imageBitmap = getBitmap(contentResolver, playbackViewModel.currentSong?.image?.toUri())
     val dominantColor = getDominantColor(
         bitmap = imageBitmap
     )
@@ -117,7 +109,7 @@ fun SongPlayerSheet(
                 Spacer(modifier = Modifier.height(96.dp))
 
                 Image(
-                    painter = rememberAsyncImagePainter(currentSong.image),
+                    painter = rememberAsyncImagePainter(playbackViewModel.currentSong?.image),
                     contentDescription = "Song Cover",
                     modifier = Modifier
                         .size(300.dp)
@@ -127,20 +119,20 @@ fun SongPlayerSheet(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(currentSong.title ?: "Unknown Title", color = Color.White, fontSize = 24.sp)
-                Text(currentSong.artist ?: "Unknown Artist", color = Color.Gray, fontSize = 16.sp)
+                Text(playbackViewModel.currentSong?.title ?: "Unknown Title", color = Color.White, fontSize = 24.sp)
+                Text(playbackViewModel.currentSong?.artist ?: "Unknown Artist", color = Color.Gray, fontSize = 16.sp)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 IconButton(onClick = {
-                    val updatedSong = currentSong.copy(isLiked = if (currentSong.isLiked == 1) 0 else 1)
-                    libraryViewModel.update(updatedSong)
-                    xcurrentSong.update { updatedSong }
+                    val updatedSong = playbackViewModel.currentSong?.copy(isLiked = if (playbackViewModel.currentSong?.isLiked == 1) 0 else 1)
+                    libraryViewModel.update(updatedSong?:Song())
+                    playbackViewModel.currentSong =  updatedSong
                 }) {
                     Icon(
-                        imageVector = if (currentSong.isLiked == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        imageVector = if (playbackViewModel.currentSong?.isLiked == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = null,
-                        tint = if (currentSong.isLiked == 1) Color.Red else Color.White
+                        tint = if (playbackViewModel.currentSong?.isLiked == 1) Color.Red else Color.White
                     )
                 }
 
@@ -156,9 +148,9 @@ fun SongPlayerSheet(
                     Slider(
                         value = currentPosition,
                         onValueChange = {
-                            onSeek(it)
+                            playbackViewModel.seek(it.toLong())
                         },
-                        valueRange = 0f..duration.toFloat(),
+                        valueRange = 0f..duration,
                         modifier = Modifier
                             .weight(1f)
                             .padding(horizontal = 8.dp),
@@ -179,7 +171,7 @@ fun SongPlayerSheet(
                         ),
 
                         )
-                    Text(formatTime(duration.toFloat()), color = Color.White, fontSize = 12.sp)
+                    Text(formatTime(duration), color = Color.White, fontSize = 12.sp)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -189,18 +181,18 @@ fun SongPlayerSheet(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onPrevious) {
+                    IconButton(onClick = {playbackViewModel.previous()}) {
                         Icon(Icons.Default.SkipPrevious, contentDescription = null, tint = Color.White)
                     }
-                    IconButton(onClick = onPlayPause) {
+                    IconButton(onClick = {playbackViewModel.playPause()}) {
                         Icon(
-                            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            imageVector = if (playbackViewModel.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(48.dp)
                         )
                     }
-                    IconButton(onClick = onNext) {
+                    IconButton(onClick = {playbackViewModel.next()}) {
                         Icon(Icons.Default.SkipNext, contentDescription = null, tint = Color.White)
                     }
                 }

@@ -31,18 +31,18 @@ import androidx.navigation.NavController
 import androidx.compose.material3.Divider
 import androidx.compose.foundation.layout.size
 import com.ynt.purrytify.R
-import com.ynt.purrytify.utils.mediaplayer.MediaPlayerService
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 
 @RequiresApi(Build.VERSION_CODES.M)
 @Composable
 fun AudioRoutingScreen(
-    mediaBinder: MediaPlayerService.MediaBinder,
-
+//    mediaBinder: MediaPlayerService.MediaBinder,
+    playbackViewModel: PlaybackViewModel,
     navController: NavController
 ) {
     val context = LocalContext.current
@@ -62,22 +62,23 @@ fun AudioRoutingScreen(
     }
 
     var selectedDeviceId by remember {
-        mutableStateOf(getSelectedAudioDeviceId(context))
+        mutableStateOf(playbackViewModel.selectedDeviceId.value)
     }
 
     LaunchedEffect(outputDevices) {
-        val savedId = getSelectedAudioDeviceId(context)
+        val savedId = playbackViewModel.selectedDeviceId.value
         val savedDevice = outputDevices.find { it.id == savedId }
 
         if (savedDevice != null) {
             selectedDeviceId = savedDevice.id
-            mediaBinder.setPreferredOutputDevice(savedDevice)
+//            mediaBinder.setPreferredOutputDevice(savedDevice)
+            playbackViewModel.setPreferredOutputDevice(savedDevice)
         } else {
             val builtInSpeaker = outputDevices.find { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
             builtInSpeaker?.let {
                 selectedDeviceId = it.id
-                mediaBinder.setPreferredOutputDevice(it)
-                saveSelectedAudioDeviceId(context, it.id)
+//                mediaBinder.setPreferredOutputDevice(it)
+                playbackViewModel.setPreferredOutputDevice(it)
             }
         }
     }
@@ -119,8 +120,8 @@ fun AudioRoutingScreen(
                     .fillMaxWidth()
                     .clickable {
                         selectedDeviceId = device.id
-                        mediaBinder.setPreferredOutputDevice(device)
-                        saveSelectedAudioDeviceId(context, device.id)
+//                        mediaBinder.setPreferredOutputDevice(device)
+                        playbackViewModel.setPreferredOutputDevice(device)
                     }
                     .padding(8.dp)
             ) {

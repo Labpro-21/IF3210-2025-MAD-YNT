@@ -32,6 +32,7 @@ import com.ynt.purrytify.R
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.libraryscreen.utils.getFileName
+import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -40,11 +41,11 @@ import kotlinx.coroutines.launch
 fun EditSong(
     setShowPopupSong: (Boolean)->Unit,
     libraryViewModel: LibraryViewModel,
+    playbackViewModel: PlaybackViewModel,
     loggedInUser: String,
     context: Context,
     sheetState: SheetState,
     song: Song,
-    currentSong: MutableStateFlow<Song>?
 ){
     val title = remember  { mutableStateOf(song.title ?: "") }
     val artist = remember{ mutableStateOf(song.artist ?: "") }
@@ -131,6 +132,7 @@ fun EditSong(
                     )
                     EditSaveButton(
                         libraryViewModel = libraryViewModel,
+                        playbackViewModel = playbackViewModel,
                         coroutineScope = coroutineScope,
                         sheetState = sheetState,
                         setShowPopupSong = setShowPopupSong,
@@ -139,7 +141,6 @@ fun EditSong(
                         artist = artist.value,
                         imageUri = selectedImageUri.value,
                         title = title.value,
-                        currentSong = currentSong
                     )
                 }
             }
