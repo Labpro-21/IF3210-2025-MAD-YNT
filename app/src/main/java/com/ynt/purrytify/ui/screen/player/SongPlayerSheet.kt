@@ -90,7 +90,6 @@ fun SongPlayerSheet(
             if (list != null) {
                 playbackViewModel.syncLocal(list)
                 playbackViewModel.setLocal()
-                Log.d("OPEN UP","SOMETHING ${list}")
             }
         }
     }

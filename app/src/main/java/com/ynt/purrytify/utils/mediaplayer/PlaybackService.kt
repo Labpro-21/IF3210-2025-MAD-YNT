@@ -42,6 +42,7 @@ class PlaybackService : MediaSessionService() {
                 .add(SessionCommand("play_by_id",Bundle.EMPTY))
                 .add(SessionCommand("none", Bundle.EMPTY))
                 .add(SessionCommand("like", Bundle.EMPTY))
+                .add(SessionCommand("get_current_state", Bundle.EMPTY))
                 .build()
 
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -121,6 +122,17 @@ class PlaybackService : MediaSessionService() {
                         updateCustomLayout()
                     }
                     Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                }
+                "get_current_state" -> {
+                    val bundle = Bundle().apply {
+                        putParcelable("current_song", currentSong)
+                        putString("source", sourceName)
+                        putBoolean("is_playing", exoPlayer.isPlaying)
+                        putLong("position", exoPlayer.currentPosition)
+                        putLong("duration", exoPlayer.duration)
+                        putParcelableArrayList("songs", ArrayList(exoSongs))
+                    }
+                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
                 }
                 else -> {
                     super.onCustomCommand(session, controller, customCommand, args)

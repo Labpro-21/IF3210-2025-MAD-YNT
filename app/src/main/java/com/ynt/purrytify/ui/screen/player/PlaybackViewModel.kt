@@ -10,16 +10,14 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionResult
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
 import com.ynt.purrytify.database.SongRepository
@@ -49,43 +47,113 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
     var sourceName by mutableStateOf<String?>(null)
     private var positionUpdateJob: Job? = null
     lateinit var mSongRepository: SongRepository
+    private var playerListener: Player.Listener? = null
+    private var isConnecting = false
 
     @UnstableApi
     fun connect() {
+        if (isConnecting) {
+            return
+        }
+        if (mediaController != null) {
+            return
+        }
+
+        isConnecting = true
+
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
         mSongRepository = SongRepository(getApplication())
+
         controllerFuture.addListener({
-            mediaController = controllerFuture.get()
-            val player = mediaController!!
-            isPlaying = player.isPlaying
-            currentPosition = player.currentPosition
-            duration = player.duration
-            currentMediaTitle = player.currentMediaItem?.mediaMetadata?.title?.toString()
-            currentMediaId = player.currentMediaItem?.mediaId?.toInt() ?: -1
-            currentSong = songList.firstOrNull { it.id==currentMediaId }
-            player.addListener(object : Player.Listener {
-                override fun onIsPlayingChanged(isPlayingNow: Boolean) {
-                    isPlaying = isPlayingNow
-                    if(isPlaying){
-                        startPositionUpdates()
+            try {
+                mediaController = controllerFuture.get()
+
+                playerListener?.let { mediaController?.removeListener(it) }
+
+                val player = mediaController!!
+
+                playerListener = object : Player.Listener {
+                    override fun onIsPlayingChanged(isPlayingNow: Boolean) {
+                        isPlaying = isPlayingNow
+                        if (isPlaying) {
+                            startPositionUpdates()
+                        } else {
+                            stopPositionUpdates()
+                        }
                     }
-                    else{
-                        stopPositionUpdates()
+
+                    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                        currentMediaTitle = mediaItem?.mediaMetadata?.title?.toString()
+                        currentMediaId = mediaItem?.mediaId?.toInt() ?: -1
+                        currentSong = songList.firstOrNull { it.id == currentMediaId }?.copy(lastPlayed = System.currentTimeMillis())
+                        if(sourceName=="local") mSongRepository.update(currentSong!!)
+                    }
+
+                    override fun onPlaybackStateChanged(state: Int) {
+                        duration = player.duration
                     }
                 }
-                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                    currentMediaTitle = mediaItem?.mediaMetadata?.title?.toString()
-                    currentMediaId = mediaItem?.mediaId?.toInt() ?: -1
-                    currentSong = songList.firstOrNull { it.id==currentMediaId }?.copy(lastPlayed = System.currentTimeMillis())
-                    mSongRepository.update(currentSong!!)
-                }
-                override fun onPlaybackStateChanged(state: Int) {
-                    duration = player.duration
-                }
-            })
+
+                player.addListener(playerListener!!)
+
+                isPlaying = player.isPlaying
+                currentPosition = player.currentPosition
+                duration = player.duration
+                currentMediaTitle = player.currentMediaItem?.mediaMetadata?.title?.toString()
+                currentMediaId = player.currentMediaItem?.mediaId?.toInt() ?: -1
+                currentSong = songList.firstOrNull { it.id == currentMediaId }
+
+
+                val resultFuture = mediaController?.sendCustomCommand(
+                    SessionCommand("get_current_state", Bundle.EMPTY),
+                    Bundle.EMPTY
+                )
+
+                resultFuture?.addListener({
+                    val result = resultFuture.get()
+
+                    if (result.resultCode == SessionResult.RESULT_SUCCESS) {
+                        val data = result.extras
+                        val currentSong = data?.getParcelable<Song>("current_song")
+                        val source = data?.getString("source")
+                        val isPlayingVal = data?.getBoolean("is_playing", false) ?: false
+                        val position = data?.getLong("position", 0L) ?: 0L
+                        val durationVal = data?.getLong("duration", 0L) ?: 0L
+                        val songs = data?.getParcelableArrayList<Song>("songs") ?: emptyList()
+
+
+                        this.currentSong = currentSong
+                        this.sourceName = source ?: ""
+                        this.isPlaying = isPlayingVal
+                        this.currentPosition = position
+                        this.duration = durationVal
+                        this.songList = songs
+                        if (isPlayingVal) startPositionUpdates()
+                    }
+                    isConnecting = false
+                }, MoreExecutors.directExecutor())
+
+            } catch (e: Exception) {
+                Log.e("Connect", "Failed to connect mediaController: ${e.message}")
+                isConnecting = false
+            }
         }, MoreExecutors.directExecutor())
     }
+
+
+    fun disconnect() {
+        playerListener?.let {
+            mediaController?.removeListener(it)
+            playerListener = null
+        }
+        mediaController?.release()
+        mediaController = null
+        isConnecting = false
+    }
+
+
+
 
     fun play() {
         mediaController?.play()

@@ -1,10 +1,13 @@
 package com.ynt.purrytify
 
+import android.app.Application
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -65,6 +68,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private lateinit var sessionManager: SessionManager
     private lateinit var downloadHelper : DownloadHelper
+    private val playbackViewModel: PlaybackViewModel by viewModels()
 
     @androidx.annotation.OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,9 +95,15 @@ class MainActivity : ComponentActivity() {
                 MainApp(
                     sessionManager = sessionManager,
                     downloadHelper = downloadHelper,
+                    playbackViewModel = playbackViewModel
                 )
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        playbackViewModel.disconnect()
     }
 
 }
@@ -115,10 +125,10 @@ sealed class Screen(val route: String) {
 fun MainApp(
     sessionManager: SessionManager,
     downloadHelper: DownloadHelper,
+    playbackViewModel: PlaybackViewModel
 ) {
     val navController: NavHostController = rememberNavController()
     val libraryViewModel: LibraryViewModel = viewModel()
-    val playbackViewModel: PlaybackViewModel = viewModel()
     val context =  LocalContext.current
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
