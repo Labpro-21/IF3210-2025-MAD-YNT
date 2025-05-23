@@ -18,6 +18,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +35,7 @@ import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 @Composable
 fun NewSongs(
     songList: List<Song>,
+    showSongPlayerSheet: MutableState<Boolean>,
     playbackViewModel: PlaybackViewModel
 ) {
     Column (
@@ -48,13 +50,14 @@ fun NewSongs(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        NewSongsList(songList,playbackViewModel)
+        NewSongsList(songList,showSongPlayerSheet,playbackViewModel)
     }
 }
 
 @Composable
 fun NewSongsList(
     songList: List<Song>,
+    showSongPlayerSheet: MutableState<Boolean>,
     playbackViewModel: PlaybackViewModel
 ) {
     LazyRow (
@@ -66,7 +69,8 @@ fun NewSongsList(
         items(songList) { song ->
             SongCard(
                 song = song,
-                playbackViewModel = playbackViewModel
+                playbackViewModel = playbackViewModel,
+                showSongPlayerSheet = showSongPlayerSheet
             )
         }
     }
@@ -75,6 +79,7 @@ fun NewSongsList(
 @Composable
 fun SongCard(
     song: Song,
+    showSongPlayerSheet: MutableState<Boolean>,
     playbackViewModel: PlaybackViewModel
 ) {
     Card(
@@ -82,9 +87,14 @@ fun SongCard(
             .width(120.dp)
             .height(170.dp)
             .clickable {
-                playbackViewModel.setLocal()
-                playbackViewModel.playSongById(song.id.toString())
-                       },
+                if(playbackViewModel.currentSong?.id ?: null == song.id){
+                    showSongPlayerSheet.value = true
+                }
+                else{
+                    playbackViewModel.setLocal()
+                    playbackViewModel.playSongById(song.id.toString())
+                }
+            },
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {

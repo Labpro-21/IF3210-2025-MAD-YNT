@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ynt.purrytify.models.Song
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -30,6 +31,7 @@ import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 @Composable
 fun RecentlyPlayed(
     songList: List<Song>,
+    showSongPlayerSheet: MutableState<Boolean>,
     playbackViewModel: PlaybackViewModel,
 ) {
     Column (
@@ -42,13 +44,14 @@ fun RecentlyPlayed(
             modifier = Modifier.padding(start = 10.dp)
         )
         Spacer(modifier = Modifier.height(10.dp))
-        SongListVertical(songList,playbackViewModel)
+        SongListVertical(songList,showSongPlayerSheet,playbackViewModel)
     }
 }
 
 @Composable
 fun SongListVertical(
     songList: List<Song>,
+    showSongPlayerSheet: MutableState<Boolean>,
     playbackViewModel: PlaybackViewModel
 ) {
     Column (
@@ -60,7 +63,8 @@ fun SongListVertical(
         songList.forEach { song ->
             SongListItem(
                 song = song,
-                playbackViewModel = playbackViewModel
+                playbackViewModel = playbackViewModel,
+                showSongPlayerSheet = showSongPlayerSheet
             )
         }
     }
@@ -69,6 +73,7 @@ fun SongListVertical(
 @Composable
 fun SongListItem(
     song: Song,
+    showSongPlayerSheet: MutableState<Boolean>,
     playbackViewModel: PlaybackViewModel
 ) {
     Row(
@@ -77,8 +82,13 @@ fun SongListItem(
             .fillMaxWidth()
             .padding(start = 10.dp)
             .clickable {
-                playbackViewModel.setLocal()
-                playbackViewModel.playSongById(song.id.toString())
+                if(playbackViewModel.currentSong?.id ?: null == song.id){
+                    showSongPlayerSheet.value = true
+                }
+                else{
+                    playbackViewModel.setLocal()
+                    playbackViewModel.playSongById(song.id.toString())
+                }
             }
     ) {
         Image(

@@ -64,7 +64,8 @@ fun HomeScreen(
         item {
             NewSongs(
                 songList = songsList,
-                playbackViewModel
+                showSongPlayerSheet = showSongPlayerSheet,
+                playbackViewModel = playbackViewModel
             )
         }
 
@@ -75,7 +76,8 @@ fun HomeScreen(
         item {
             RecentlyPlayed(
                 songList = recentlySong,
-                playbackViewModel
+                showSongPlayerSheet = showSongPlayerSheet,
+                playbackViewModel = playbackViewModel
             )
         }
     }
