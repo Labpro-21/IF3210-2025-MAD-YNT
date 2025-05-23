@@ -292,7 +292,8 @@ fun MainApp(
             setShowPopupSong = { showSongPlayerSheet.value = it },
             sheetState = showSongPlayerSheetState,
             libraryViewModel = libraryViewModel,
-            playbackViewModel = playbackViewModel
+            playbackViewModel = playbackViewModel,
+            sessionManager = sessionManager
         )
     }
 

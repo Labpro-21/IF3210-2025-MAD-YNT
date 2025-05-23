@@ -35,7 +35,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
     private var mediaController: MediaController? = null
     var isPlaying by mutableStateOf(false)
     var currentMediaTitle by mutableStateOf<String?>(null)
-    var currentMediaId by mutableIntStateOf(0)
+    var currentMediaId by mutableIntStateOf(-1)
     var currentPosition by mutableLongStateOf(0L)
     var duration by mutableLongStateOf(0L)
     private val _selectedDeviceId = MutableStateFlow<Int?>(null)
@@ -138,7 +138,8 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
 
     fun setLocal(){
         songList = localSongList
-        sourceName = "local"
+        sourceName ="local"
+        if(currentMediaId>=0) currentSong = songList.firstOrNull { it.id==currentMediaId }
         syncSongs()
     }
 

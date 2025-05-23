@@ -1,28 +1,34 @@
 package com.ynt.purrytify.utils.mediaplayer
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.OptIn
+import androidx.compose.runtime.MutableState
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import com.ynt.purrytify.MainActivity
+import com.ynt.purrytify.R
+import com.ynt.purrytify.database.SongRepository
 import com.ynt.purrytify.models.Song
 
 class PlaybackService : MediaSessionService() {
 
     private inner class MediaSessionCallback : MediaSession.Callback {
-
         @OptIn(UnstableApi::class)
         override fun onConnect(
             session: MediaSession,
@@ -34,9 +40,21 @@ class PlaybackService : MediaSessionService() {
                 .add(SessionCommand("next", Bundle.EMPTY))
                 .add(SessionCommand("previous", Bundle.EMPTY))
                 .add(SessionCommand("play_by_id",Bundle.EMPTY))
+                .add(SessionCommand("none", Bundle.EMPTY))
+                .add(SessionCommand("like", Bundle.EMPTY))
                 .build()
+
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                 .setAvailableSessionCommands(sessionCommands)
+                .setCustomLayout(
+                    listOf(
+                        CommandButton.Builder()
+                            .setDisplayName("Like")
+                            .setIconResId(R.drawable.baseline_favorite_24)
+                            .setSessionCommand(SessionCommand("like", Bundle.EMPTY))
+                            .build(),
+                    )
+                )
                 .build()
         }
 
@@ -77,9 +95,31 @@ class PlaybackService : MediaSessionService() {
                     previous()
                     Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
+                "play_pause"->{
+                    if(exoPlayer.isPlaying){
+                        pause()
+                    }
+                    else{
+                        play()
+                    }
+                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                }
                 "play_by_id" ->{
                     val id = args.getString("song_id")
                     playSongById(id!!)
+                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                }
+                "like" -> {
+                    currentSong?.let {
+                        val updated = it.copy(isLiked = if (it.isLiked == 1) 0 else 1)
+                        currentSong = updated
+                        val index = exoSongs.indexOfFirst { song -> song.id == updated.id }
+                        if (index != -1) {
+                            exoSongs[index] = updated
+                        }
+                        mSongRepository.update(updated)
+                        updateCustomLayout()
+                    }
                     Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
                 else -> {
@@ -90,27 +130,45 @@ class PlaybackService : MediaSessionService() {
     }
 
 
+    private lateinit var mSongRepository: SongRepository
     private lateinit var exoPlayer: ExoPlayer
     private lateinit var mediaSession: MediaSession
 
     private lateinit var sourceName : String
+    private var exoSongs = mutableListOf<Song>()
 
+    private var currentSong: Song? = null
     private var currentPlayingIndex = -1
     private var currentPlayingSongId: String? = null
 
+    @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
-        exoPlayer = ExoPlayer.Builder(this).build()
+        val intent = Intent(applicationContext, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+
+        val sessionIntent = PendingIntent.getActivity(
+            applicationContext,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        mSongRepository = SongRepository(application)
+        exoPlayer = ExoPlayer.Builder(this).build().apply {
+            repeatMode = Player.REPEAT_MODE_ALL
+        }
         mediaSession = MediaSession.Builder(this, exoPlayer)
             .setCallback(MediaSessionCallback())
+            .setSessionActivity(sessionIntent)
             .build()
-
         sourceName = ""
-
         exoPlayer.addListener(object : Player.Listener {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 currentPlayingSongId = mediaItem?.mediaId
                 currentPlayingIndex = exoPlayer.currentMediaItemIndex
+                currentSong = exoSongs.firstOrNull{ currentPlayingSongId == it.id.toString()}
+                updateCustomLayout()
             }
         })
         exoPlayer.prepare()
@@ -121,6 +179,9 @@ class PlaybackService : MediaSessionService() {
             exoPlayer.clearMediaItems()
             sourceName = source
         }
+        exoSongs.clear()
+        exoSongs.addAll(songs)
+        currentSong = exoSongs.firstOrNull {it.id.toString() == currentPlayingSongId}
         val currentMediaItems = (0 until exoPlayer.mediaItemCount).map { exoPlayer.getMediaItemAt(it) }
         val currentMediaIds = currentMediaItems.map { it.mediaId }.toSet()
         for ((index, song) in songs.withIndex()) {
@@ -172,10 +233,32 @@ class PlaybackService : MediaSessionService() {
                 }
             }
         }
+        updateCustomLayout()
     }
+
+    fun updateCustomLayout() {
+        val likeIconRes = if (currentSong?.isLiked == 1) {
+            R.drawable.baseline_favorite_24
+        } else {
+            R.drawable.baseline_favorite_border_24
+        }
+        if(sourceName=="local"){
+            val likeButton = CommandButton.Builder()
+                .setDisplayName("Like")
+                .setIconResId(likeIconRes)
+                .setSessionCommand(SessionCommand("like", Bundle.EMPTY))
+                .build()
+            mediaSession.setCustomLayout(listOf(likeButton))
+        }
+        else{
+            mediaSession.setCustomLayout(listOf())
+        }
+    }
+
 
     fun playSongById(songId: String) {
         val index = (0 until exoPlayer.mediaItemCount).indexOfFirst { exoPlayer.getMediaItemAt(it).mediaId == songId }
+        currentSong = exoSongs.firstOrNull {it.id.toString() == songId}
         if (index != -1) {
             exoPlayer.seekTo(index, 0)
             exoPlayer.play()
@@ -185,13 +268,18 @@ class PlaybackService : MediaSessionService() {
     }
 
     fun next() {
-        if (exoPlayer.hasNextMediaItem()) exoPlayer.seekToNext()
-        exoPlayer.play()
+        if (exoPlayer.hasNextMediaItem()) {
+            exoPlayer.seekToNext()
+            exoPlayer.play()
+        }
+
     }
 
     fun previous() {
-        if (exoPlayer.hasPreviousMediaItem()) exoPlayer.seekToPrevious()
-        exoPlayer.play()
+        if (exoPlayer.hasPreviousMediaItem()) {
+            exoPlayer.seekToPrevious()
+            exoPlayer.play()
+        }
     }
 
     fun pause() = exoPlayer.pause()

@@ -56,8 +56,10 @@ fun LibraryScreen(
         if(list!=null) {
             playbackViewModel.syncLocal(list)
         }
+        if (playbackViewModel.sourceName=="local"){
+            playbackViewModel.setLocal()
+        }
     }
-
 
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -100,12 +102,10 @@ fun LibraryScreen(
                     if(songCopy.id == playbackViewModel.currentMediaId){
                         playbackViewModel.currentSong = songCopy
                     }
-
                 },
                 updateEditSong = { song ->
                     showPopUpEditSong.value = true
                     editedSong.value = song
-                    playbackViewModel.syncLocal(songList!!)
                 },
                 playSong = { selectedSong ->
                     if(playbackViewModel.currentMediaId == selectedSong.id && playbackViewModel.isPlaying){

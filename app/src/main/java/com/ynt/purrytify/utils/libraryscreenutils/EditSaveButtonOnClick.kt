@@ -34,7 +34,9 @@ fun editSaveButtonOnClick(
             artist = artist
         )
         libraryViewModel.update(songUpdate)
-        playbackViewModel.currentSong = songUpdate
+        if(playbackViewModel.currentMediaId == songUpdate.id){
+            playbackViewModel.currentSong = songUpdate
+        }
 
     coroutineScope.launch {
         sheetState.hide()

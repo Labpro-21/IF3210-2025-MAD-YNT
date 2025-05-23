@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -34,7 +35,10 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -57,6 +61,7 @@ import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import kotlinx.coroutines.launch
 import androidx.core.graphics.scale
 import androidx.core.graphics.get
+import com.ynt.purrytify.utils.auth.SessionManager
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,6 +71,7 @@ fun SongPlayerSheet(
     libraryViewModel: LibraryViewModel,
     sheetState: SheetState,
     playbackViewModel: PlaybackViewModel,
+    sessionManager: SessionManager
 ){
     val coroutineScope = rememberCoroutineScope()
     val interactionSource = remember {MutableInteractionSource()}
@@ -76,6 +82,19 @@ fun SongPlayerSheet(
     val dominantColor = getDominantColor(
         bitmap = imageBitmap
     )
+    val username = sessionManager.getUser()
+    val localSongList by libraryViewModel.getAllSongs(username).observeAsState()
+    LaunchedEffect(localSongList) {
+        if (playbackViewModel.sourceName=="local") {
+            val list = localSongList
+            if (list != null) {
+                playbackViewModel.syncLocal(list)
+                playbackViewModel.setLocal()
+                Log.d("OPEN UP","SOMETHING ${list}")
+            }
+        }
+    }
+
     ModalBottomSheet(
         onDismissRequest = {
             coroutineScope.launch {
@@ -125,15 +144,19 @@ fun SongPlayerSheet(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 IconButton(onClick = {
-                    val updatedSong = playbackViewModel.currentSong?.copy(isLiked = if (playbackViewModel.currentSong?.isLiked == 1) 0 else 1)
-                    libraryViewModel.update(updatedSong?:Song())
-                    playbackViewModel.currentSong =  updatedSong
+                    if(playbackViewModel.sourceName == "local"){
+                        val updatedSong = playbackViewModel.currentSong?.copy(isLiked = if (playbackViewModel.currentSong?.isLiked == 1) 0 else 1)
+                        libraryViewModel.update(updatedSong?:Song())
+                        playbackViewModel.currentSong =  updatedSong
+                    }
                 }) {
-                    Icon(
-                        imageVector = if (playbackViewModel.currentSong?.isLiked == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = null,
-                        tint = if (playbackViewModel.currentSong?.isLiked == 1) Color.Red else Color.White
-                    )
+                    if(playbackViewModel.sourceName=="local"){
+                        Icon(
+                            imageVector = if (playbackViewModel.currentSong?.isLiked == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = null,
+                            tint = if (playbackViewModel.currentSong?.isLiked == 1) Color.Red else Color.White
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
