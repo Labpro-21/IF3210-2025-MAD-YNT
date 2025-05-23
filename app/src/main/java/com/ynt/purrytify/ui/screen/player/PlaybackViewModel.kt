@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -21,6 +22,7 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
+import com.ynt.purrytify.database.SongRepository
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.utils.mediaplayer.PlaybackService
 import kotlinx.coroutines.Job
@@ -46,13 +48,13 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
     var currentSong by mutableStateOf<Song?>(null)
     var sourceName by mutableStateOf<String?>(null)
     private var positionUpdateJob: Job? = null
-
-
+    lateinit var mSongRepository: SongRepository
 
     @UnstableApi
     fun connect() {
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
+        mSongRepository = SongRepository(getApplication())
         controllerFuture.addListener({
             mediaController = controllerFuture.get()
             val player = mediaController!!
@@ -75,7 +77,8 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                     currentMediaTitle = mediaItem?.mediaMetadata?.title?.toString()
                     currentMediaId = mediaItem?.mediaId?.toInt() ?: -1
-                    currentSong = songList.firstOrNull { it.id==currentMediaId }
+                    currentSong = songList.firstOrNull { it.id==currentMediaId }?.copy(lastPlayed = System.currentTimeMillis())
+                    mSongRepository.update(currentSong!!)
                 }
                 override fun onPlaybackStateChanged(state: Int) {
                     duration = player.duration
