@@ -69,6 +69,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.core.splashscreen)

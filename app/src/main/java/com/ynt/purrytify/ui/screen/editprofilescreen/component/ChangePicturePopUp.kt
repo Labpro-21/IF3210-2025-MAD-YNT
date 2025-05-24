@@ -21,9 +21,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import android.Manifest
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
+import com.ynt.purrytify.R
 import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
@@ -41,15 +46,21 @@ fun ChangePicturePopUp(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        dragHandle = null
+        dragHandle = null,
+        containerColor = colorResource(R.color.dark_gray),
+        contentColor = colorResource(R.color.dark_gray),
     ) {
         Column(
             modifier = Modifier
                 .padding(20.dp)
                 .wrapContentHeight(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("Change Profile Picture", style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = "Change Profile Picture",
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.White
+            )
             Spacer(modifier = Modifier.height(16.dp))
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -59,9 +70,13 @@ fun ChangePicturePopUp(
                         onSelectPicture()
                         onDismiss()
                     },
+                    colors = ButtonDefaults.buttonColors(colorResource(R.color.dark_gray)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Choose Picture")
+                    Text(
+                        text = "Choose Picture",
+                        color = Color.White,
+                        )
                 }
                 TextButton(
                     onClick = {
@@ -69,9 +84,13 @@ fun ChangePicturePopUp(
                         onTakePicture()
                         onDismiss()
                     },
+                    colors = ButtonDefaults.buttonColors(colorResource(R.color.dark_gray)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Take Picture")
+                    Text(
+                        text = "Take Picture",
+                        color = Color.White,
+                        )
                 }
             }
         }

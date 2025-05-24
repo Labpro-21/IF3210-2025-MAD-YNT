@@ -1,8 +1,15 @@
 package com.ynt.purrytify.ui.screen.libraryscreen
 
+import android.content.res.Configuration
 import android.util.Log
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -15,9 +22,11 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
@@ -41,6 +50,7 @@ fun LibraryScreen(
     viewModel: LibraryViewModel = viewModel(),
     playbackViewModel: PlaybackViewModel,
     showSongPlayerSheet: MutableState<Boolean>,
+    configuration: Configuration
 ) {
     val showPopUpAddSong = remember { mutableStateOf(false) }
     val showPopUpEditSong = remember { mutableStateOf(false) }
@@ -50,6 +60,8 @@ fun LibraryScreen(
     val editedSong = remember { mutableStateOf<Song?>(null) }
     val username = sessionManager.getUser()
     val songList by viewModel.getAllSongs(username).observeAsState()
+
+    var isTopBarVisible = remember { mutableStateOf(true) }
 
     LaunchedEffect(songList) {
         val list = songList
@@ -77,13 +89,28 @@ fun LibraryScreen(
 
     Scaffold(
         topBar = {
-            LibraryTopBar(
-                title = "Your Library",
-                onAddClick = { showPopUpAddSong.value = true },
-                selectedChoiceIndex = selectedChoiceIndex.intValue,
-                onChoiceSelected = { selectedChoiceIndex.intValue = it },
-                navController = navController
-            )
+            if(configuration.orientation == Configuration.ORIENTATION_LANDSCAPE){
+                AnimatedContent(targetState = isTopBarVisible.value) {
+                    if(it){
+                    LibraryTopBar(
+                            title = "Your Library",
+                            onAddClick = { showPopUpAddSong.value = true },
+                            selectedChoiceIndex = selectedChoiceIndex.intValue,
+                            onChoiceSelected = { selectedChoiceIndex.intValue = it },
+                            navController = navController
+                        )
+                    }
+                }
+            }
+            else{
+                LibraryTopBar(
+                    title = "Your Library",
+                    onAddClick = { showPopUpAddSong.value = true },
+                    selectedChoiceIndex = selectedChoiceIndex.intValue,
+                    onChoiceSelected = { selectedChoiceIndex.intValue = it },
+                    navController = navController
+                )
+            }
         },
         containerColor = Color.Black
     ) { innerPadding ->
@@ -91,6 +118,7 @@ fun LibraryScreen(
             modifier = Modifier.padding(innerPadding)
         ) {
             SongListRecyclerView(
+                isTopBarVisible = isTopBarVisible,
                 localContext = localContext,
                 lifecycleOwner = lifecycleOwner,
                 loggedInUser = username,
