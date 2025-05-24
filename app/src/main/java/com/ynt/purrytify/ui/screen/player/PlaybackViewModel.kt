@@ -256,7 +256,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
                 mediaController?.let { player ->
                     currentPosition = player.currentPosition
                 }
-                delay(100L)
+                delay(10L)
             }
         }
     }

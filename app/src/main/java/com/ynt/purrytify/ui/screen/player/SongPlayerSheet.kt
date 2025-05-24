@@ -39,8 +39,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,8 +77,10 @@ fun SongPlayerSheet(
 ){
     val coroutineScope = rememberCoroutineScope()
     val interactionSource = remember {MutableInteractionSource()}
-    val currentPosition = if(playbackViewModel.currentPosition.toFloat() >= 0) playbackViewModel.currentPosition.toFloat() else 0f
     val duration = if(playbackViewModel.duration.toFloat() >= 0) playbackViewModel.duration.toFloat() else 0f
+    val currentPosition = playbackViewModel.currentPosition.coerceAtLeast(0).toFloat()
+    var sliderPosition by remember { mutableStateOf(currentPosition) }
+    var isSliderDragging by remember { mutableStateOf(false) }
     val contentResolver = LocalContext.current.contentResolver
     val imageBitmap = getBitmap(contentResolver, playbackViewModel.currentSong?.image?.toUri())
     val dominantColor = getDominantColor(
@@ -91,6 +95,12 @@ fun SongPlayerSheet(
                 playbackViewModel.syncLocal(list)
                 playbackViewModel.setLocal()
             }
+        }
+    }
+
+    LaunchedEffect(currentPosition) {
+        if (!isSliderDragging) {
+            sliderPosition = currentPosition
         }
     }
 
@@ -168,9 +178,14 @@ fun SongPlayerSheet(
                 ) {
                     Text(formatTime(currentPosition), color = Color.White, fontSize = 12.sp)
                     Slider(
-                        value = currentPosition,
+                        value = sliderPosition,
                         onValueChange = {
-                            playbackViewModel.seek(it.toLong())
+                            sliderPosition = it
+                            isSliderDragging = true
+                        },
+                        onValueChangeFinished = {
+                            isSliderDragging = false
+                            playbackViewModel.seek(sliderPosition.toLong())
                         },
                         valueRange = 0f..duration,
                         modifier = Modifier
