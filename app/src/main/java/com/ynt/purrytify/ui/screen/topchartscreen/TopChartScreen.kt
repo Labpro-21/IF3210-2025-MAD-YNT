@@ -100,7 +100,8 @@ fun TopSongScreen(
                         viewModel.update(songCopy)
                         playbackViewModel.playSongById(selectedSong.id.toString())
                     }
-                }
+                },
+                navController = navController
             )
         }
     }
