@@ -29,6 +29,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.models.OnlineSong
@@ -43,7 +44,8 @@ fun SongList(
     songList : List<OnlineSong>,
     viewModel : TopChartViewModel,
     sessionManager: SessionManager,
-    playSong : (Song) -> Unit
+    playSong : (Song) -> Unit,
+    navController: NavController
 ) {
     Column (
         modifier = Modifier
@@ -57,7 +59,8 @@ fun SongList(
                 downloadHelper = downloadHelper,
                 viewModel = viewModel,
                 sessionManager = sessionManager,
-                playSong = playSong
+                playSong = playSong,
+                navController = navController
             )
         }
     }
@@ -69,7 +72,8 @@ fun OneSong(
     downloadHelper: DownloadHelper,
     viewModel: TopChartViewModel,
     sessionManager: SessionManager,
-    playSong: (Song) -> Unit
+    playSong: (Song) -> Unit,
+    navController: NavController
 ) {
     val showOptionsSheet = remember { mutableStateOf(false) }
     val showShareSheet = remember { mutableStateOf(false) }
@@ -150,7 +154,8 @@ fun OneSong(
         if (showShareSheet.value) {
             ShareOptions(
                 onDismiss = { showShareSheet.value = false },
-                songID = song.id
+                songID = song.id,
+                navController = navController
             )
         }
     }

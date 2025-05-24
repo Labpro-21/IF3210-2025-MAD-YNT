@@ -98,4 +98,7 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.session)
+
+    //QR Code
+    implementation ("com.google.zxing:core:3.5.2")
 }

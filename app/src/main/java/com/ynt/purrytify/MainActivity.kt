@@ -39,10 +39,12 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.component.BottomBar
@@ -56,6 +58,7 @@ import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
 import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
+import com.ynt.purrytify.ui.screen.qrsharingscreen.QRSharingScreen
 import com.ynt.purrytify.ui.screen.topchartscreen.TopSongScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
@@ -117,6 +120,9 @@ sealed class Screen(val route: String) {
     data object TopGlobalCharts : Screen("topGlobalCharts")
     data object TopRegionCharts : Screen("topRegionCharts")
     data object AudioRouting : Screen("audioRouting")
+    data object QRSharing : Screen("qrSharing/{songId}") {
+        fun createRoute(songId: Int) = "qrSharing/$songId"
+    }
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -293,6 +299,14 @@ fun MainApp(
                     playbackViewModel = playbackViewModel,
                     navController = navController
                 )
+            }
+
+            composable(
+                route = Screen.QRSharing.route,
+                arguments = listOf(navArgument("songId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val songId = backStackEntry.arguments?.getInt("songId") ?: 0
+                QRSharingScreen(songId = songId)
             }
         }
     }

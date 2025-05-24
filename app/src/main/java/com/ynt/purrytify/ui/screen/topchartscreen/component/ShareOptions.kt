@@ -8,13 +8,16 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
+import com.ynt.purrytify.Screen
 import com.ynt.purrytify.utils.sharing.ShareViaURL
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShareOptions(
     onDismiss : () -> (Unit),
-    songID: Int
+    songID: Int,
+    navController: NavController
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
@@ -34,7 +37,7 @@ fun ShareOptions(
 
         TextButton(
             onClick = {
-                //TODO: Implement QR Sharing
+                navController.navigate(Screen.QRSharing.createRoute(songID))
                 onDismiss()
             }
         ) {
