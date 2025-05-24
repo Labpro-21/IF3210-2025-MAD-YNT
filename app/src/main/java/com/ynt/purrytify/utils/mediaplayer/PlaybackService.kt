@@ -25,6 +25,15 @@ import com.ynt.purrytify.MainActivity
 import com.ynt.purrytify.R
 import com.ynt.purrytify.database.SongRepository
 import com.ynt.purrytify.models.Song
+import com.ynt.purrytify.models.SongStat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 class PlaybackService : MediaSessionService() {
 
@@ -43,6 +52,7 @@ class PlaybackService : MediaSessionService() {
                 .add(SessionCommand("none", Bundle.EMPTY))
                 .add(SessionCommand("like", Bundle.EMPTY))
                 .add(SessionCommand("get_current_state", Bundle.EMPTY))
+                .add(SessionCommand("send_user", Bundle.EMPTY))
                 .build()
 
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -134,6 +144,12 @@ class PlaybackService : MediaSessionService() {
                     }
                     Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
                 }
+                "send_user" -> {
+                    val bundle = Bundle().apply {
+                        putString("user", currentUser)
+                    }
+                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
+                }
                 else -> {
                     super.onCustomCommand(session, controller, customCommand, args)
                 }
@@ -152,6 +168,10 @@ class PlaybackService : MediaSessionService() {
     private var currentSong: Song? = null
     private var currentPlayingIndex = -1
     private var currentPlayingSongId: String? = null
+
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var positionUpdateJob: Job? = null
+    private var currentUser = ""
 
     @OptIn(UnstableApi::class)
     override fun onCreate() {
@@ -181,6 +201,8 @@ class PlaybackService : MediaSessionService() {
                 currentPlayingIndex = exoPlayer.currentMediaItemIndex
                 currentSong = exoSongs.firstOrNull{ currentPlayingSongId == it.id.toString()}
                 updateCustomLayout()
+                startPositionUpdates()
+                Log.d("PlaybackService","Transition triggered")
             }
         })
         exoPlayer.prepare()
@@ -276,6 +298,8 @@ class PlaybackService : MediaSessionService() {
             exoPlayer.play()
             currentPlayingIndex = index
             currentPlayingSongId = songId
+            startPositionUpdates()
+            Log.d("PlaybackService","Play song by id called")
         }
     }
 
@@ -301,6 +325,46 @@ class PlaybackService : MediaSessionService() {
         return mediaSession
     }
 
+    private fun startPositionUpdates() {
+        positionUpdateJob?.cancel()
+        positionUpdateJob = scope.launch {
+            while (withContext(Dispatchers.Main) { !exoPlayer.isPlaying }) {
+                delay(300L)
+            }
+            var lastUpdateTime = System.currentTimeMillis()
+            while (withContext(Dispatchers.Main) { exoPlayer.isPlaying }) {
+                val now = System.currentTimeMillis()
+                val elapsed = now - lastUpdateTime
+                lastUpdateTime = now
+                val calendar = Calendar.getInstance()
+                val day = calendar.get(Calendar.DAY_OF_MONTH)
+                val month = calendar.get(Calendar.MONTH) + 1
+                val year = calendar.get(Calendar.YEAR)
+                val user = currentUser
+                val song = currentSong ?: break
+                withContext(Dispatchers.IO) {
+                    try {
+                        val existingStat = mSongRepository.getSongStat(
+                            user, year, month, day, song.id.toString(), song.artist.toString()
+                        )
+                        val newTimeListened = (existingStat?.timeListened ?: 0L) + elapsed
+                        val newStat = SongStat(
+                            user = user,
+                            year = year,
+                            month = month,
+                            day = day,
+                            songId = song.id.toString(),
+                            artists = song.artist.toString(),
+                            timeListened = newTimeListened
+                        )
+                        mSongRepository.insert(newStat)
+                    } catch (e: Exception) {
+                    }
+                }
+                delay(1000L)
+            }
+        }
+    }
 
     override fun onDestroy() {
         super.onDestroy()
