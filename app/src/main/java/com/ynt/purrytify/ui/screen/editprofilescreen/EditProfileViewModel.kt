@@ -29,8 +29,6 @@ class EditProfileViewModel(application: Application) : AndroidViewModel(applicat
         val context = getApplication<Application>().applicationContext
         if (uri != null) {
             val file = File(getRealPathFromURI(context, uri))
-            Log.d("Image Uri", getRealPathFromURI(context, uri))
-            Log.d("File name", file.name)
             val requestFile = file.asRequestBody("image/jpeg".toMediaType())
             editedImageFile = MultipartBody.Part.createFormData("profilePhoto", file.name, requestFile)
         }
@@ -44,13 +42,10 @@ class EditProfileViewModel(application: Application) : AndroidViewModel(applicat
                     location = editedCountryCode,
                     profilePhoto = editedImageFile
                 )
-                Log.d("EditProfile", "Status Code: ${response.code()}")
-                Log.d("EditProfile", "Is Successful: ${response.isSuccessful}")
 
                 if (response.isSuccessful) {
                     val responseBody = response.body()
                     val bodyString = responseBody?.string()
-                    Log.d("EditProfile", "Response: $bodyString")
                 } else {
                     val errorBody = response.errorBody()
                     val errorString = errorBody?.string()
@@ -58,7 +53,6 @@ class EditProfileViewModel(application: Application) : AndroidViewModel(applicat
                 }
 
             } catch (e: Exception) {
-                Log.d("Exception", e.message.toString())
             }
 
         }

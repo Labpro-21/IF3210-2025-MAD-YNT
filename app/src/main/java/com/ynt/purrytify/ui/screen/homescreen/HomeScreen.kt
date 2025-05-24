@@ -1,13 +1,12 @@
 package com.ynt.purrytify.ui.screen.homescreen
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,6 +19,7 @@ import com.ynt.purrytify.ui.screen.homescreen.component.NewSongs
 import com.ynt.purrytify.ui.screen.homescreen.component.RecentlyPlayed
 import com.ynt.purrytify.ui.screen.homescreen.component.TopCharts
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
+import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 import com.ynt.purrytify.utils.auth.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -27,14 +27,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 fun HomeScreen(
     navController: NavController,
     sessionManager: SessionManager,
+    playbackViewModel: PlaybackViewModel,
     viewModel: HomeViewModel = viewModel(),
-    onSongsLoaded: (List<Song>?) -> Unit = {},
-    currentSong: MutableStateFlow<Song>?,
+    libraryViewModel: LibraryViewModel,
     showSongPlayerSheet: MutableState<Boolean>,
-    onPlay: (song: Song)->Unit
 ) {
     LaunchedEffect(Unit) {
         viewModel.loadNewSongs(sessionManager)
+    }
+    val username = sessionManager.getUser()
+    val librarySongList by libraryViewModel.getAllSongs(username).observeAsState()
+    LaunchedEffect(librarySongList) {
+        val list = librarySongList
+        if(list!=null) {
+            playbackViewModel.syncLocal(list)
+        }
     }
 
     val songsList = viewModel.songList.observeAsState(emptyList()).value
@@ -57,17 +64,8 @@ fun HomeScreen(
         item {
             NewSongs(
                 songList = songsList,
-                playSong = { selectedSong ->
-                    if(currentSong?.value?.id ?: null == selectedSong.id){
-                        showSongPlayerSheet.value = true
-                    }
-                    else{
-                        val songCopy = selectedSong.copy(lastPlayed = System.currentTimeMillis())
-                        viewModel.update(songCopy)
-                        onPlay(selectedSong)
-                    }
-                },
-                onSongsLoaded = onSongsLoaded
+                showSongPlayerSheet = showSongPlayerSheet,
+                playbackViewModel = playbackViewModel
             )
         }
 
@@ -78,17 +76,8 @@ fun HomeScreen(
         item {
             RecentlyPlayed(
                 songList = recentlySong,
-                playSong = { selectedSong ->
-                    if(currentSong?.value?.id ?: null == selectedSong.id){
-                        showSongPlayerSheet.value = true
-                    }
-                    else{
-                        val songCopy = selectedSong.copy(lastPlayed = System.currentTimeMillis())
-                        viewModel.update(songCopy)
-                        onPlay(selectedSong)
-                    }
-                },
-                onSongsLoaded = onSongsLoaded
+                showSongPlayerSheet = showSongPlayerSheet,
+                playbackViewModel = playbackViewModel
             )
         }
     }
