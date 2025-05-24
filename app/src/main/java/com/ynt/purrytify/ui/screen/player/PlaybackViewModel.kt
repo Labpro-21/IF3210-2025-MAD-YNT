@@ -57,12 +57,15 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
     @UnstableApi
     fun connect() {
         if (isConnecting) {
+            Log.d("PlaybackViewModel","It is connecting")
             return
         }
         if (mediaController != null) {
+            Log.d("PlaybackViewModel","Media controller exist")
             return
         }
         isConnecting = true
+        Log.d("PlaybackViewModel","Connecting I guess")
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
         mSongRepository = SongRepository(getApplication())
