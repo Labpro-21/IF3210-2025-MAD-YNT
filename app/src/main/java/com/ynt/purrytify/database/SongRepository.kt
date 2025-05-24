@@ -4,6 +4,9 @@ import android.app.Application
 import androidx.lifecycle.LiveData
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.SongStat
+import com.ynt.purrytify.models.TimeListened
+import com.ynt.purrytify.models.TopArtist
+import com.ynt.purrytify.models.TopSong
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -58,4 +61,25 @@ class SongRepository(application: Application) {
     fun getAllSongsRaw(username: String) : List<Song> {
         return mSongsDao.getAllSongsRaw(username)
     }
+
+    fun getMonthlyTimeListened(user: String): LiveData<List<TimeListened>> {
+        return mSongsDao.getMonthlyTimeListened(user)
+    }
+
+    fun getMonthlySongCount(user: String): LiveData<List<TopSong>> {
+        return mSongsDao.getMonthlySongCount(user)
+    }
+
+    fun getMonthlyArtistCount(user: String): LiveData<List<TopArtist>> {
+        return mSongsDao.getMonthlyArtistCount(user)
+    }
+
+    fun getOneSongByArtist(user: String, artist: String): Song {
+        return mSongsDao.getOneSongByArtist(user, artist)
+    }
+
+    fun getOneSongById(user: String, songId: Int): Song {
+        return mSongsDao.getOneSongById(user, songId)
+    }
+
 }

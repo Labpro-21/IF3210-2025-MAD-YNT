@@ -119,9 +119,11 @@ fun ProfileScreen(
                             .background(Color.Gray)
                     ) {
                         SoundCapsuleHeader()
-
-
                     }
+                }
+
+                item {
+                    SoundCapsule(viewModel)
                 }
 
 
