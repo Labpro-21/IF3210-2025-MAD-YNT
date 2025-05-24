@@ -183,6 +183,11 @@ class PlaybackService : MediaSessionService() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
+        if (::mediaSession.isInitialized) {
+            Log.d("PlaybackService", "MediaSession already initialized, skipping creation")
+            return
+        }
+
         val sessionIntent = PendingIntent.getActivity(
             applicationContext,
             0,
@@ -193,6 +198,7 @@ class PlaybackService : MediaSessionService() {
         exoPlayer = ExoPlayer.Builder(this).build().apply {
             repeatMode = Player.REPEAT_MODE_ALL
         }
+        Log.d("PlaybackService","Making media session")
         mediaSession = MediaSession.Builder(this, exoPlayer)
             .setCallback(MediaSessionCallback())
             .setSessionActivity(sessionIntent)
@@ -376,6 +382,8 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        mediaSession.release()
+        exoPlayer.release()
         super.onDestroy()
     }
 }
