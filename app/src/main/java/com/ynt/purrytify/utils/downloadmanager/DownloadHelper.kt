@@ -19,11 +19,8 @@ class DownloadHelper(private val context: Context) {
 
     private val downloadReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d("DownloadReceiver", "Here")
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
-            Log.d("DownloadReceiver", "Received download complete for id=$id, our id=$downloadId")
             if (id == downloadId) {
-                Log.d("DownloadReceiver", "Download completed, invoking listener.")
                 onCompleteListener?.invoke()
             }
         }
@@ -66,7 +63,6 @@ class DownloadHelper(private val context: Context) {
         try {
             context.unregisterReceiver(downloadReceiver)
         } catch (e: IllegalArgumentException) {
-            Log.d("Receiver", e.message.toString())
         }
     }
 }
