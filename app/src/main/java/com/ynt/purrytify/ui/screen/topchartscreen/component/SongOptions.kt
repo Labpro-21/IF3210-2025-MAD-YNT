@@ -1,6 +1,8 @@
 package com.ynt.purrytify.ui.screen.topchartscreen.component
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -11,7 +13,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.window.Dialog
+import com.ynt.purrytify.R
 import com.ynt.purrytify.models.OnlineSong
 import com.ynt.purrytify.models.Song
 
@@ -24,18 +30,29 @@ fun SongOptions(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState
+        sheetState = sheetState,
+        containerColor = colorResource(R.color.dark_gray),
+        contentColor = colorResource(R.color.dark_gray),
     ) {
         TextButton(
-            onClick = {  }
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {  },
+            colors = ButtonDefaults.buttonColors(colorResource(R.color.dark_gray)),
         ) {
-            Text("Share")
+            Text(
+                text = "Share",
+                color = Color.White
+            )
         }
-
         TextButton(
-            onClick = onDownload
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onDownload,
+            colors = ButtonDefaults.buttonColors(colorResource(R.color.dark_gray)),
         ) {
-            Text("Download")
+            Text(
+                text = "Download",
+                color = Color.White
+            )
         }
     }
 }

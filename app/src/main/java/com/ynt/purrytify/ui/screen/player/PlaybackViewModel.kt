@@ -181,6 +181,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         }
         val command = SessionCommand("play_by_id",Bundle.EMPTY)
         controller.sendCustomCommand(command, bundle)
+        mediaController?.play()
     }
 
 
@@ -268,6 +269,14 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
     private fun stopPositionUpdates() {
         positionUpdateJob?.cancel()
         positionUpdateJob = null
+    }
+
+    fun kill() {
+        sourceName = null
+        mediaController?.stop()
+        val controller = mediaController ?: return
+        val command = SessionCommand("kill",Bundle.EMPTY)
+        controller.sendCustomCommand(command, Bundle.EMPTY)
     }
 
 }

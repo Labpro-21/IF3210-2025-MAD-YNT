@@ -37,10 +37,10 @@ fun LibraryTopBar(
             .fillMaxWidth()
             .background(Color.Black)
             .padding(
-                top = 25.dp,
+                top = 8.dp,
                 start = 18.dp,
                 end = 18.dp,
-                bottom = 12.dp,
+                bottom = 8.dp,
             )
     ) {
         Row(
@@ -81,14 +81,13 @@ fun LibraryTopBar(
             )
             AudioRoutesButton(navController = navController)
         }
-
-
+        HorizontalDivider(
+            thickness = 2.dp,
+            color = colorResource(R.color.dark_gray),
+            modifier = Modifier
+                .padding(top = 8.dp)
+        )
     }
-    HorizontalDivider(
-        thickness = 2.dp,
-        color = colorResource(R.color.dark_gray),
-        modifier = Modifier
-            .padding(top = 145.dp)
-    )
+
 
 }
