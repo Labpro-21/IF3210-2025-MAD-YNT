@@ -49,6 +49,7 @@ class PlaybackService : MediaSessionService() {
                 .add(SessionCommand("next", Bundle.EMPTY))
                 .add(SessionCommand("previous", Bundle.EMPTY))
                 .add(SessionCommand("play_by_id",Bundle.EMPTY))
+                .add(SessionCommand("play_pause",Bundle.EMPTY))
                 .add(SessionCommand("none", Bundle.EMPTY))
                 .add(SessionCommand("like", Bundle.EMPTY))
                 .add(SessionCommand("get_current_state", Bundle.EMPTY))
@@ -145,10 +146,12 @@ class PlaybackService : MediaSessionService() {
                     Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
                 }
                 "send_user" -> {
-                    val bundle = Bundle().apply {
-                        putString("user", currentUser)
+                    val user = args.getString("user")
+                    if (user != null) {
+                        currentUser = user
                     }
-                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
+                    Log.d("PlaybackService","User received: $user")
+                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
                 else -> {
                     super.onCustomCommand(session, controller, customCommand, args)
@@ -202,7 +205,14 @@ class PlaybackService : MediaSessionService() {
                 currentSong = exoSongs.firstOrNull{ currentPlayingSongId == it.id.toString()}
                 updateCustomLayout()
                 startPositionUpdates()
-                Log.d("PlaybackService","Transition triggered")
+            }
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                super.onIsPlayingChanged(isPlaying)
+                if (!isPlaying) {
+                    positionUpdateJob?.cancel()
+                } else {
+                    startPositionUpdates()
+                }
             }
         })
         exoPlayer.prepare()
@@ -299,7 +309,6 @@ class PlaybackService : MediaSessionService() {
             currentPlayingIndex = index
             currentPlayingSongId = songId
             startPositionUpdates()
-            Log.d("PlaybackService","Play song by id called")
         }
     }
 

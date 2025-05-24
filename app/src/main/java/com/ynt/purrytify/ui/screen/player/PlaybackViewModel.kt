@@ -227,13 +227,14 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
         controller.sendCustomCommand(command, Bundle.EMPTY)
     }
 
-    fun sendUser(){
+    fun sendUser(currentUser: String){
         val controller = mediaController ?: return
         val bundle = Bundle().apply {
             putString("user", currentUser)
         }
+        Log.d("PlaybackViewModel","Current user is $currentUser")
         val command = SessionCommand("send_user",Bundle.EMPTY)
-        controller.sendCustomCommand(command, Bundle.EMPTY)
+        controller.sendCustomCommand(command, bundle)
     }
 
     fun setPreferredOutputDevice(savedDevice: AudioDeviceInfo) {
