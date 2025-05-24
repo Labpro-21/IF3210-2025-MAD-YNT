@@ -28,7 +28,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.models.OnlineSong
@@ -51,7 +50,7 @@ fun SongList(
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        songList.forEach() { song ->
+        songList.forEach { song ->
             OneSong(
                 song = song,
                 downloadHelper = downloadHelper,
@@ -103,13 +102,13 @@ fun OneSong(
 
         Column {
             Text(
-                text = song.title ?: "",
+                text = song.title,
                 color = Color.White,
                 fontSize = 16.sp,
                 maxLines = 1
             )
             Text(
-                text = song.artist ?: "",
+                text = song.artist,
                 color = Color.LightGray,
                 fontSize = 14.sp,
                 maxLines = 1
@@ -134,7 +133,7 @@ fun OneSong(
             SongOptions(
                 onDismiss = { showSheet = false },
                 onDownload = {
-                    var isDownloading = true
+//                    var isDownloading = true
                     downloadHelper.startDownload(
                         song = song,
                         viewModel = viewModel,

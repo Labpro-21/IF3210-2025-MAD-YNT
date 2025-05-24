@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import androidx.core.content.edit
+import com.ynt.purrytify.models.ProfileResponse
 
 class SessionManager(private val context: Context) {
     private val USER_CODE = "YNTUser"
@@ -23,6 +24,24 @@ class SessionManager(private val context: Context) {
 
     fun clearUser(){
         user.edit { clear() }
+    }
+
+    fun setProfile(profile: ProfileResponse) {
+        user.edit {
+            putString("email", profile.email)
+            putString("username", profile.username)
+            putString("photo", profile.photoURL)
+            putString("location", profile.location)
+        }
+    }
+
+    fun getProfile(default: String = ""): Map<String, String> {
+        return mapOf(
+            "email" to (user.getString("email", default) ?: default),
+            "username" to (user.getString("username", default) ?: default),
+            "photoURL" to (user.getString("photo", default) ?: default),
+            "location" to (user.getString("location", default) ?: default)
+        )
     }
 
     fun getAccessToken(): String? = tokenStorage.getAccessToken()

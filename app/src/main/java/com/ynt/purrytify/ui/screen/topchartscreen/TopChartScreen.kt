@@ -20,8 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.ynt.purrytify.models.Song
+import com.ynt.purrytify.network.RetrofitInstance
 import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
-import com.ynt.purrytify.ui.screen.homescreen.component.ChartBox
+import com.ynt.purrytify.ui.screen.topchartscreen.component.ChartBox
 import com.ynt.purrytify.ui.screen.topchartscreen.component.BackButtonIcon
 import com.ynt.purrytify.ui.screen.topchartscreen.component.SongList
 import com.ynt.purrytify.utils.auth.SessionManager
@@ -39,9 +40,14 @@ fun TopSongScreen(
     onPlay: (song: Song)->Unit,
     onSongsLoaded: (List<Song>?) -> Unit = {},
 ) {
-    val topColor = Color(0xFF108B74)
-    val bottomColor = Color(0xFF1E3264)
-    LazyColumn() {
+    var topColor = Color(0xFF108B74)
+    var bottomColor = Color(0xFF1E3264)
+    if (isRegion) {
+        topColor = Color(0xFFF16D7A)
+        bottomColor = Color(0xFFEC1E32)
+    }
+
+    LazyColumn {
         item {
             Box(
                 modifier = Modifier
@@ -57,12 +63,21 @@ fun TopSongScreen(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                ChartBox(
-                    topText = "Top 50",
-                    bottomText = "GLOBAL",
-                    topColor = topColor,
-                    bottomColor = bottomColor
-                )
+                if (isRegion) {
+                    ChartBox(
+                        topText = "Top 10",
+                        bottomText = sessionManager.getProfile()["location"] ?: "",
+                        topColor = topColor,
+                        bottomColor = bottomColor
+                    )
+                } else {
+                    ChartBox(
+                        topText = "Top 50",
+                        bottomText = "GLOBAL",
+                        topColor = topColor,
+                        bottomColor = bottomColor
+                    )
+                }
 
                 BackButtonIcon(
                     onClick = { navController.popBackStack() },

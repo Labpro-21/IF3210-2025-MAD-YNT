@@ -14,11 +14,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.Locale
 
 @Composable
 fun TopCharts(
     onGLobalClick : () -> Unit,
-    onRegionClick : () -> Unit
+    onRegionClick : () -> Unit,
+    region: String
 ) {
     Column {
         Text(text = "Charts",
@@ -45,10 +47,10 @@ fun TopCharts(
 
             TopChartsBox(
                 topText = "Top 10",
-                bottomText = "ID",
+                bottomText = region,
                 topColor = Color(0xFFF16D7A),
                 bottomColor = Color(0xFFEC1E32),
-                desc = "Your daily update of the most played tracks right now - Indonesia",
+                desc = "Your daily update of the most played tracks right now - ${Locale("", region).displayCountry}",
                 onClick = onRegionClick
             )
         }

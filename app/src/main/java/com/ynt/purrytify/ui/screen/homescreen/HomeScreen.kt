@@ -1,9 +1,7 @@
 package com.ynt.purrytify.ui.screen.homescreen
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,7 +17,6 @@ import com.ynt.purrytify.ui.home.HomeViewModel
 import com.ynt.purrytify.ui.screen.homescreen.component.NewSongs
 import com.ynt.purrytify.ui.screen.homescreen.component.RecentlyPlayed
 import com.ynt.purrytify.ui.screen.homescreen.component.TopCharts
-import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.utils.auth.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -34,7 +31,7 @@ fun HomeScreen(
     onPlay: (song: Song)->Unit
 ) {
     LaunchedEffect(Unit) {
-        viewModel.loadNewSongs(sessionManager)
+        viewModel.loadHome(sessionManager)
     }
 
     val songsList = viewModel.songList.observeAsState(emptyList()).value
@@ -50,7 +47,8 @@ fun HomeScreen(
                 },
                 onRegionClick = {
                     navController.navigate("topRegionCharts")
-                }
+                },
+                region = sessionManager.getProfile()["location"] ?: "ID"
             )
         }
 
@@ -72,7 +70,7 @@ fun HomeScreen(
         }
 
         item {
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(5.dp))
         }
 
         item {

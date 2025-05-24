@@ -13,18 +13,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import android.Manifest
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
-import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -61,8 +57,15 @@ fun ChangePicturePopUp(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Choose Picture")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Choose Picture")
+                    }
                 }
+
                 TextButton(
                     onClick = {
                         cameraPermissionState.launchPermissionRequest()
@@ -71,7 +74,13 @@ fun ChangePicturePopUp(
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Take Picture")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Take Picture")
+                    }
                 }
             }
         }
