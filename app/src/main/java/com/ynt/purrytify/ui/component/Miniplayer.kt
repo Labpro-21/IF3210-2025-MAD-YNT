@@ -39,18 +39,16 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.ynt.purrytify.R
 import com.ynt.purrytify.models.Song
+import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun Miniplayer(
-    currentSong: Song?,
-    onPlay: () -> Unit,
-    onSkip: () -> Unit,
+    playbackViewModel: PlaybackViewModel,
     onClick: () -> Unit,
-    isPlaying: Boolean,
-    xcurrentDuration: MutableStateFlow<Float>
 ) {
     val context = LocalContext.current
+    val currentSong = playbackViewModel.currentSong
     Column(
         modifier = Modifier
             .height(64.dp)
@@ -126,16 +124,20 @@ fun Miniplayer(
                     .padding(horizontal = 8.dp)
             ) {
                 IconButton(
-                    onClick = onPlay
+                    onClick = {
+                        playbackViewModel.playPause()
+                    }
                 ) {
                     Icon(
-                        imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        imageVector = if (playbackViewModel.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                         contentDescription = "Play/Pause Song",
                         tint = Color.White
                     )
                 }
                 IconButton(
-                    onClick = onSkip
+                    onClick = {
+                        playbackViewModel.next()
+                    }
                 ) {
                     Icon(
                         imageVector = Icons.Filled.SkipNext,
@@ -145,7 +147,7 @@ fun Miniplayer(
                 }
             }
         }
-        val progress = xcurrentDuration.collectAsState().value / (currentSong?.duration ?: 1).toFloat()
+        val progress = playbackViewModel.currentPosition / (currentSong?.duration ?: 1).toFloat()
         LinearProgressIndicator(
             progress = {progress},
             modifier = Modifier.fillMaxWidth(),

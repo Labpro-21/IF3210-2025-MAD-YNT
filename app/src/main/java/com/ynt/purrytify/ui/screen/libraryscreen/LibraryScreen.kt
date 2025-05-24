@@ -20,26 +20,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.libraryscreen.component.AddSong
 import com.ynt.purrytify.ui.screen.libraryscreen.component.EditSong
 import com.ynt.purrytify.ui.screen.libraryscreen.component.LibraryTopBar
 import com.ynt.purrytify.ui.screen.libraryscreen.component.SongListRecyclerView
+import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 import com.ynt.purrytify.utils.auth.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
+@androidx.annotation.OptIn(UnstableApi::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     navController: NavController,
     sessionManager: SessionManager,
-    currentSong: MutableStateFlow<Song>?,
     viewModel: LibraryViewModel = viewModel(),
+    playbackViewModel: PlaybackViewModel,
     showSongPlayerSheet: MutableState<Boolean>,
-    onPlay: (song: Song)->Unit,
-    onSongsLoaded: (List<Song>?) -> Unit = {}
 ) {
     val showPopUpAddSong = remember { mutableStateOf(false) }
     val showPopUpEditSong = remember { mutableStateOf(false) }
@@ -47,13 +48,17 @@ fun LibraryScreen(
     val localContext = LocalContext.current
     val selectedChoiceIndex = rememberSaveable { mutableIntStateOf(0) }
     val editedSong = remember { mutableStateOf<Song?>(null) }
-
     val username = sessionManager.getUser()
-
-    val songList by viewModel.getAllSongs(username ?: "").observeAsState(emptyList())
+    val songList by viewModel.getAllSongs(username).observeAsState()
 
     LaunchedEffect(songList) {
-        onSongsLoaded(songList)
+        val list = songList
+        if(list!=null) {
+            playbackViewModel.syncLocal(list)
+        }
+        if (playbackViewModel.sourceName=="local"){
+            playbackViewModel.setLocal()
+        }
     }
 
     val sheetState = rememberModalBottomSheetState(
@@ -76,7 +81,8 @@ fun LibraryScreen(
                 title = "Your Library",
                 onAddClick = { showPopUpAddSong.value = true },
                 selectedChoiceIndex = selectedChoiceIndex.intValue,
-                onChoiceSelected = { selectedChoiceIndex.intValue = it }
+                onChoiceSelected = { selectedChoiceIndex.intValue = it },
+                navController = navController
             )
         },
         containerColor = Color.Black
@@ -93,25 +99,23 @@ fun LibraryScreen(
                 updateLikeSong = { song ->
                     val songCopy = song.copy(isLiked = if (song.isLiked == 1) 0 else 1)
                     viewModel.update(songCopy)
-                    if(songCopy.id == currentSong?.value?.id ?: null){
-                        currentSong?.update {
-                            songCopy
-                        }
+                    if(songCopy.id == playbackViewModel.currentMediaId){
+                        playbackViewModel.currentSong = songCopy
                     }
-
                 },
                 updateEditSong = { song ->
-                    editedSong.value = song
                     showPopUpEditSong.value = true
+                    editedSong.value = song
                 },
                 playSong = { selectedSong ->
-                    if(currentSong?.value?.id ?: null == selectedSong.id){
+                    if(playbackViewModel.currentMediaId == selectedSong.id && playbackViewModel.isPlaying){
                         showSongPlayerSheet.value = true
                     }
                     else{
                         val songCopy = selectedSong.copy(lastPlayed = System.currentTimeMillis())
                         viewModel.update(songCopy)
-                        onPlay(selectedSong)
+                        playbackViewModel.setLocal()
+                        playbackViewModel.playSongById(songCopy.id.toString())
                     }
                 }
             )
@@ -120,11 +124,11 @@ fun LibraryScreen(
                 EditSong(
                     setShowPopupSong = { showPopUpEditSong.value = it },
                     libraryViewModel = viewModel,
+                    playbackViewModel = playbackViewModel,
                     loggedInUser = username,
                     context = localContext,
                     sheetState = sheetState,
                     song = editedSong.value!!,
-                    currentSong = currentSong
                 )
             }
         }

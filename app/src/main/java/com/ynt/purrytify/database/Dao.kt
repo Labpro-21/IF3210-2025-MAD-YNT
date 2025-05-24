@@ -11,7 +11,7 @@ import com.ynt.purrytify.models.Song
 
 @Dao
 interface Dao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(song: Song)
     @Update
     fun update(song: Song)

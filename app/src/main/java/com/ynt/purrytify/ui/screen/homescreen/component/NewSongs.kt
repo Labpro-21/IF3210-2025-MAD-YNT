@@ -18,6 +18,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,12 +30,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.models.Song
+import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 
 @Composable
 fun NewSongs(
     songList: List<Song>,
-    playSong : (Song) -> Unit,
-    onSongsLoaded: (List<Song>?) -> Unit = {}
+    showSongPlayerSheet: MutableState<Boolean>,
+    playbackViewModel: PlaybackViewModel
 ) {
     Column (
         horizontalAlignment = Alignment.Start
@@ -48,15 +50,15 @@ fun NewSongs(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        NewSongsList(songList, playSong, onSongsLoaded)
+        NewSongsList(songList,showSongPlayerSheet,playbackViewModel)
     }
 }
 
 @Composable
 fun NewSongsList(
     songList: List<Song>,
-    playSong : (Song) -> Unit,
-    onSongsLoaded: (List<Song>?) -> Unit = {}
+    showSongPlayerSheet: MutableState<Boolean>,
+    playbackViewModel: PlaybackViewModel
 ) {
     LazyRow (
         modifier = Modifier
@@ -67,13 +69,8 @@ fun NewSongsList(
         items(songList) { song ->
             SongCard(
                 song = song,
-                playSong = {
-                    onSongsLoaded(songList)
-                    songList.forEach { song ->
-                        Log.d("Song", song.title.toString())
-                    }
-                    playSong(song)
-                }
+                playbackViewModel = playbackViewModel,
+                showSongPlayerSheet = showSongPlayerSheet
             )
         }
     }
@@ -82,13 +79,22 @@ fun NewSongsList(
 @Composable
 fun SongCard(
     song: Song,
-    playSong: (Song) -> Unit
+    showSongPlayerSheet: MutableState<Boolean>,
+    playbackViewModel: PlaybackViewModel
 ) {
     Card(
         modifier = Modifier
             .width(120.dp)
             .height(170.dp)
-            .clickable { playSong(song) },
+            .clickable {
+                if(playbackViewModel.currentSong?.id ?: null == song.id){
+                    showSongPlayerSheet.value = true
+                }
+                else{
+                    playbackViewModel.setLocal()
+                    playbackViewModel.playSongById(song.id.toString())
+                }
+            },
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {

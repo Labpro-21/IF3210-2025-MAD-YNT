@@ -16,15 +16,16 @@ import java.io.File
 class DownloadHelper(private val context: Context) {
     private var downloadId: Long = -1L
     private var onCompleteListener: (() -> Unit)? = null
+    private val downloadListeners = mutableMapOf<Long, () -> Unit>()
 
     private val downloadReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d("DownloadReceiver", "Here")
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L)
-            Log.d("DownloadReceiver", "Received download complete for id=$id, our id=$downloadId")
-            if (id == downloadId) {
-                Log.d("DownloadReceiver", "Download completed, invoking listener.")
-                onCompleteListener?.invoke()
+            val listener = downloadListeners[id]
+            listener?.invoke()
+            downloadListeners.remove(id)
+            if (downloadListeners.isEmpty()) {
+                unregister()
             }
         }
     }
@@ -34,19 +35,6 @@ class DownloadHelper(private val context: Context) {
 
         val outputDir = File(context.getExternalFilesDir("songs"), "${song.title}.mp3")
         val destinationUri = Uri.fromFile(outputDir)
-        onCompleteListener = {
-            val savedSong = Song(
-                title = song.title,
-                artist = song.artist,
-                owner = user,
-                image = song.artwork,
-                audio = destinationUri.toString(),
-                duration = parseDurationToSeconds(song.duration)
-            )
-            viewModel.insert(savedSong)
-
-            unregister()
-        }
 
         val request = DownloadManager.Request(song.url.toUri())
             .setTitle("Downloading ${song.title}.mp3")
@@ -60,13 +48,25 @@ class DownloadHelper(private val context: Context) {
 
         context.registerReceiver(downloadReceiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_EXPORTED)
         downloadId = downloadManager.enqueue(request)
+
+        downloadListeners[downloadId] = {
+            val savedSong = Song(
+                title = song.title,
+                artist = song.artist,
+                owner = user,
+                image = song.artwork,
+                audio = destinationUri.toString(),
+                duration = parseDurationToSeconds(song.duration)
+            )
+            viewModel.insert(savedSong)
+            Log.d("SONG DOWNLOAD", song.title)
+        }
     }
 
     private fun unregister() {
         try {
             context.unregisterReceiver(downloadReceiver)
         } catch (e: IllegalArgumentException) {
-            Log.d("Receiver", e.message.toString())
         }
     }
 }

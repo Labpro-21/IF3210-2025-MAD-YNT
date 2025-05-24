@@ -2,6 +2,7 @@ package com.ynt.purrytify.ui.screen.topchartscreen
 
 import android.app.Application
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -19,6 +20,7 @@ import retrofit2.Response
 class TopChartViewModel(application: Application) : AndroidViewModel(application) {
     private val _onlineSongs = MutableLiveData<List<OnlineSong>>()
     val onlineSongs: LiveData<List<OnlineSong>> = _onlineSongs
+    val currentRegion = MutableLiveData<String>()
     private val mSongRepository: SongRepository = SongRepository(application)
     private var profile: ProfileResponse? = null
 
@@ -27,6 +29,7 @@ class TopChartViewModel(application: Application) : AndroidViewModel(application
             try {
                 val profileResponse = RetrofitInstance.api.getProfile("Bearer ${sessionManager.getAccessToken()}")
                 profile = profileResponse.body()
+                currentRegion.value = profile?.location
                 val response : Response<List<OnlineSong>>
                 if (isRegion) {
                     response = RetrofitInstance.api.getTopRegionSongs(profile?.location ?: "")
@@ -38,7 +41,6 @@ class TopChartViewModel(application: Application) : AndroidViewModel(application
                     _onlineSongs.value = response.body()
                 }
             } catch (e: Exception) {
-                Log.d("Error", e.message.toString())
             }
         }
     }
@@ -53,9 +55,8 @@ class TopChartViewModel(application: Application) : AndroidViewModel(application
         mSongRepository.update(song)
     }
 
-    fun convertOnlineSongToSong(): List<Song> {
-        Log.d("Length Online Song", _onlineSongs.value?.size.toString())
-        return _onlineSongs.value?.map { onlineSong ->
+    fun convertOnlineSongToSong(source: List<OnlineSong>): List<Song> {
+        return source.map { onlineSong ->
             Song(
                 id = onlineSong.id,
                 title = onlineSong.title,
@@ -65,7 +66,7 @@ class TopChartViewModel(application: Application) : AndroidViewModel(application
                 audio = onlineSong.url,
                 duration = parseDurationToSeconds(onlineSong.duration)
             )
-        } ?: emptyList()
+        }
     }
 
     fun getRegion(): String {
