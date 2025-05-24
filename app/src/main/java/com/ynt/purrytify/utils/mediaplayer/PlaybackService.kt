@@ -49,6 +49,7 @@ class PlaybackService : MediaSessionService() {
                 .add(SessionCommand("next", Bundle.EMPTY))
                 .add(SessionCommand("previous", Bundle.EMPTY))
                 .add(SessionCommand("play_by_id",Bundle.EMPTY))
+                .add(SessionCommand("play_pause",Bundle.EMPTY))
                 .add(SessionCommand("none", Bundle.EMPTY))
                 .add(SessionCommand("like", Bundle.EMPTY))
                 .add(SessionCommand("get_current_state", Bundle.EMPTY))
@@ -202,7 +203,14 @@ class PlaybackService : MediaSessionService() {
                 currentSong = exoSongs.firstOrNull{ currentPlayingSongId == it.id.toString()}
                 updateCustomLayout()
                 startPositionUpdates()
-                Log.d("PlaybackService","Transition triggered")
+            }
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                super.onIsPlayingChanged(isPlaying)
+                if (!isPlaying) {
+                    positionUpdateJob?.cancel()
+                } else {
+                    startPositionUpdates()
+                }
             }
         })
         exoPlayer.prepare()
@@ -299,7 +307,6 @@ class PlaybackService : MediaSessionService() {
             currentPlayingIndex = index
             currentPlayingSongId = songId
             startPositionUpdates()
-            Log.d("PlaybackService","Play song by id called")
         }
     }
 
