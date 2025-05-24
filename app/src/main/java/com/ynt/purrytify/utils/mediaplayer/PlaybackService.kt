@@ -146,10 +146,12 @@ class PlaybackService : MediaSessionService() {
                     Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
                 }
                 "send_user" -> {
-                    val bundle = Bundle().apply {
-                        putString("user", currentUser)
+                    val user = args.getString("user")
+                    if (user != null) {
+                        currentUser = user
                     }
-                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS, bundle))
+                    Log.d("PlaybackService","User received: $user")
+                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
                 else -> {
                     super.onCustomCommand(session, controller, customCommand, args)

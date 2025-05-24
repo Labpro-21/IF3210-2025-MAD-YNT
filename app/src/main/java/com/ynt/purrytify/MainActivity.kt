@@ -177,10 +177,9 @@ fun MainApp(
         if (isLoggedIn.value && !didAutoLogin.value) {
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.Login.route) { inclusive = true }
-                playbackViewModel.currentUser = sessionManager.getUser()
-                playbackViewModel.sendUser()
                 launchSingleTop = true
             }
+            playbackViewModel.sendUser(sessionManager.getUser())
             startRefreshLoop()
             didAutoLogin.value = true
         }
@@ -188,6 +187,7 @@ fun MainApp(
 
     LaunchedEffect(isLoggedIn.value) {
         if (isLoggedIn.value) {
+            playbackViewModel.sendUser(sessionManager.getUser())
             startRefreshLoop()
         } else {
             stopRefreshLoop()
