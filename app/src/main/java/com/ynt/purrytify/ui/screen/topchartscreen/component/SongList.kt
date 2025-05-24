@@ -71,7 +71,8 @@ fun OneSong(
     sessionManager: SessionManager,
     playSong: (Song) -> Unit
 ) {
-    var showSheet by remember { mutableStateOf(false) }
+    val showOptionsSheet = remember { mutableStateOf(false) }
+    val showShareSheet = remember { mutableStateOf(false) }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -120,7 +121,7 @@ fun OneSong(
 
         IconButton(
             onClick = {
-                showSheet = true
+                showOptionsSheet.value = true
             }
         ) {
             Icon(
@@ -130,18 +131,26 @@ fun OneSong(
             )
         }
 
-        if (showSheet) {
+        if (showOptionsSheet.value) {
             SongOptions(
-                onDismiss = { showSheet = false },
+                onDismiss = { showOptionsSheet.value = false },
                 onDownload = {
-                    var isDownloading = true
                     downloadHelper.startDownload(
                         song = song,
                         viewModel = viewModel,
                         user = sessionManager.getUser()
                     )
-
                 },
+                songID = song.id,
+                showShareSheetState = showShareSheet,
+                closeSelf = { showOptionsSheet.value = false }
+            )
+        }
+
+        if (showShareSheet.value) {
+            ShareOptions(
+                onDismiss = { showShareSheet.value = false },
+                songID = song.id
             )
         }
     }
