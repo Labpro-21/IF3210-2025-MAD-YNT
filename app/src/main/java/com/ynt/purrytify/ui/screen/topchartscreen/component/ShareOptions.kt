@@ -1,14 +1,19 @@
 package com.ynt.purrytify.ui.screen.topchartscreen.component
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.navigation.NavController
+import com.ynt.purrytify.R
 import com.ynt.purrytify.Screen
 import com.ynt.purrytify.utils.sharing.ShareViaURL
 
@@ -26,9 +31,15 @@ fun ShareOptions(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color.DarkGray
+        containerColor = colorResource(R.color.dark_gray),
+        contentColor = colorResource(R.color.dark_gray),
     ) {
         TextButton(
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = Color.White
+            ),
             onClick = {
                 ShareViaURL(context, songID)
                 onDismiss()
@@ -38,6 +49,11 @@ fun ShareOptions(
         }
 
         TextButton(
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = Color.White
+            ),
             onClick = {
                 navController.navigate(Screen.QRSharing.createRoute(
                     songId = songID,
