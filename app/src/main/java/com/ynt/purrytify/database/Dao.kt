@@ -112,6 +112,6 @@ interface Dao {
     suspend fun getMonthlyMaxStreaksForUser(user: String): List<MaxStreak>
 
     @Query("SELECT * FROM MaxStreak WHERE user = :user AND year = :year AND month = :month LIMIT 1")
-    fun getMaxStreak(user: String, year: Int, month: Int): MaxStreak?
+    suspend fun getMaxStreak(user: String, year: Int, month: Int): MaxStreak?
 }
 

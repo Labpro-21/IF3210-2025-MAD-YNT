@@ -97,7 +97,7 @@ class SongRepository(application: Application) {
         return mSongsDao.getMonthlyMaxStreaksForUser(user)
     }
 
-    fun getMaxStreak (user: String, year: Int, month: Int): MaxStreak?{
+    suspend fun getMaxStreak (user: String, year: Int, month: Int): MaxStreak?{
         return mSongsDao.getMaxStreak(user,year,month)
     }
 

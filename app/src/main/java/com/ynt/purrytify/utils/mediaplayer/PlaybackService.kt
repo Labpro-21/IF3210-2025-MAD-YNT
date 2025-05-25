@@ -222,7 +222,9 @@ class PlaybackService : MediaSessionService() {
                     currentSong = updatedSong
                     if (sourceName == "local") {
                         mSongRepository.update(updatedSong)
-                        upsertMaxStreakForSongIfHigher(updatedSong, updatedSong.owner ?: "unknown")
+                        CoroutineScope(Dispatchers.IO).launch {
+                            upsertMaxStreakForSongIfHigher(updatedSong, updatedSong.owner ?: "unknown")
+                        }
                     }
                 }
                 updateCustomLayout()
@@ -424,7 +426,7 @@ class PlaybackService : MediaSessionService() {
         return song
     }
 
-    private fun upsertMaxStreakForSongIfHigher(song: Song, user: String) {
+    private suspend fun upsertMaxStreakForSongIfHigher(song: Song, user: String) {
         val cal = Calendar.getInstance().apply {
             timeInMillis = System.currentTimeMillis()
         }
