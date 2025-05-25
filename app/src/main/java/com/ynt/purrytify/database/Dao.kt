@@ -17,8 +17,10 @@ import com.ynt.purrytify.models.TopSong
 interface Dao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(song: Song)
+
     @Update
     fun update(song: Song)
+
     @Delete
     fun delete(song: Song)
 
@@ -29,7 +31,7 @@ interface Dao {
     suspend fun getSongStat(user: String, year: Int, month: Int, day: Int, songId: String, artists: String): SongStat?
 
     @Query("SELECT SUM(timeListened) AS timeListened, month, year FROM SongStat WHERE user = :user GROUP BY month, year ORDER BY month, year DESC")
-    fun getMonthlyTimeListened(user: String): LiveData<List<TimeListened>>
+    suspend fun getMonthlyTimeListened(user: String): List<TimeListened>
 
     @Query("""
         WITH max_listened AS (
@@ -46,10 +48,9 @@ interface Dao {
             AND ss.timeListened = ml.timeListened
         ORDER BY ss.month, ss.year DESC
     """)
-    fun getMonthlySongCount(user: String): LiveData<List<TopSong>>
+    suspend fun getMonthlySongCount(user: String): List<TopSong>
 
-    @Query(
-        """
+    @Query("""
         WITH artist_total AS (
             SELECT artists, month, year, SUM(timeListened) AS totalTime
             FROM SongStat
@@ -66,16 +67,14 @@ interface Dao {
         JOIN max_total mt
           ON at.month = mt.month AND at.year = mt.year AND at.totalTime = mt.maxTime
         ORDER BY at.year, at.month DESC;
-
-    """
-    )
-    fun getMonthlyArtistCount(user: String): LiveData<List<TopArtist>>
+    """)
+    suspend fun getMonthlyArtistCount(user: String): List<TopArtist>
 
     @Query("SELECT * FROM song WHERE owner = :user AND artist = :artist LIMIT 1")
-    fun getOneSongByArtist(user: String, artist: List<String>): LiveData<List<Song>>
+    suspend fun getOneSongByArtist(user: String, artist: List<String>): List<Song>
 
     @Query("SELECT * FROM song WHERE owner = :user AND id IN (:songId)")
-    fun getOneSongById(user: String, songId: List<Int>): LiveData<List<Song>>
+    suspend fun getOneSongById(user: String, songId: List<Int>): List<Song>
 
     @Query("SELECT * FROM song WHERE owner = :username ORDER BY date_added DESC")
     fun getAllSongs(username: String): LiveData<List<Song>>
@@ -97,4 +96,8 @@ interface Dao {
 
     @Query("SELECT * FROM song WHERE owner = :username ORDER BY date_added DESC")
     fun getAllSongsRaw(username: String): List<Song>
+
+    @Query("SELECT COUNT(*) FROM SongStat WHERE user = :user")
+    suspend fun songStatCountForUser(user: String): Int
 }
+

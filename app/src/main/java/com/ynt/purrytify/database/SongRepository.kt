@@ -17,6 +17,7 @@ class SongRepository(application: Application) {
         val db = SongRoomDatabase.getDatabase(application)
         mSongsDao = db.songDao()
     }
+
     fun getAllSongs(username: String): LiveData<List<Song>> = mSongsDao.getAllSongs(username)
 
     fun insert(song: Song) {
@@ -28,12 +29,13 @@ class SongRepository(application: Application) {
     }
 
     suspend fun getSongStat(user: String, year: Int, month: Int, day: Int, songId: String, artists: String): SongStat? {
-       return mSongsDao.getSongStat(user, year, month, day, songId, artists)
+        return mSongsDao.getSongStat(user, year, month, day, songId, artists)
     }
 
     fun delete(song: Song) {
         executorService.execute { mSongsDao.delete(song) }
     }
+
     fun update(song: Song) {
         executorService.execute { mSongsDao.update(song) }
     }
@@ -62,24 +64,27 @@ class SongRepository(application: Application) {
         return mSongsDao.getAllSongsRaw(username)
     }
 
-    fun getMonthlyTimeListened(user: String): LiveData<List<TimeListened>> {
+    suspend fun getMonthlyTimeListened(user: String): List<TimeListened> {
         return mSongsDao.getMonthlyTimeListened(user)
     }
 
-    fun getMonthlySongCount(user: String): LiveData<List<TopSong>> {
+    suspend fun getMonthlySongCount(user: String): List<TopSong> {
         return mSongsDao.getMonthlySongCount(user)
     }
 
-    fun getMonthlyArtistCount(user: String): LiveData<List<TopArtist>> {
+    suspend fun getMonthlyArtistCount(user: String): List<TopArtist> {
         return mSongsDao.getMonthlyArtistCount(user)
     }
 
-    fun getOneSongByArtist(user: String, artist: List<String>): LiveData<List<Song>> {
+    suspend fun getOneSongByArtist(user: String, artist: List<String>): List<Song> {
         return mSongsDao.getOneSongByArtist(user, artist)
     }
 
-    fun getOneSongById(user: String, songId: List<Int>): LiveData<List<Song>> {
+    suspend fun getOneSongById(user: String, songId: List<Int>): List<Song> {
         return mSongsDao.getOneSongById(user, songId)
     }
 
+    suspend fun songStatCountForUser(user: String): Int {
+        return mSongsDao.songStatCountForUser(user)
+    }
 }
