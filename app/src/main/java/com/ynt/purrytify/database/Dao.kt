@@ -11,6 +11,7 @@ import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.SongStat
 import com.ynt.purrytify.models.TenTopSong
 import com.ynt.purrytify.models.TimeListened
+import com.ynt.purrytify.models.TimeListenedPerDay
 import com.ynt.purrytify.models.TopArtist
 import com.ynt.purrytify.models.TopSong
 import com.ynt.purrytify.models.TopTenArtist
@@ -132,5 +133,24 @@ interface Dao {
 
     @Query("SELECT COUNT(artists) FROM songstat WHERE user = :user AND month = :month AND year = :year")
     suspend fun getAllArtistPerMonth(user: String, month: Int, year: Int) : Int
+
+    @Query("""
+        SELECT 
+            year, month, day, SUM(timeListened) AS totalTimeListened
+        FROM songstat
+        WHERE user = :user AND year = :year AND month = :month
+        GROUP BY year, month, day
+        ORDER BY day
+    """)
+    suspend fun getTimeListenedPerDay(user: String, month: Int, year: Int): List<TimeListenedPerDay>
+
+    @Query("""
+        SELECT 
+            SUM(timeListened)
+        FROM SongStat
+        WHERE user = :user AND year = :year AND month = :month
+        GROUP BY year, month
+    """)
+    suspend fun getTotalTimeListenedInMonth(user: String, month: Int, year: Int): Long
 }
 

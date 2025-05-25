@@ -6,6 +6,7 @@ import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.SongStat
 import com.ynt.purrytify.models.TenTopSong
 import com.ynt.purrytify.models.TimeListened
+import com.ynt.purrytify.models.TimeListenedPerDay
 import com.ynt.purrytify.models.TopArtist
 import com.ynt.purrytify.models.TopSong
 import com.ynt.purrytify.models.TopTenArtist
@@ -104,6 +105,14 @@ class SongRepository(application: Application) {
 
     suspend fun getTenTopArtist(user: String, month: Int, year: Int) : List<TopTenArtist> {
         return mSongsDao.getTenTopArtist(user, month, year)
+    }
+
+    suspend fun getTimeListenedPerDay(user: String, month: Int, year: Int): List<TimeListenedPerDay> {
+        return mSongsDao.getTimeListenedPerDay(user, month, year)
+    }
+
+    suspend fun getTotalTimeListenedInMonth(user: String, month: Int, year: Int): Long {
+        return mSongsDao.getTotalTimeListenedInMonth(user, month, year)
     }
 
 }

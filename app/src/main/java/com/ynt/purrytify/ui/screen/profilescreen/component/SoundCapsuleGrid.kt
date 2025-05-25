@@ -58,6 +58,7 @@ fun SoundCapsuleGrid(
                 .fillMaxWidth()
                 .height(100.dp),
             onClick = {
+                viewModel.getMonthlyTimeListened(sessionManager, month, year)
                 navController.navigate("timeListened")
             }
         )

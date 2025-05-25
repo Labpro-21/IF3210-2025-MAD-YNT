@@ -13,6 +13,7 @@ import com.ynt.purrytify.models.ProfileResponse
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.TenTopSong
 import com.ynt.purrytify.models.TimeListened
+import com.ynt.purrytify.models.TimeListenedPerDay
 import com.ynt.purrytify.models.TopArtist
 import com.ynt.purrytify.models.TopSong
 import com.ynt.purrytify.models.TopTenArtist
@@ -34,6 +35,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
     val songPerMonth = MutableLiveData<Int>()
     val artistPerMonth = MutableLiveData<Int>()
+    val timeListenedPerMonth = MutableLiveData<Long>()
 
     val topSongs = MutableLiveData<List<TopSong>>()
     val topArtists = MutableLiveData<List<TopArtist>>()
@@ -41,6 +43,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     val listTopArtist = MutableLiveData<List<Song>>()
     val listTopTenSong = MutableLiveData<List<TenTopSong>>()
     val listTopTenArtist = MutableLiveData<List<TopTenArtist>>()
+    val listTimeListened = MutableLiveData<List<TimeListenedPerDay>>()
     private val songRepo = SongRepository(application = application)
     private val _data = MutableLiveData<Result<ProfileResponse?>>()
     val data: LiveData<Result<ProfileResponse?>> = _data
@@ -162,6 +165,21 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
                 val monthArtist = songRepo.getAllArtistPerMonth(user, month, year)
                 artistPerMonth.postValue(monthArtist)
+            }
+        }
+    }
+
+    fun getMonthlyTimeListened(sessionManager: SessionManager, month: Int, year: Int) {
+        val user = sessionManager.getUser()
+        viewModelScope.launch {
+            val listMonth = topSongs.value?.map { it.month }
+            val listYear = topSongs.value?.map { it.year }
+            if (listMonth != null && listYear != null) {
+                val listTime = songRepo.getTimeListenedPerDay(user, month, year)
+                listTimeListened.postValue(listTime)
+
+                val time = songRepo.getTotalTimeListenedInMonth(user, month, year)
+                timeListenedPerMonth.postValue(time)
             }
         }
     }

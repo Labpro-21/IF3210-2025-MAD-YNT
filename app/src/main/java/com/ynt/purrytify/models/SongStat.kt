@@ -61,3 +61,10 @@ data class TopArtist(
     val year: Int,
     val totalTime: Long
 )
+
+data class TimeListenedPerDay(
+    val year: Int,
+    val month: Int,
+    val day: Int,
+    val totalTimeListened: Long
+)
