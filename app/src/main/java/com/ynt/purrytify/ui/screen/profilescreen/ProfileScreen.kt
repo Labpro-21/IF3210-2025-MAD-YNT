@@ -45,7 +45,7 @@ import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    viewModel: ProfileViewModel = viewModel(),
+    viewModel: ProfileViewModel,
     sessionManager: SessionManager,
     downloadHelper: DownloadHelper
 ) {

@@ -51,6 +51,10 @@ import com.ynt.purrytify.ui.screen.player.SongPlayerSheet
 import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
 import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
+import com.ynt.purrytify.ui.screen.profilescreen.ProfileViewModel
+import com.ynt.purrytify.ui.screen.profilescreen.TimeListenedScreen
+import com.ynt.purrytify.ui.screen.profilescreen.TopArtistScreen
+import com.ynt.purrytify.ui.screen.profilescreen.TopSongScreen
 import com.ynt.purrytify.ui.screen.topchartscreen.TopChartScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
@@ -110,6 +114,9 @@ sealed class Screen(val route: String) {
     data object TopGlobalCharts : Screen("topGlobalCharts")
     data object TopRegionCharts : Screen("topRegionCharts")
     data object AudioRouting : Screen("audioRouting")
+    data object TopSong : Screen("topSong")
+    data object TopArtist : Screen("topArtist")
+    data object TimeListened : Screen("timeListened")
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -122,6 +129,7 @@ fun MainApp(
 ) {
     val navController: NavHostController = rememberNavController()
     val libraryViewModel: LibraryViewModel = viewModel()
+    val profileViewModel: ProfileViewModel = viewModel()
     val context =  LocalContext.current
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -251,7 +259,8 @@ fun MainApp(
                 ProfileScreen(
                     navController = navController,
                     sessionManager = sessionManager,
-                    downloadHelper = downloadHelper
+                    downloadHelper = downloadHelper,
+                    viewModel = profileViewModel
                 )
             }
 
@@ -288,6 +297,30 @@ fun MainApp(
                 AudioRoutingScreen(
                     playbackViewModel = playbackViewModel,
                     navController = navController
+                )
+            }
+            
+            composable(Screen.TopSong.route) {
+                TopSongScreen(
+                    navController = navController,
+                    viewModel = profileViewModel,
+                    sessionManager = sessionManager
+                )
+            }
+            
+            composable(Screen.TopArtist.route) {
+                TopArtistScreen(
+                    navController = navController,
+                    viewModel = profileViewModel,
+                    sessionManager = sessionManager
+                )
+            }
+
+            composable(Screen.TimeListened.route) {
+                TimeListenedScreen(
+                    navController = navController,
+                    viewModel = profileViewModel,
+                    sessionManager = sessionManager
                 )
             }
         }
