@@ -83,10 +83,18 @@ Purrytify menggunakan berbagai pustaka untuk mendukung fitur-fitur di atas:
 - `org.jetbrains.kotlin.plugin.compose`
 
 ## Screenshot Aplikasi
-![image](https://github.com/user-attachments/assets/017b8f4f-3719-4293-b301-33d9d3755dc1)
-![image](https://github.com/user-attachments/assets/1ef4862d-f785-44ac-b132-0e59c9d30343)
-![image](https://github.com/user-attachments/assets/ff83eb73-e9b2-4b6f-84aa-7580dd984e81)
-![image](https://github.com/user-attachments/assets/115d25cd-6e33-4f86-87af-5c6cdd0024f4)
+![image](https://github.com/user-attachments/assets/c76144c6-7851-488c-b8f9-e01f7bc83168)
+![image](https://github.com/user-attachments/assets/ebd66fae-3556-4c04-b116-c6f4e7a91335)
+![image](https://github.com/user-attachments/assets/5345ce8f-b4ee-4776-aa8b-0462887ba77f)
+![image](https://github.com/user-attachments/assets/ffcfc772-9191-4ee2-b439-e7a1649e4178)
+![image](https://github.com/user-attachments/assets/57f5e3e3-332e-4580-a883-14e6af8636d3)
+![image](https://github.com/user-attachments/assets/75ab1ebf-d1c7-4e9a-a99a-3b98a6428e07)
+![image](https://github.com/user-attachments/assets/370d7ff1-56de-4dc4-b9c2-bbf9d5c50d95)
+![image](https://github.com/user-attachments/assets/d0469a05-9a31-4053-812a-56fc4b309f92)
+![image](https://github.com/user-attachments/assets/aec8c746-aee0-47c1-8023-c385dda6301b)
+![image](https://github.com/user-attachments/assets/0099d3e7-d011-452e-8e5a-7411129b9b02)
+![image](https://github.com/user-attachments/assets/416c3528-4259-49d5-8d56-6caae599e953)
+
 
 ## Pembagian Kerja Anggota Kelompok
 
