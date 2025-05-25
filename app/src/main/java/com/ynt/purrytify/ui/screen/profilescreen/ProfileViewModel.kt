@@ -2,16 +2,10 @@ package com.ynt.purrytify.ui.screen.profilescreen
 
 import android.app.Application
 import android.util.Log
-import androidx.compose.runtime.collection.MutableVector
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ynt.purrytify.database.SongRepository
 import com.ynt.purrytify.models.ProfileResponse
 import com.ynt.purrytify.models.Song
@@ -24,7 +18,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
-import kotlin.concurrent.timer
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
     val countSong = MutableLiveData<Int>()
@@ -67,22 +60,32 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     fun getSoundCapsuleData(sessionManager: SessionManager) {
         val user = sessionManager.getUser()
-        songRepo.getMonthlyTimeListened(user).observeForever { result ->
-            timeListened.postValue(result)
-        }
-        songRepo.getMonthlySongCount(user).observeForever { result ->
-            songRepo.getOneSongById(user, result.map { it.songId.toInt() }).observeForever { res ->
-                listTopSong.postValue(res)
+        viewModelScope.launch {
+            val count = songRepo.songStatCountForUser(user)
+            Log.d("ProfileViewModel","The Count is $count")
+            if (count > 0) {
+                val monthlyTimeListened = songRepo.getMonthlyTimeListened(user)
+                timeListened.postValue(monthlyTimeListened)
+                val monthlySongCount = songRepo.getMonthlySongCount(user)
+                topSongs.postValue(monthlySongCount)
+                val songIds = monthlySongCount.map { it.songId.toInt() }
+                val oneSongById = songRepo.getOneSongById(user, songIds)
+                listTopSong.postValue(oneSongById)
+                val monthlyArtistCount = songRepo.getMonthlyArtistCount(user)
+                topArtists.postValue(monthlyArtistCount)
+                val artists = monthlyArtistCount.map { it.artists }
+                val oneSongByArtist = songRepo.getOneSongByArtist(user, artists)
+                listTopArtist.postValue(oneSongByArtist)
+            } else {
+                timeListened.postValue(emptyList())
+                listTopSong.postValue(emptyList())
+                topSongs.postValue(emptyList())
+                listTopArtist.postValue(emptyList())
+                topArtists.postValue(emptyList())
             }
-            topSongs.postValue(result)
-        }
-        songRepo.getMonthlyArtistCount(user).observeForever { result ->
-            songRepo.getOneSongByArtist(user, result.map { it.artists }).observeForever { res ->
-                listTopArtist.postValue(res)
-            }
-            topArtists.postValue(result)
         }
     }
+
 
     fun getCsv() : List<List<String>> {
         val data = mutableListOf<List<String>>()
