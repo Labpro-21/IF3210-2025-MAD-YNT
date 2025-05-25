@@ -46,10 +46,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.component.BottomBar
 import com.ynt.purrytify.ui.component.ConnectivityStatusBanner
+import com.ynt.purrytify.ui.screen.DeepLinkScreen
 import com.ynt.purrytify.ui.screen.audioroutingscreen.AudioRoutingScreen
 import com.ynt.purrytify.ui.screen.homescreen.HomeScreen
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryScreen
@@ -324,6 +326,15 @@ fun MainApp(
                     songTitle = songTitle,
                     songArtist = songArtist
                 )
+            }
+
+            composable(
+                route = "deeplink/song/{songId}",
+                arguments = listOf(navArgument("songId") { type = NavType.IntType }),
+                deepLinks = listOf(navDeepLink { uriPattern = "purrytify://song/{songId}" })
+            ) { backStackEntry ->
+                val songId = backStackEntry.arguments?.getInt("songId")
+                DeepLinkScreen(songId)
             }
         }
     }
