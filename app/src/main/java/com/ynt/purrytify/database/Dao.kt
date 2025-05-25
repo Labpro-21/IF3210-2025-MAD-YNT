@@ -8,6 +8,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.ynt.purrytify.models.Song
+import com.ynt.purrytify.models.SongStat
 
 @Dao
 interface Dao {
@@ -17,6 +18,12 @@ interface Dao {
     fun update(song: Song)
     @Delete
     fun delete(song: Song)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(songStat: SongStat)
+
+    @Query("SELECT * FROM SongStat WHERE user = :user AND year = :year AND month = :month AND day = :day AND songId = :songId AND artists = :artists LIMIT 1")
+    suspend fun getSongStat(user: String, year: Int, month: Int, day: Int, songId: String, artists: String): SongStat?
 
     @Query("SELECT * FROM song WHERE owner = :username ORDER BY date_added DESC")
     fun getAllSongs(username: String): LiveData<List<Song>>

@@ -4,15 +4,21 @@ import android.Manifest
 import android.content.Context
 import android.location.Geocoder
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,9 +27,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
@@ -37,6 +45,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.ynt.purrytify.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -78,92 +87,116 @@ fun Maps(
         locationText = "Izin lokasi belum diberikan"
     }
 
+    val green = colorResource(id = R.color.green)
+    var selectedLocation by remember { mutableStateOf(LatLng(-6.88, 107.61)) }
+
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition(
+            selectedLocation,
+            15f,
+            0f,
+            0f
+        )
+    }
 
     Column(
         modifier = Modifier
+            .fillMaxSize()
             .padding(16.dp)
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        TextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            label = { Text("Find location") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = colorResource(R.color.dark_gray),
+                unfocusedContainerColor = colorResource(R.color.dark_gray),
+                disabledContainerColor = colorResource(R.color.dark_gray),
+                focusedLabelColor = colorResource(R.color.green),
+                unfocusedLabelColor = colorResource(R.color.medium_dark_gray),
+                focusedIndicatorColor = colorResource(R.color.green),
+                unfocusedIndicatorColor = colorResource(R.color.medium_dark_gray),
+                focusedTextColor = colorResource(R.color.white),
+                unfocusedTextColor = colorResource(R.color.medium_dark_gray),
+                cursorColor = colorResource(R.color.green)
+            ),
+            singleLine = true,
+        )
 
-        var selectedLocation by remember { mutableStateOf(LatLng(-6.88, 107.61)) }
+        Button(
+            onClick = {
+                if(!searchQuery.isNullOrBlank()) {
+                    focusManager.clearFocus()
+                    coroutineScope.launch {
+                        val geocoder = Geocoder(context, Locale.getDefault())
+                        val addressList = withContext(Dispatchers.IO) {
+                            geocoder.getFromLocationName(searchQuery, 1)
+                        }
 
-        val cameraPositionState = rememberCameraPositionState {
-            position = CameraPosition(
-                selectedLocation,
-                15f,
-                0f,
-                0f
-            )
+                        if (!addressList.isNullOrEmpty()) {
+                            val address = addressList[0]
+                            selectedLocation = LatLng(address.latitude, address.longitude)
+                            cameraPositionState.animate(
+                                CameraUpdateFactory.newLatLngZoom(
+                                    LatLng(
+                                        address.latitude,
+                                        address.longitude
+                                    ), 15f
+                                )
+                            )
+                        }
+                    }
+                }
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = green,
+                contentColor = Color.White
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        ) {
+            Text("Cari")
         }
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            TextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Cari lokasi") },
-                modifier = Modifier.fillMaxWidth().padding(16.dp)
-            )
-
-            Button(onClick = {
-                focusManager.clearFocus()
-                coroutineScope.launch {
-                    val geocoder = Geocoder(context, Locale.getDefault())
-                    val addressList = withContext(Dispatchers.IO) {
-                        geocoder.getFromLocationName(searchQuery, 1)
-                    }
-
-                    if (!addressList.isNullOrEmpty()) {
-                        val address = addressList[0]
-                        selectedLocation = LatLng(address.latitude, address.longitude)
-                        cameraPositionState.animate(
-                            CameraUpdateFactory.newLatLngZoom(
-                                LatLng(
-                                    address.latitude,
-                                    address.longitude
-                                ), 15f
-                            )
-                        )
-                    }
-                }
-            }) {
-                Text("Cari")
+        GoogleMap(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.LightGray),
+            cameraPositionState = cameraPositionState,
+            onMapClick = {
+                selectedLocation = it
             }
+        ) {
+            Marker(state = MarkerState(position = selectedLocation), title = "Lokasi dipilih")
+        }
 
-            GoogleMap(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                cameraPositionState = cameraPositionState,
-                onMapClick = {
-                    selectedLocation = it
-                }
-            ) {
-                Marker(state = MarkerState(position = selectedLocation), title = "Lokasi dipilih")
-            }
+        Text(
+            text = "Coordinate: ${selectedLocation.latitude}, ${selectedLocation.longitude}",
+            modifier = Modifier.padding(vertical = 16.dp),
+            color = Color.White
+        )
 
+        val countryCode = getCountryCodeFromCoordinates(
+            context,
+            selectedLocation.latitude,
+            selectedLocation.longitude
+        )
+
+        if (countryCode != null) {
+            onLocationSelected(countryCode)
             Text(
-                text = "Koordinat: ${selectedLocation.latitude}, ${selectedLocation.longitude}",
-                modifier = Modifier.padding(16.dp),
+                text = countryCode,
+                modifier = Modifier.padding(bottom = 16.dp),
                 color = Color.White
             )
-
-            val countryCode = getCountryCodeFromCoordinates(
-                context,
-                selectedLocation.latitude,
-                selectedLocation.longitude
-            )
-
-            if (countryCode != null) {
-                onLocationSelected(countryCode)
-                Text(
-                    text = countryCode,
-                    modifier = Modifier.padding(16.dp),
-                    color = Color.White
-                )
-            }
         }
     }
-
 }
 
 fun getCountryCodeFromCoordinates(context: Context, latitude: Double, longitude: Double): String? {

@@ -3,6 +3,7 @@ package com.ynt.purrytify.ui.screen.libraryscreen.component
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -53,6 +54,8 @@ fun SongPicker(
             artists.value = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST).toString()
             duration.value =
                 retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toInt() ?: 0
+            val image = retriever.embeddedPicture
+            Log.d("IMAGE EXTRACT","$image")
             retriever.release()
             Text(
                 text = fileName,

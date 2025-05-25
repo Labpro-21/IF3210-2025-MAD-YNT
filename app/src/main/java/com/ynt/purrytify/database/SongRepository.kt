@@ -3,6 +3,7 @@ package com.ynt.purrytify.database
 import android.app.Application
 import androidx.lifecycle.LiveData
 import com.ynt.purrytify.models.Song
+import com.ynt.purrytify.models.SongStat
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -18,6 +19,15 @@ class SongRepository(application: Application) {
     fun insert(song: Song) {
         executorService.execute { mSongsDao.insert(song) }
     }
+
+    suspend fun insert(songStat: SongStat){
+        mSongsDao.insert(songStat)
+    }
+
+    suspend fun getSongStat(user: String, year: Int, month: Int, day: Int, songId: String, artists: String): SongStat? {
+       return mSongsDao.getSongStat(user, year, month, day, songId, artists)
+    }
+
     fun delete(song: Song) {
         executorService.execute { mSongsDao.delete(song) }
     }

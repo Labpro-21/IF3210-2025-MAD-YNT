@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +38,8 @@ import com.ynt.purrytify.utils.auth.SessionManager
 fun ProfileScreen(
     navController: NavController,
     viewModel: ProfileViewModel = viewModel(),
-    sessionManager: SessionManager
+    sessionManager: SessionManager,
+    isLoggedIn: MutableState<Boolean>
 )
 {
     LaunchedEffect(Unit) {
@@ -96,7 +98,11 @@ fun ProfileScreen(
 
             SongProfileDetail(viewModel)
 
-            LogoutButton { sessionManager.logout() }
+            LogoutButton {
+                sessionManager.logout()
+                isLoggedIn.value = false
+                Log.d("Login","IS LOGGED IN? ${isLoggedIn.value}")
+            }
 
         } ?: run {
             Text(

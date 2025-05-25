@@ -14,37 +14,37 @@ import com.ynt.purrytify.utils.Constants
 
 @Composable
 fun CustomNavBar(navController: NavController){
-    NavigationBar(
-        containerColor = Color.Black
-    ) {
-        val navBackStackEntry = navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry.value?.destination?.route
-        Constants.BottomNavItems.forEach {
-            NavigationBarItem(
-                selected = currentRoute == it.route,
-                icon = {
-                    Icon(imageVector = it.icon, contentDescription = it.label)
-                },
-                label = {
-                    Text(text = it.label)
-                },
-                onClick = {
-                    navController.navigate(it.route){
-                        popUpTo(navController.graph.startDestinationId){
-                            saveState = true
+        NavigationBar(
+            containerColor = Color.Black
+        ) {
+            val navBackStackEntry = navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry.value?.destination?.route
+            Constants.BottomNavItems.forEach {
+                NavigationBarItem(
+                    selected = currentRoute == it.route,
+                    icon = {
+                        Icon(imageVector = it.icon, contentDescription = it.label)
+                    },
+                    label = {
+                        Text(text = it.label)
+                    },
+                    onClick = {
+                        navController.navigate(it.route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                alwaysShowLabel = false,
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.White,
-                    unselectedIconColor = Color.Gray,
-                    selectedTextColor = Color.White,
-                    indicatorColor = Color(0xFF1BB452)
+                    },
+                    alwaysShowLabel = false,
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color.White,
+                        unselectedIconColor = Color.Gray,
+                        selectedTextColor = Color.White,
+                        indicatorColor = Color(0xFF1BB452)
+                    )
                 )
-            )
+            }
         }
-    }
 }
