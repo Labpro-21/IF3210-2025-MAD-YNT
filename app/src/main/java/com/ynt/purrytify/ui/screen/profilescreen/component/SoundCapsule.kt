@@ -39,9 +39,12 @@ fun SoundCapsule(
     val listTopSong by viewModel.listTopSong.observeAsState(emptyList())
     val listTopArtist by viewModel.listTopArtist.observeAsState(emptyList())
     val longestStreakSong by viewModel.longestStreakSong.observeAsState(emptyList())
-    Log.d("Time Listened Count", timeListened.size.toString())
-    Log.d("Top Songs", topSongs.size.toString())
-    Log.d("Top Artist Count", topArtists.size.toString())
+    Log.d("SoundCapsule", "Time Listened Size: ${timeListened.size}")
+    Log.d("SoundCapsule", "ListTopSong Size: ${listTopSong.size}")
+    Log.d("SoundCapsule", "ListTopArtist Size: ${listTopArtist.size}")
+    Log.d("SoundCapsule", "LongestStreakSong Size: ${longestStreakSong.size}")
+    Log.d("SoundCapsule", "TopSongs Size: ${topSongs.size}")
+    Log.d("SoundCapsule", "TopArtists Size: ${topArtists.size}")
 
     if (timeListened.isEmpty()) {
         Box(
@@ -58,7 +61,7 @@ fun SoundCapsule(
             )
         }
     } else {
-        for (i in timeListened.indices) {
+        for (i in timeListened.indices.reversed()) {
             Text(
                 text = "${
                     Month.of(timeListened[i].month).name.lowercase()

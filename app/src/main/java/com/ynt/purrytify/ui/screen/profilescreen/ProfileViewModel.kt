@@ -62,25 +62,47 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     fun getSoundCapsuleData(sessionManager: SessionManager) {
         val user = sessionManager.getUser()
+        Log.d("ProfileViewModel", "User fetched: $user")
+
         viewModelScope.launch {
             val count = songRepo.songStatCountForUser(user)
             Log.d("ProfileViewModel", "The Count is $count")
+
             if (count > 0) {
                 val monthlyTimeListened = songRepo.getMonthlyTimeListened(user)
+                Log.d("ProfileViewModel", "Monthly time listened: $monthlyTimeListened")
                 timeListened.postValue(monthlyTimeListened)
+
                 val monthlySongCount = songRepo.getMonthlySongCount(user)
+                Log.d("ProfileViewModel", "Monthly song count: $monthlySongCount")
                 topSongs.postValue(monthlySongCount)
+
                 val songIds = monthlySongCount.map { it.songId.toInt() }
-                val oneSongById = songRepo.getOneSongById(user, songIds)
+                val songMap = songRepo.getOneSongById(user, songIds.distinct())
+                    .associateBy { it.id }
+                val oneSongById = songIds.mapNotNull { songMap[it] }
+                Log.d("ProfileViewModel", "One song by ID: $oneSongById")
                 listTopSong.postValue(oneSongById)
+
                 val monthlyArtistCount = songRepo.getMonthlyArtistCount(user)
+                Log.d("ProfileViewModel", "Monthly artist count: $monthlyArtistCount")
                 topArtists.postValue(monthlyArtistCount)
+
                 val artists = monthlyArtistCount.map { it.artists }
-                val oneSongByArtist = songRepo.getOneSongByArtist(user, artists)
-                listTopArtist.postValue(oneSongByArtist)
+                Log.d("ProfileViewModel", "Top artist names (raw): $artists")
+                val uniqueArtists = artists.distinct()
+                val artistToSongMap = songRepo.getOneSongByArtist(user, uniqueArtists)
+                    .associateBy { it.artist }
+                val oneSongByArtist = artists.mapNotNull { artistToSongMap[it] }
+                Log.d("ProfileViewModel", "One song by artist (with possible duplicates): $oneSongByArtist")
+                listTopArtist.postValue(oneSongByArtist.reversed())
+
                 val longestActiveStreakSong = songRepo.getMonthlyMaxStreaksForUser(user)
-                longestStreakSong.postValue(longestActiveStreakSong)
+                Log.d("ProfileViewModel", "Longest active streak songs: $longestActiveStreakSong")
+                longestStreakSong.postValue(longestActiveStreakSong.reversed())
             } else {
+                Log.d("ProfileViewModel", "No song stats available for user. Posting empty lists.")
+
                 timeListened.postValue(emptyList())
                 listTopSong.postValue(emptyList())
                 topSongs.postValue(emptyList())
@@ -90,7 +112,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             }
         }
     }
-
 
 
     fun getCsv() : List<List<String>> {

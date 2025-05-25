@@ -31,7 +31,7 @@ interface Dao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(songStat: SongStat)
 
-    @Query("SELECT * FROM SongStat WHERE user = :user AND year = :year AND month = :month AND day = :day AND songId = :songId AND artists = :artists LIMIT 1")
+    @Query("SELECT * FROM SongStat WHERE user = :user AND year = :year AND month = :month AND day = :day AND songId = :songId AND artists = :artists")
     suspend fun getSongStat(user: String, year: Int, month: Int, day: Int, songId: String, artists: String): SongStat?
 
     @Query("SELECT SUM(timeListened) AS timeListened, month, year FROM SongStat WHERE user = :user GROUP BY month, year ORDER BY month, year DESC")
@@ -74,7 +74,7 @@ interface Dao {
     """)
     suspend fun getMonthlyArtistCount(user: String): List<TopArtist>
 
-    @Query("SELECT * FROM song WHERE owner = :user AND artist = :artist LIMIT 1")
+    @Query("SELECT * FROM song WHERE owner = :user AND artist IN (:artist)")
     suspend fun getOneSongByArtist(user: String, artist: List<String>): List<Song>
 
     @Query("SELECT * FROM song WHERE owner = :user AND id IN (:songId)")
@@ -111,7 +111,7 @@ interface Dao {
     """)
     suspend fun getMonthlyMaxStreaksForUser(user: String): List<MaxStreak>
 
-    @Query("SELECT * FROM MaxStreak WHERE user = :user AND year = :year AND month = :month LIMIT 1")
+    @Query("SELECT * FROM MaxStreak WHERE user = :user AND year = :year AND month = :month")
     suspend fun getMaxStreak(user: String, year: Int, month: Int): MaxStreak?
 }
 
