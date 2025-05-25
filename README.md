@@ -109,5 +109,5 @@ Purrytify menggunakan berbagai pustaka untuk mendukung fitur-fitur di atas:
 | NIM          | Nama Anggota | Jam Pengerjaan |
 |--------------|--------------|-----------|
 | 13522036      | Akbar Al Fattah    |Login(8 Jam), Logout (2 Jam), Background Service (12 Jam), Pemutaran Lagu (12 Jam), Audio Routing & Output Device (6 Jam), Share Song & Deeplink (12 Jam), Share Song QR (8 Jam), Recommendation (8 Jam) Total: 68 Jam |
-| 13522088      | Muhamad Rafli Rasyiidin    | Header (1 jam), Navbar (1 jam), Profile (12 jam), Home (10 jam), Total: 24 jam   |
+| 13522088      | Muhamad Rafli Rasyiidin    | Header (1 jam), Navbar (1 jam), Profile (12 jam), Home (10 jam), Edit Profile (16 jam), Online Songs (12 jam), Download Song (6 jam), Sound Capsule (12 jam)  Total: 70 jam   |
 | 13522100      | M. Hanief Fatkhan Nashrullah    |  RecyclerView(12 Jam), Setup Room Database(4 Jam), Setup Bottom Navigation Layout (6 Jam), Add Edit Delete Song(10 Jam), Network Sensing (2 Jam), Rework (18 Jam), Exoplayer (18 Jam), Responsive UI (5 Jam), Database Usage Tracker (5 Jam) Total: 80 Jam  |
