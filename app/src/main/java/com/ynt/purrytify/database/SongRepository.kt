@@ -74,11 +74,11 @@ class SongRepository(application: Application) {
         return mSongsDao.getMonthlyArtistCount(user)
     }
 
-    fun getOneSongByArtist(user: String, artist: String): Song {
+    fun getOneSongByArtist(user: String, artist: List<String>): LiveData<List<Song>> {
         return mSongsDao.getOneSongByArtist(user, artist)
     }
 
-    fun getOneSongById(user: String, songId: Int): Song {
+    fun getOneSongById(user: String, songId: List<Int>): LiveData<List<Song>> {
         return mSongsDao.getOneSongById(user, songId)
     }
 

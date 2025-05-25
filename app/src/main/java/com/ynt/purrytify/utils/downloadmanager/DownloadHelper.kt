@@ -6,12 +6,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import androidx.core.net.toUri
 import com.ynt.purrytify.models.OnlineSong
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.screen.topchartscreen.TopChartViewModel
 import java.io.File
+import java.io.FileWriter
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class DownloadHelper(private val context: Context) {
     private var downloadId: Long = -1L
@@ -67,6 +73,29 @@ class DownloadHelper(private val context: Context) {
         try {
             context.unregisterReceiver(downloadReceiver)
         } catch (e: IllegalArgumentException) {
+        }
+    }
+
+    fun saveToCsv(data: List<List<String>>): Boolean {
+        val fileName = "sound_capsule_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())}"
+        val state = Environment.getExternalStorageState()
+        if (state != Environment.MEDIA_MOUNTED) return false
+
+        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+        val file = File(downloadsDir, "$fileName.csv")
+
+        return try {
+            val writer = FileWriter(file)
+            data.forEach { row ->
+                writer.append(row.joinToString(","))
+                writer.append("\n")
+            }
+            writer.flush()
+            writer.close()
+            true
+        } catch (e: IOException) {
+            e.printStackTrace()
+            false
         }
     }
 }

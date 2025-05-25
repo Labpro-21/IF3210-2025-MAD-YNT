@@ -36,12 +36,12 @@ data class TopSong(
     val songId: String,
     val month: Int,
     val year: Int,
-    val listenedSongCount: Int
+    val timeListened: Long
 )
 
 data class TopArtist(
     val artists: String,
     val month: Int,
     val year: Int,
-    val listenedArtistCount: Int
+    val totalTime: Long
 )

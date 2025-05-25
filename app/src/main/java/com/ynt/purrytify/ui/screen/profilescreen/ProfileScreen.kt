@@ -40,12 +40,14 @@ import com.ynt.purrytify.ui.screen.profilescreen.component.ProfileDetail
 import com.ynt.purrytify.ui.screen.profilescreen.component.SoundCapsule
 import com.ynt.purrytify.ui.screen.profilescreen.component.SoundCapsuleHeader
 import com.ynt.purrytify.utils.auth.SessionManager
+import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
     viewModel: ProfileViewModel = viewModel(),
-    sessionManager: SessionManager
+    sessionManager: SessionManager,
+    downloadHelper: DownloadHelper
 ) {
     LaunchedEffect(Unit) {
         viewModel.loadProfile(sessionManager)
@@ -116,16 +118,16 @@ fun ProfileScreen(
                 item {
                     Box(
                         modifier = Modifier
-                            .background(Color.Gray)
+                            .background(Color(0xFF121212))
+                            .padding(top = 10.dp)
                     ) {
-                        SoundCapsuleHeader()
+                        Column() {
+                            SoundCapsuleHeader(viewModel, downloadHelper)
+                            SoundCapsule(viewModel, sessionManager)
+                        }
+
                     }
                 }
-
-                item {
-                    SoundCapsule(viewModel)
-                }
-
 
             } ?: run {
                 item {

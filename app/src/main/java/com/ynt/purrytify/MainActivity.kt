@@ -251,6 +251,7 @@ fun MainApp(
                 ProfileScreen(
                     navController = navController,
                     sessionManager = sessionManager,
+                    downloadHelper = downloadHelper
                 )
             }
 

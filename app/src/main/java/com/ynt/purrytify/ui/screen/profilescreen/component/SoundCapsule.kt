@@ -1,26 +1,70 @@
 package com.ynt.purrytify.ui.screen.profilescreen.component
 
 import android.util.Log
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileViewModel
+import com.ynt.purrytify.utils.auth.SessionManager
+import java.time.Month
 
 @Composable
 fun SoundCapsule(
-    viewModel: ProfileViewModel
+    viewModel: ProfileViewModel,
+    sessionManager: SessionManager,
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.getSoundCapsuleData(sessionManager)
+    }
+
     val timeListened by viewModel.timeListened.observeAsState(emptyList())
     val topSongs by viewModel.topSongs.observeAsState(emptyList())
     val topArtists by viewModel.topArtists.observeAsState(emptyList())
+    val listTopSong by viewModel.listTopSong.observeAsState(emptyList())
+    val listTopArtist by viewModel.listTopArtist.observeAsState(emptyList())
     Log.d("Time Listened Count", timeListened.size.toString())
-    timeListened.forEach { value ->
-        Text(
-            value.timeListened.toString(),
-            color = Color.White
-        )
+    Log.d("Top Songs", topSongs.size.toString())
+    Log.d("Top Artist Count", topArtists.size.toString())
+
+    if (timeListened.isEmpty()) {
+        Text("No Data Available", color = Color.White)
+    } else {
+        var isStreak: Boolean = true
+        for (i in timeListened.indices) {
+            Text(
+                text = "${
+                    Month.of(timeListened[i].month).name.lowercase()
+                        .replaceFirstChar { it.uppercase() }
+                } ${timeListened[i].year}",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier
+                    .padding(start = 16.dp, top = 16.dp, end = 16.dp)
+            )
+
+            if (listTopSong.isNotEmpty() && listTopArtist.isNotEmpty()) {
+                SoundCapsuleGrid(
+                    timeListened = timeListened[i].timeListened,
+                    songTitle = listTopSong[i].title.toString(),
+                    artistName = listTopArtist[i].artist.toString(),
+                    songImage = listTopSong[i].image.toString(),
+                    artistImage = listTopArtist[i].image.toString(),
+                    isStreak = isStreak
+                )
+                isStreak = false
+            }
+        }
     }
 }
