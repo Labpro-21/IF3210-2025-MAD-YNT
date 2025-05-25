@@ -17,6 +17,8 @@ import com.ynt.purrytify.utils.sharing.ShareViaURL
 fun ShareOptions(
     onDismiss : () -> (Unit),
     songID: Int,
+    songTitle: String,
+    songArtist: String,
     navController: NavController
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -37,7 +39,11 @@ fun ShareOptions(
 
         TextButton(
             onClick = {
-                navController.navigate(Screen.QRSharing.createRoute(songID))
+                navController.navigate(Screen.QRSharing.createRoute(
+                    songId = songID,
+                    songTitle = songTitle,
+                    songArtist = songArtist
+                ))
                 onDismiss()
             }
         ) {

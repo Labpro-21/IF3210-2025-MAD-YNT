@@ -2,6 +2,7 @@ package com.ynt.purrytify
 
 import android.app.Application
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -120,9 +121,14 @@ sealed class Screen(val route: String) {
     data object TopGlobalCharts : Screen("topGlobalCharts")
     data object TopRegionCharts : Screen("topRegionCharts")
     data object AudioRouting : Screen("audioRouting")
-    data object QRSharing : Screen("qrSharing/{songId}") {
-        fun createRoute(songId: Int) = "qrSharing/$songId"
+    data object QRSharing : Screen("qrSharing/{songId}/{songTitle}/{songArtist}") {
+        fun createRoute(songId: Int, songTitle: String, songArtist: String): String {
+            val encodedTitle = Uri.encode(songTitle)
+            val encodedArtist = Uri.encode(songArtist)
+            return "qrSharing/$songId/$encodedTitle/$encodedArtist"
+        }
     }
+
 }
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -303,10 +309,21 @@ fun MainApp(
 
             composable(
                 route = Screen.QRSharing.route,
-                arguments = listOf(navArgument("songId") { type = NavType.IntType })
+                arguments = listOf(
+                    navArgument("songId") { type = NavType.IntType },
+                    navArgument("songTitle") { type = NavType.StringType },
+                    navArgument("songArtist") { type = NavType.StringType },
+                )
             ) { backStackEntry ->
                 val songId = backStackEntry.arguments?.getInt("songId") ?: 0
-                QRSharingScreen(songId = songId)
+                val songTitle = backStackEntry.arguments?.getString("songTitle") ?: "Unknown Title"
+                val songArtist = backStackEntry.arguments?.getString("songArtist") ?: "Unknown Artist"
+
+                QRSharingScreen(
+                    songId = songId,
+                    songTitle = songTitle,
+                    songArtist = songArtist
+                )
             }
         }
     }

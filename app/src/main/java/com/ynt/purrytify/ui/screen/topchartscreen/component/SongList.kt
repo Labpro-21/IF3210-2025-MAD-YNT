@@ -155,6 +155,8 @@ fun OneSong(
             ShareOptions(
                 onDismiss = { showShareSheet.value = false },
                 songID = song.id,
+                songTitle = song.title,
+                songArtist = song.artist,
                 navController = navController
             )
         }
