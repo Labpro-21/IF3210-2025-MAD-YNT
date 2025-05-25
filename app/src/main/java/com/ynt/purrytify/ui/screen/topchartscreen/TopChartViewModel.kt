@@ -46,7 +46,7 @@ class TopChartViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun insert(song: Song){
-        viewModelScope.launch() {
+        viewModelScope.launch {
             mSongRepository.insert(song)
         }
     }
@@ -67,5 +67,9 @@ class TopChartViewModel(application: Application) : AndroidViewModel(application
                 duration = parseDurationToSeconds(onlineSong.duration)
             )
         }
+    }
+
+    fun getRegion(): String {
+        return profile?.location ?: ""
     }
 }

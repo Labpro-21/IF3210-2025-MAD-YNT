@@ -25,3 +25,23 @@ data class SongStat(
     val artists: String,
     val timeListened: Long = 0,
 )
+
+data class TimeListened(
+    val timeListened: Long,
+    val month: Int,
+    val year: Int
+)
+
+data class TopSong(
+    val songId: String,
+    val month: Int,
+    val year: Int,
+    val timeListened: Long
+)
+
+data class TopArtist(
+    val artists: String,
+    val month: Int,
+    val year: Int,
+    val totalTime: Long
+)

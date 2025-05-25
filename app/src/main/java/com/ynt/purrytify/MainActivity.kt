@@ -3,7 +3,6 @@ package com.ynt.purrytify
 import android.net.Uri
 import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -65,7 +64,11 @@ import com.ynt.purrytify.ui.screen.editprofilescreen.EditProfileScreen
 import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileScreen
 import com.ynt.purrytify.ui.screen.qrsharingscreen.QRSharingScreen
-import com.ynt.purrytify.ui.screen.topchartscreen.TopSongScreen
+import com.ynt.purrytify.ui.screen.profilescreen.ProfileViewModel
+import com.ynt.purrytify.ui.screen.profilescreen.TimeListenedScreen
+import com.ynt.purrytify.ui.screen.profilescreen.TopArtistScreen
+import com.ynt.purrytify.ui.screen.profilescreen.TopSongScreen
+import com.ynt.purrytify.ui.screen.topchartscreen.TopChartScreen
 import com.ynt.purrytify.ui.theme.PurrytifyTheme
 import com.ynt.purrytify.utils.auth.SessionManager
 import kotlinx.coroutines.Job
@@ -113,7 +116,6 @@ class MainActivity : ComponentActivity() {
         playbackViewModel.disconnect()
     }
 
-
 }
 
 sealed class Screen(val route: String) {
@@ -125,6 +127,9 @@ sealed class Screen(val route: String) {
     data object TopGlobalCharts : Screen("topGlobalCharts")
     data object TopRegionCharts : Screen("topRegionCharts")
     data object AudioRouting : Screen("audioRouting")
+    data object TopSong : Screen("topSong")
+    data object TopArtist : Screen("topArtist")
+    data object TimeListened : Screen("timeListened")
     data object QRSharing : Screen("qrSharing/{songId}/{songTitle}/{songArtist}") {
         fun createRoute(songId: Int, songTitle: String, songArtist: String): String {
             val encodedTitle = Uri.encode(songTitle)
@@ -145,6 +150,7 @@ fun MainApp(
 ) {
     val navController: NavHostController = rememberNavController()
     val libraryViewModel: LibraryViewModel = viewModel()
+    val profileViewModel: ProfileViewModel = viewModel()
     val context =  LocalContext.current
     val configuration = LocalConfiguration.current
 
@@ -172,7 +178,6 @@ fun MainApp(
         refreshJob?.cancel()
         refreshJob = refreshScope.launch {
             while (isLoggedIn.value) {
-                Log.d("Login","REFRESHING")
                 delay(240_000L)
                 val success = sessionManager.refreshExpired()
                 if (!success) {
@@ -298,12 +303,14 @@ fun MainApp(
                         ProfileScreen(
                             navController = navController,
                             sessionManager = sessionManager,
+                            downloadHelper = downloadHelper,
+                            viewModel = profileViewModel,
                             isLoggedIn = isLoggedIn
                         )
                     }
 
                     composable(Screen.TopGlobalCharts.route) {
-                        TopSongScreen(
+                        TopChartScreen(
                             navController = navController,
                             isRegion = false,
                             sessionManager = sessionManager,
@@ -314,7 +321,7 @@ fun MainApp(
                     }
 
                     composable(Screen.TopRegionCharts.route) {
-                        TopSongScreen(
+                        TopChartScreen(
                             navController = navController,
                             isRegion = true,
                             sessionManager = sessionManager,
@@ -347,8 +354,10 @@ fun MainApp(
                         )
                     ) { backStackEntry ->
                         val songId = backStackEntry.arguments?.getInt("songId") ?: 0
-                        val songTitle = backStackEntry.arguments?.getString("songTitle") ?: "Unknown Title"
-                        val songArtist = backStackEntry.arguments?.getString("songArtist") ?: "Unknown Artist"
+                        val songTitle =
+                            backStackEntry.arguments?.getString("songTitle") ?: "Unknown Title"
+                        val songArtist =
+                            backStackEntry.arguments?.getString("songArtist") ?: "Unknown Artist"
 
                         QRSharingScreen(
                             songId = songId,
@@ -367,7 +376,30 @@ fun MainApp(
                             songId = songId,
                             playbackViewModel = playbackViewModel,
                             showSongPlayerSheet = showSongPlayerSheet
-                            )
+                        )
+                    }
+                    composable(Screen.TopSong.route) {
+                        TopSongScreen(
+                            navController = navController,
+                            viewModel = profileViewModel,
+                            sessionManager = sessionManager
+                        )
+                    }
+
+                    composable(Screen.TopArtist.route) {
+                        TopArtistScreen(
+                            navController = navController,
+                            viewModel = profileViewModel,
+                            sessionManager = sessionManager
+                        )
+                    }
+
+                    composable(Screen.TimeListened.route) {
+                        TimeListenedScreen(
+                            navController = navController,
+                            viewModel = profileViewModel,
+                            sessionManager = sessionManager
+                        )
                     }
                 }
             }

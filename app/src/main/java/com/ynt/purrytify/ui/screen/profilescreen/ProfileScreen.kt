@@ -2,7 +2,9 @@ package com.ynt.purrytify.ui.screen.profilescreen
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,9 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +26,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -32,83 +37,111 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.ui.screen.profilescreen.component.EditProfileButton
 import com.ynt.purrytify.ui.screen.profilescreen.component.LogoutButton
+import com.ynt.purrytify.ui.screen.profilescreen.component.ProfileDetail
+import com.ynt.purrytify.ui.screen.profilescreen.component.SoundCapsule
+import com.ynt.purrytify.ui.screen.profilescreen.component.SoundCapsuleHeader
 import com.ynt.purrytify.utils.auth.SessionManager
+import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    viewModel: ProfileViewModel = viewModel(),
+    viewModel: ProfileViewModel,
     sessionManager: SessionManager,
+    downloadHelper: DownloadHelper,
     isLoggedIn: MutableState<Boolean>
-)
-{
+) {
     LaunchedEffect(Unit) {
         viewModel.loadProfile(sessionManager)
     }
 
     val result = viewModel.data.observeAsState().value
-    val scrollState = rememberScrollState()
+//    val scrollState = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(30.dp)
-            .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        result?.onSuccess { data ->
-
-//            Spacer(modifier = Modifier.height(100.dp))
-
-            Image(
-                painter = rememberAsyncImagePainter(data?.photoURL),
-                contentDescription = "Profile Image",
-                contentScale = ContentScale.Crop,
+    Scaffold (
+        containerColor = Color.Black,
+        topBar = {
+            Text(
+                text = "Profile",
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
-                    .size(150.dp)
-                    .clip(CircleShape)
-                )
-
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = data?.username ?: "No username",
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+                    .background(Color.Black)
+                    .padding(
+                        top = 30.dp,
+                        start = 18.dp,
+                        end = 18.dp,
+                        bottom = 12.dp,),
+                fontSize = 25.sp
             )
+        }
+    ) { innerPadding ->
+        LazyColumn (
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            result?.onSuccess { data ->
+                item {
+                    ProfileDetail(data)
+                }
 
-            Spacer(modifier = Modifier.height(5.dp))
+                item {
+                    Spacer(modifier = Modifier.height(5.dp))
+                }
 
-            Text(
-                text = data?.location ?: "No location",
-                fontSize = 16.sp,
-                color = Color.White
-            )
+                item {
+                    EditProfileButton {
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            "photoURL",
+                            data?.photoURL
+                        )
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            "location",
+                            data?.location
+                        )
+                        navController.navigate("editProfile")
+                    }
+                }
 
-            Spacer(modifier = Modifier.height(5.dp))
+                item {
+                    Spacer(modifier = Modifier.height(50.dp))
+                }
 
-            EditProfileButton {
-                navController.currentBackStackEntry?.savedStateHandle?.set("photoURL", data?.photoURL)
-                navController.currentBackStackEntry?.savedStateHandle?.set("location", data?.location)
-                navController.navigate("editProfile") }
+                item {
+                    SongProfileDetail(viewModel)
+                }
 
-            Spacer(modifier = Modifier.height(50.dp))
+                item {
+                    LogoutButton {
+                        sessionManager.logout()
+                        isLoggedIn.value = false
+                    }
+                }
 
-            SongProfileDetail(viewModel)
+                item {
+                    Box(
+                        modifier = Modifier
+                            .background(Color(0xFF121212))
+                            .padding(top = 10.dp)
+                    ) {
+                        Column() {
+                            SoundCapsuleHeader(viewModel, downloadHelper)
+                            SoundCapsule(viewModel, sessionManager)
+                        }
 
-            LogoutButton {
-                sessionManager.logout()
-                isLoggedIn.value = false
-                Log.d("Login","IS LOGGED IN? ${isLoggedIn.value}")
+                    }
+                }
+
+            } ?: run {
+                item {
+                    Text(
+                        text = "Memuat data...",
+                        fontSize = 16.sp
+                    )
+                }
             }
-
-        } ?: run {
-            Text(
-                text = "Memuat data...",
-                fontSize = 16.sp
-            )
         }
     }
 }
@@ -124,9 +157,6 @@ fun SongProfileDetail(viewModel: ProfileViewModel) {
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("$songCount",
@@ -140,9 +170,6 @@ fun SongProfileDetail(viewModel: ProfileViewModel) {
         }
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("$countLiked",
@@ -155,9 +182,6 @@ fun SongProfileDetail(viewModel: ProfileViewModel) {
         }
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("$playedCount",

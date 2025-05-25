@@ -113,7 +113,7 @@ fun SongCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(start = 8.dp, end = 8.dp, top = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(

@@ -104,7 +104,5 @@ fun TopChartsBox(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-
-
     }
 }

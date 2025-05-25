@@ -33,7 +33,7 @@ fun HomeScreen(
     showSongPlayerSheet: MutableState<Boolean>,
 ) {
     LaunchedEffect(Unit) {
-        viewModel.loadNewSongs(sessionManager)
+        viewModel.loadHome(sessionManager)
     }
     val username = sessionManager.getUser()
     val librarySongList by libraryViewModel.getAllSongs(username).observeAsState()
@@ -57,7 +57,8 @@ fun HomeScreen(
                 },
                 onRegionClick = {
                     navController.navigate("topRegionCharts")
-                }
+                },
+                region = sessionManager.getProfile()["location"] ?: "ID"
             )
         }
 
