@@ -9,6 +9,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ynt.purrytify.database.SongRepository
+import com.ynt.purrytify.models.MaxStreak
 import com.ynt.purrytify.models.ProfileResponse
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.TenTopSong
@@ -23,8 +24,11 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
+    val monthLive = MutableLiveData<String>()
+    val yearLive = MutableLiveData<Int>()
     val countSong = MutableLiveData<Int>()
     val countLiked = MutableLiveData<Int>()
     val playedCount = MutableLiveData<Int>()
@@ -41,6 +45,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     val topArtists = MutableLiveData<List<TopArtist>>()
     var listTopSong = MutableLiveData<List<Song>>()
     val listTopArtist = MutableLiveData<List<Song>>()
+    val longestStreakSong = MutableLiveData<List<MaxStreak>>()
     val listTopTenSong = MutableLiveData<List<TenTopSong>>()
     val listTopTenArtist = MutableLiveData<List<TopTenArtist>>()
     val listTimeListened = MutableLiveData<List<TimeListenedPerDay>>()
@@ -76,36 +81,57 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     fun getSoundCapsuleData(sessionManager: SessionManager) {
         val user = sessionManager.getUser()
+        Log.d("ProfileViewModel", "User fetched: $user")
+
         viewModelScope.launch {
             val count = songRepo.songStatCountForUser(user)
-            Log.d("ProfileViewModel","The Count is $count")
+            Log.d("ProfileViewModel", "The Count is $count")
+
             if (count > 0) {
                 monthlyTimeListened.removeObserver(timeListenedObserver)
                 monthlyTimeListened = songRepo.getMonthlyTimeListened(user)
                 monthlyTimeListened.observeForever(timeListenedObserver)
 
                 val monthlySongCount = songRepo.getMonthlySongCount(user)
+                Log.d("ProfileViewModel", "Monthly song count: $monthlySongCount")
                 topSongs.postValue(monthlySongCount)
 
                 val songIds = monthlySongCount.map { it.songId.toInt() }
-                val oneSongById = songRepo.getOneSongById(user, songIds)
+                val songMap = songRepo.getOneSongById(user, songIds.distinct())
+                    .associateBy { it.id }
+                val oneSongById = songIds.mapNotNull { songMap[it] }
+                Log.d("ProfileViewModel", "One song by ID: $oneSongById")
                 listTopSong.postValue(oneSongById)
 
                 val monthlyArtistCount = songRepo.getMonthlyArtistCount(user)
+                Log.d("ProfileViewModel", "Monthly artist count: $monthlyArtistCount")
                 topArtists.postValue(monthlyArtistCount)
 
                 val artists = monthlyArtistCount.map { it.artists }
-                val oneSongByArtist = songRepo.getOneSongByArtist(user, artists)
-                listTopArtist.postValue(oneSongByArtist)
+                Log.d("ProfileViewModel", "Top artist names (raw): $artists")
+                val uniqueArtists = artists.distinct()
+                val artistToSongMap = songRepo.getOneSongByArtist(user, uniqueArtists)
+                    .associateBy { it.artist }
+                val oneSongByArtist = artists.mapNotNull { artistToSongMap[it] }
+                Log.d("ProfileViewModel", "One song by artist (with possible duplicates): $oneSongByArtist")
+                listTopArtist.postValue(oneSongByArtist.reversed())
+
+                val longestActiveStreakSong = songRepo.getMonthlyMaxStreaksForUser(user)
+                Log.d("ProfileViewModel", "Longest active streak songs: $longestActiveStreakSong")
+                longestStreakSong.postValue(longestActiveStreakSong.reversed())
             } else {
+                Log.d("ProfileViewModel", "No song stats available for user. Posting empty lists.")
+
                 timeListened.postValue(emptyList())
                 listTopSong.postValue(emptyList())
                 topSongs.postValue(emptyList())
                 listTopArtist.postValue(emptyList())
                 topArtists.postValue(emptyList())
+                longestStreakSong.postValue(emptyList())
             }
         }
     }
+
 
     fun getCsv() : List<List<String>> {
         val data = mutableListOf<List<String>>()
@@ -142,6 +168,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun getTopSong(sessionManager: SessionManager, month: Int, year: Int) {
         val user = sessionManager.getUser()
         viewModelScope.launch {
+            monthLive.postValue(Month.of(month).getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH))
+            yearLive.postValue(year)
             val listMonth = topSongs.value?.map { it.month }
             val listYear = topSongs.value?.map { it.year }
             if (listMonth != null && listYear != null) {
@@ -157,6 +185,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun getTopArtist(sessionManager: SessionManager, month: Int, year: Int) {
         val user = sessionManager.getUser()
         viewModelScope.launch {
+            monthLive.postValue(Month.of(month).getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH))
+            yearLive.postValue(year)
             val listMonth = topSongs.value?.map { it.month }
             val listYear = topSongs.value?.map { it.year }
             if (listMonth != null && listYear != null) {
@@ -172,6 +202,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun getMonthlyTimeListened(sessionManager: SessionManager, month: Int, year: Int) {
         val user = sessionManager.getUser()
         viewModelScope.launch {
+            monthLive.postValue(Month.of(month).getDisplayName(java.time.format.TextStyle.FULL, Locale.ENGLISH))
+            yearLive.postValue(year)
             val listMonth = topSongs.value?.map { it.month }
             val listYear = topSongs.value?.map { it.year }
             if (listMonth != null && listYear != null) {

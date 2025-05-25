@@ -7,6 +7,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.ynt.purrytify.models.MaxStreak
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.SongStat
 import com.ynt.purrytify.models.TenTopSong
@@ -28,9 +29,12 @@ interface Dao {
     fun delete(song: Song)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(maxStreak: MaxStreak)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(songStat: SongStat)
 
-    @Query("SELECT * FROM SongStat WHERE user = :user AND year = :year AND month = :month AND day = :day AND songId = :songId AND artists = :artists LIMIT 1")
+    @Query("SELECT * FROM SongStat WHERE user = :user AND year = :year AND month = :month AND day = :day AND songId = :songId AND artists = :artists")
     suspend fun getSongStat(user: String, year: Int, month: Int, day: Int, songId: String, artists: String): SongStat?
 
     @Query("SELECT SUM(timeListened) AS timeListened, month, year FROM SongStat WHERE user = :user GROUP BY month, year ORDER BY month, year DESC")
@@ -102,6 +106,16 @@ interface Dao {
 
     @Query("SELECT COUNT(*) FROM SongStat WHERE user = :user")
     suspend fun songStatCountForUser(user: String): Int
+
+    @Query("""
+    SELECT * FROM MaxStreak 
+    WHERE user = :user 
+    ORDER BY year DESC, month DESC
+    """)
+    suspend fun getMonthlyMaxStreaksForUser(user: String): List<MaxStreak>
+
+    @Query("SELECT * FROM MaxStreak WHERE user = :user AND year = :year AND month = :month")
+    suspend fun getMaxStreak(user: String, year: Int, month: Int): MaxStreak?
 
     @Query("""
         SELECT title, image, artists, month, year, timeListened

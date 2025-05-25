@@ -2,6 +2,7 @@ package com.ynt.purrytify.database
 
 import android.app.Application
 import androidx.lifecycle.LiveData
+import com.ynt.purrytify.models.MaxStreak
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.SongStat
 import com.ynt.purrytify.models.TenTopSong
@@ -25,6 +26,10 @@ class SongRepository(application: Application) {
 
     fun insert(song: Song) {
         executorService.execute { mSongsDao.insert(song) }
+    }
+
+    fun insert(maxStreak: MaxStreak){
+        executorService.execute { mSongsDao.insert(maxStreak) }
     }
 
     suspend fun insert(songStat: SongStat){
@@ -90,6 +95,15 @@ class SongRepository(application: Application) {
     suspend fun songStatCountForUser(user: String): Int {
         return mSongsDao.songStatCountForUser(user)
     }
+
+    suspend fun getMonthlyMaxStreaksForUser(user: String): List<MaxStreak> {
+        return mSongsDao.getMonthlyMaxStreaksForUser(user)
+    }
+
+    suspend fun getMaxStreak (user: String, year: Int, month: Int): MaxStreak?{
+        return mSongsDao.getMaxStreak(user,year,month)
+    }
+
 
     suspend fun getTenTopSong(user: String, month: Int, year: Int) : List<TenTopSong> {
         return mSongsDao.getTenTopSong(user, month, year)

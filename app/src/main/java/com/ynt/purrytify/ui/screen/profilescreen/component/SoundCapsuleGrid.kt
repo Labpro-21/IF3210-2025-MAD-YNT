@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.ynt.purrytify.models.MaxStreak
+import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.TimeListened
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileViewModel
 import com.ynt.purrytify.utils.auth.SessionManager
@@ -44,7 +46,7 @@ fun SoundCapsuleGrid(
     artistImage: String,
     month: Int,
     year: Int,
-    isStreak: Boolean = false
+    longestStreakSong: MaxStreak?
 ) {
     Column(
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 10.dp)
@@ -101,47 +103,48 @@ fun SoundCapsuleGrid(
             )
         }
 
-        if (isStreak) {
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF212121)
-                )
-            ) {
-                Column (
-                    modifier = Modifier.padding(20.dp)
-                ){
-                    Image(
-                        painter = rememberAsyncImagePainter(songImage),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .align(Alignment.CenterHorizontally)
+        if (longestStreakSong!=null) {
+            if(longestStreakSong.maxStreak>1) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFF212121)
                     )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(longestStreakSong.image),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .align(Alignment.CenterHorizontally)
+                        )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                    Text(
-                        text = "You had a 5-day streak",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                        Text(
+                            text = "You had a ${longestStreakSong.maxStreak}-day streak",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
 
-                    Spacer(modifier = Modifier.height(13.dp))
+                        Spacer(modifier = Modifier.height(13.dp))
 
-                    Text(
-                        text = "You played Loose by Daniel Caesar day after day. You were on fire",
-                        color = Color.Gray,
-                        fontSize = 13.sp,
-                    )
+                        Text(
+                            text = "You played ${longestStreakSong.title} by ${longestStreakSong.artists} day after day. You were on fire",
+                            color = Color.Gray,
+                            fontSize = 13.sp,
+                        )
+                    }
                 }
             }
         }

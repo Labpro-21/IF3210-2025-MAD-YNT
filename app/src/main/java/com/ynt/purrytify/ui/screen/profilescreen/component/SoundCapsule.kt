@@ -1,20 +1,25 @@
 package com.ynt.purrytify.ui.screen.profilescreen.component
 
 import android.util.Log
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.ynt.purrytify.models.MaxStreak
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileViewModel
 import com.ynt.purrytify.utils.auth.SessionManager
@@ -35,15 +40,30 @@ fun SoundCapsule(
     val topArtists by viewModel.topArtists.observeAsState(emptyList())
     val listTopSong by viewModel.listTopSong.observeAsState(emptyList())
     val listTopArtist by viewModel.listTopArtist.observeAsState(emptyList())
-    Log.d("Time Listened Count", timeListened.size.toString())
-    Log.d("Top Songs", topSongs.size.toString())
-    Log.d("Top Artist Count", topArtists.size.toString())
+    val longestStreakSong by viewModel.longestStreakSong.observeAsState(emptyList())
+    Log.d("SoundCapsule", "Time Listened Size: ${timeListened.size}")
+    Log.d("SoundCapsule", "ListTopSong Size: ${listTopSong.size}")
+    Log.d("SoundCapsule", "ListTopArtist Size: ${listTopArtist.size}")
+    Log.d("SoundCapsule", "LongestStreakSong Size: ${longestStreakSong.size}")
+    Log.d("SoundCapsule", "TopSongs Size: ${topSongs.size}")
+    Log.d("SoundCapsule", "TopArtists Size: ${topArtists.size}")
 
     if (timeListened.isEmpty()) {
-        Text("No Data Available", color = Color.White)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No Data Available",
+                color = Color.LightGray,
+                fontSize = 18.sp,
+                textAlign = TextAlign.Center
+            )
+        }
     } else {
-        var isStreak: Boolean = true
-        for (i in timeListened.indices) {
+        for (i in timeListened.indices.reversed()) {
             Text(
                 text = "${
                     Month.of(timeListened[i].month).name.lowercase()
@@ -56,7 +76,7 @@ fun SoundCapsule(
                     .padding(start = 16.dp, top = 16.dp, end = 16.dp)
             )
 
-            if (listTopSong.isNotEmpty() && listTopArtist.isNotEmpty()) {
+            if (listTopSong.isNotEmpty() && listTopArtist.isNotEmpty() && longestStreakSong.isNotEmpty()) {
                 SoundCapsuleGrid(
                     navController = navController,
                     viewModel = viewModel,
@@ -66,11 +86,10 @@ fun SoundCapsule(
                     artistName = listTopArtist[i].artist.toString(),
                     songImage = listTopSong[i].image.toString(),
                     artistImage = listTopArtist[i].image.toString(),
+                    longestStreakSong = longestStreakSong?.get(i),
                     month = timeListened[i].month,
                     year = timeListened[i].year,
-                    isStreak = isStreak
                 )
-                isStreak = false
             }
         }
     }

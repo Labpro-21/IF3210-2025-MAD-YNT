@@ -68,3 +68,16 @@ data class TimeListenedPerDay(
     val day: Int,
     val totalTimeListened: Long
 )
+
+
+@Entity(primaryKeys = ["year","month","user"])
+data class MaxStreak(
+    val year: Int,
+    val month: Int,
+    val user: String,
+    val songId: String,
+    val title: String,
+    val artists: String,
+    val maxStreak: Int,
+    val image: String
+)

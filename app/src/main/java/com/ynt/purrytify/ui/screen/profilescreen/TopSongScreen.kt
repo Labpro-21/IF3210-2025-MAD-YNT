@@ -79,8 +79,10 @@ fun TopSongScreen(
                 .padding(top = 16.dp, start = 22.dp, end = 22.dp, bottom = 16.dp)
         ) {
             item {
+                val liveMonth = viewModel.monthLive.observeAsState("").value
+                val liveYear = viewModel.yearLive.observeAsState(0).value
                 Text(
-                    text = "April 2025",
+                    text = "$liveMonth $liveYear",
                     color = Color.White,
                     fontSize = 14.sp
                 )
