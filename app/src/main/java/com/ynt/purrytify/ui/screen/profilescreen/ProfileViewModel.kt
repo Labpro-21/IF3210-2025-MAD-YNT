@@ -2,41 +2,45 @@ package com.ynt.purrytify.ui.screen.profilescreen
 
 import android.app.Application
 import android.util.Log
-import androidx.compose.runtime.collection.MutableVector
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ynt.purrytify.database.SongRepository
 import com.ynt.purrytify.models.ProfileResponse
 import com.ynt.purrytify.models.Song
+import com.ynt.purrytify.models.TenTopSong
 import com.ynt.purrytify.models.TimeListened
 import com.ynt.purrytify.models.TopArtist
 import com.ynt.purrytify.models.TopSong
+import com.ynt.purrytify.models.TopTenArtist
 import com.ynt.purrytify.network.RetrofitInstance
 import com.ynt.purrytify.utils.auth.SessionManager
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
-import kotlin.concurrent.timer
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
     val countSong = MutableLiveData<Int>()
     val countLiked = MutableLiveData<Int>()
     val playedCount = MutableLiveData<Int>()
     val timeListened = MutableLiveData<List<TimeListened>>()
+    var monthlyTimeListened: LiveData<List<TimeListened>> = MutableLiveData()
+    private val timeListenedObserver = Observer<List<TimeListened>> { time ->
+        timeListened.postValue(time)
+    }
+    val songPerMonth = MutableLiveData<Int>()
+    val artistPerMonth = MutableLiveData<Int>()
+
     val topSongs = MutableLiveData<List<TopSong>>()
     val topArtists = MutableLiveData<List<TopArtist>>()
     var listTopSong = MutableLiveData<List<Song>>()
     val listTopArtist = MutableLiveData<List<Song>>()
-    val listTopTenSong = MutableLiveData<List<Song>>()
-    val listTopTenArtist = MutableLiveData<List<Song>>()
+    val listTopTenSong = MutableLiveData<List<TenTopSong>>()
+    val listTopTenArtist = MutableLiveData<List<TopTenArtist>>()
     private val songRepo = SongRepository(application = application)
     private val _data = MutableLiveData<Result<ProfileResponse?>>()
     val data: LiveData<Result<ProfileResponse?>> = _data
@@ -48,15 +52,15 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 if (response.isSuccessful) {
                     _data.value = Result.success(response.body())
 
-                    songRepo.countSongsPerUser(response.body()?.email ?: "-").observeForever { count ->
-                        countSong.postValue(count)
-                    }
-                    songRepo.countLikedSong(username = response.body()?.email ?: "-").observeForever { count ->
-                        countLiked.postValue(count)
-                    }
-                    songRepo.playedSongCount(username = response.body()?.email ?: "-").observeForever { count ->
-                        playedCount.postValue(count)
-                    }
+                    val countSongPerUser = songRepo.countSongsPerUser(response.body()?.email ?: "-")
+                    countSong.postValue(countSongPerUser)
+
+                    val countLikedPerUser = songRepo.countLikedSong(username = response.body()?.email ?: "-")
+                    countLiked.postValue(countLikedPerUser)
+
+                    val countPlayedPerUser = songRepo.playedSongCount(username = response.body()?.email ?: "-")
+                    playedCount.postValue(countPlayedPerUser)
+
                 } else {
                 _data.value = Result.failure(Exception("Error: ${response.code()}"))
                 }
@@ -69,20 +73,34 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     fun getSoundCapsuleData(sessionManager: SessionManager) {
         val user = sessionManager.getUser()
-        songRepo.getMonthlyTimeListened(user).observeForever { result ->
-            timeListened.postValue(result)
-        }
-        songRepo.getMonthlySongCount(user).observeForever { result ->
-            songRepo.getOneSongById(user, result.map { it.songId.toInt() }).observeForever { res ->
-                listTopSong.postValue(res)
+        viewModelScope.launch {
+            val count = songRepo.songStatCountForUser(user)
+            Log.d("ProfileViewModel","The Count is $count")
+            if (count > 0) {
+                monthlyTimeListened.removeObserver(timeListenedObserver)
+                monthlyTimeListened = songRepo.getMonthlyTimeListened(user)
+                monthlyTimeListened.observeForever(timeListenedObserver)
+
+                val monthlySongCount = songRepo.getMonthlySongCount(user)
+                topSongs.postValue(monthlySongCount)
+
+                val songIds = monthlySongCount.map { it.songId.toInt() }
+                val oneSongById = songRepo.getOneSongById(user, songIds)
+                listTopSong.postValue(oneSongById)
+
+                val monthlyArtistCount = songRepo.getMonthlyArtistCount(user)
+                topArtists.postValue(monthlyArtistCount)
+
+                val artists = monthlyArtistCount.map { it.artists }
+                val oneSongByArtist = songRepo.getOneSongByArtist(user, artists)
+                listTopArtist.postValue(oneSongByArtist)
+            } else {
+                timeListened.postValue(emptyList())
+                listTopSong.postValue(emptyList())
+                topSongs.postValue(emptyList())
+                listTopArtist.postValue(emptyList())
+                topArtists.postValue(emptyList())
             }
-            topSongs.postValue(result)
-        }
-        songRepo.getMonthlyArtistCount(user).observeForever { result ->
-            songRepo.getOneSongByArtist(user, result.map { it.artists }).observeForever { res ->
-                listTopArtist.postValue(res)
-            }
-            topArtists.postValue(result)
         }
     }
 
@@ -118,13 +136,32 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         return data
     }
 
-    fun getTopSong(sessionManager: SessionManager) {
+    fun getTopSong(sessionManager: SessionManager, month: Int, year: Int) {
         val user = sessionManager.getUser()
-        val listMonth = topSongs.value?.map { it.month }
-        val listYear = topSongs.value?.map { it.year }
-        if (listMonth != null && listYear != null) {
-            songRepo.getTenTopSong(user, listMonth, listYear).observeForever { result ->
-                listTopTenSong.postValue(result)
+        viewModelScope.launch {
+            val listMonth = topSongs.value?.map { it.month }
+            val listYear = topSongs.value?.map { it.year }
+            if (listMonth != null && listYear != null) {
+                val tenTopSong = songRepo.getTenTopSong(user, month, year)
+                listTopTenSong.postValue(tenTopSong)
+
+                val monthSong = songRepo.getAllSongPerMonth(user, month, year)
+                songPerMonth.postValue(monthSong)
+            }
+        }
+    }
+
+    fun getTopArtist(sessionManager: SessionManager, month: Int, year: Int) {
+        val user = sessionManager.getUser()
+        viewModelScope.launch {
+            val listMonth = topSongs.value?.map { it.month }
+            val listYear = topSongs.value?.map { it.year }
+            if (listMonth != null && listYear != null) {
+                val tenTopArtist = songRepo.getTenTopArtist(user, month, year)
+                listTopTenArtist.postValue(tenTopArtist)
+
+                val monthArtist = songRepo.getAllArtistPerMonth(user, month, year)
+                artistPerMonth.postValue(monthArtist)
             }
         }
     }

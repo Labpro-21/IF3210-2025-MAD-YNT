@@ -9,16 +9,20 @@ import androidx.room.Query
 import androidx.room.Update
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.SongStat
+import com.ynt.purrytify.models.TenTopSong
 import com.ynt.purrytify.models.TimeListened
 import com.ynt.purrytify.models.TopArtist
 import com.ynt.purrytify.models.TopSong
+import com.ynt.purrytify.models.TopTenArtist
 
 @Dao
 interface Dao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(song: Song)
+
     @Update
     fun update(song: Song)
+
     @Delete
     fun delete(song: Song)
 
@@ -46,10 +50,9 @@ interface Dao {
             AND ss.timeListened = ml.timeListened
         ORDER BY ss.month, ss.year DESC
     """)
-    fun getMonthlySongCount(user: String): LiveData<List<TopSong>>
+    suspend fun getMonthlySongCount(user: String): List<TopSong>
 
-    @Query(
-        """
+    @Query("""
         WITH artist_total AS (
             SELECT artists, month, year, SUM(timeListened) AS totalTime
             FROM SongStat
@@ -66,28 +69,26 @@ interface Dao {
         JOIN max_total mt
           ON at.month = mt.month AND at.year = mt.year AND at.totalTime = mt.maxTime
         ORDER BY at.year, at.month DESC;
+    """)
+    suspend fun getMonthlyArtistCount(user: String): List<TopArtist>
 
-    """
-    )
-    fun getMonthlyArtistCount(user: String): LiveData<List<TopArtist>>
-
-    @Query("SELECT * FROM song WHERE owner = :user AND artist = :artist LIMIT 1")
-    fun getOneSongByArtist(user: String, artist: List<String>): LiveData<List<Song>>
+    @Query("SELECT * FROM song WHERE owner = :user AND artist IN (:artist)")
+    suspend fun getOneSongByArtist(user: String, artist: List<String>): List<Song>
 
     @Query("SELECT * FROM song WHERE owner = :user AND id IN (:songId)")
-    fun getOneSongById(user: String, songId: List<Int>): LiveData<List<Song>>
+    suspend fun getOneSongById(user: String, songId: List<Int>): List<Song>
 
     @Query("SELECT * FROM song WHERE owner = :username ORDER BY date_added DESC")
     fun getAllSongs(username: String): LiveData<List<Song>>
 
     @Query("SELECT COUNT(*) FROM song WHERE owner = :username")
-    fun countSongsPerUser(username: String): LiveData<Int>
+    suspend fun countSongsPerUser(username: String): Int
 
     @Query("SELECT COUNT(*) FROM song WHERE owner = :username AND is_liked = 1")
-    fun countSongLiked(username: String): LiveData<Int>
+    suspend fun countSongLiked(username: String): Int
 
     @Query("SELECT COUNT(*) FROM song WHERE owner = :username AND last_played != 0")
-    fun playedSongCount(username: String): LiveData<Int>
+    suspend fun playedSongCount(username: String): Int
 
     @Query("SELECT * FROM song WHERE owner = :username ORDER BY date_added DESC LIMIT 10")
     fun getNewSongs(username: String): LiveData<List<Song>>
@@ -98,15 +99,38 @@ interface Dao {
     @Query("SELECT * FROM song WHERE owner = :username ORDER BY date_added DESC")
     fun getAllSongsRaw(username: String): List<Song>
 
+    @Query("SELECT COUNT(*) FROM SongStat WHERE user = :user")
+    suspend fun songStatCountForUser(user: String): Int
+
     @Query("""
-        SELECT s.*
-        FROM song AS s
-        JOIN songstat AS ss
-            ON s.id = ss.songId
-        WHERE owner = :user AND month = (:month) AND year = (:year) AND timeListened != 0
-        GROUP BY s.id, month, year
-        ORDER BY MAX(SUM(timeListened)), month, year DESC
+        SELECT title, image, artists, month, year, timeListened
+        FROM songstat
+        WHERE user = :user AND month = :month AND year = :year
+        ORDER BY timeListened DESC
         LIMIT 10
     """)
-    fun getTenTopSong(user: String, month: List<Int>, year: List<Int>) : LiveData<List<Song>>
+    suspend fun getTenTopSong(user: String, month: Int, year: Int) : List<TenTopSong>
+
+    @Query("""
+        SELECT a.artists, a.totalTime, s.image
+        FROM (
+            SELECT artists, SUM(timeListened) AS totalTime
+            FROM songstat
+            WHERE user = :user AND month = :month AND year = :year
+            GROUP BY artists
+        ) AS a
+        JOIN songstat s ON s.artists = a.artists
+        WHERE s.user = :user AND s.month = :month AND s.year = :year
+        GROUP BY a.artists
+        ORDER BY a.totalTime DESC
+        LIMIT 10
+    """)
+    suspend fun getTenTopArtist(user: String, month: Int, year: Int) : List<TopTenArtist>
+
+    @Query("SELECT COUNT(*) FROM songstat WHERE user = :user AND month = :month AND year = :year")
+    suspend fun getAllSongPerMonth(user: String, month: Int, year: Int) : Int
+
+    @Query("SELECT COUNT(artists) FROM songstat WHERE user = :user AND month = :month AND year = :year")
+    suspend fun getAllArtistPerMonth(user: String, month: Int, year: Int) : Int
 }
+

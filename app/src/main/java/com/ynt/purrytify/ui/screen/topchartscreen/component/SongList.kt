@@ -28,6 +28,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.models.OnlineSong
@@ -42,7 +44,8 @@ fun SongList(
     songList : List<OnlineSong>,
     viewModel : TopChartViewModel,
     sessionManager: SessionManager,
-    playSong : (Song) -> Unit
+    playSong : (Song) -> Unit,
+    navController: NavController
 ) {
     Column (
         modifier = Modifier
@@ -50,13 +53,14 @@ fun SongList(
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        songList.forEach { song ->
+        songList.forEach() { song ->
             OneSong(
                 song = song,
                 downloadHelper = downloadHelper,
                 viewModel = viewModel,
                 sessionManager = sessionManager,
-                playSong = playSong
+                playSong = playSong,
+                navController = navController
             )
         }
     }
@@ -68,9 +72,11 @@ fun OneSong(
     downloadHelper: DownloadHelper,
     viewModel: TopChartViewModel,
     sessionManager: SessionManager,
-    playSong: (Song) -> Unit
+    playSong: (Song) -> Unit,
+    navController: NavController
 ) {
-    var showSheet by remember { mutableStateOf(false) }
+    val showOptionsSheet = remember { mutableStateOf(false) }
+    val showShareSheet = remember { mutableStateOf(false) }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -102,13 +108,13 @@ fun OneSong(
 
         Column {
             Text(
-                text = song.title,
+                text = song.title ?: "",
                 color = Color.White,
                 fontSize = 16.sp,
                 maxLines = 1
             )
             Text(
-                text = song.artist,
+                text = song.artist ?: "",
                 color = Color.LightGray,
                 fontSize = 14.sp,
                 maxLines = 1
@@ -119,7 +125,7 @@ fun OneSong(
 
         IconButton(
             onClick = {
-                showSheet = true
+                showOptionsSheet.value = true
             }
         ) {
             Icon(
@@ -129,18 +135,29 @@ fun OneSong(
             )
         }
 
-        if (showSheet) {
+        if (showOptionsSheet.value) {
             SongOptions(
-                onDismiss = { showSheet = false },
+                onDismiss = { showOptionsSheet.value = false },
                 onDownload = {
-//                    var isDownloading = true
                     downloadHelper.startDownload(
                         song = song,
                         viewModel = viewModel,
                         user = sessionManager.getUser()
                     )
-
                 },
+                songID = song.id,
+                showShareSheetState = showShareSheet,
+                closeSelf = { showOptionsSheet.value = false }
+            )
+        }
+
+        if (showShareSheet.value) {
+            ShareOptions(
+                onDismiss = { showShareSheet.value = false },
+                songID = song.id,
+                songTitle = song.title,
+                songArtist = song.artist,
+                navController = navController
             )
         }
     }

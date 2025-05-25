@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +48,8 @@ fun ProfileScreen(
     navController: NavController,
     viewModel: ProfileViewModel,
     sessionManager: SessionManager,
-    downloadHelper: DownloadHelper
+    downloadHelper: DownloadHelper,
+    isLoggedIn: MutableState<Boolean>
 ) {
     LaunchedEffect(Unit) {
         viewModel.loadProfile(sessionManager)
@@ -112,7 +114,10 @@ fun ProfileScreen(
                 }
 
                 item {
-                    LogoutButton { sessionManager.logout() }
+                    LogoutButton {
+                        sessionManager.logout()
+                        isLoggedIn.value = false
+                    }
                 }
 
                 item {

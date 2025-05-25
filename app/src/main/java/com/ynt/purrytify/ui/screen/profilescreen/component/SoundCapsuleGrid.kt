@@ -16,6 +16,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,18 +25,25 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.models.TimeListened
+import com.ynt.purrytify.ui.screen.profilescreen.ProfileViewModel
+import com.ynt.purrytify.utils.auth.SessionManager
 
 @Composable
 fun SoundCapsuleGrid(
     navController: NavController,
+    viewModel: ProfileViewModel,
+    sessionManager: SessionManager,
     timeListened: Long,
     songTitle: String,
     artistName: String,
     songImage: String,
     artistImage: String,
+    month: Int,
+    year: Int,
     isStreak: Boolean = false
 ) {
     Column(
@@ -69,6 +77,7 @@ fun SoundCapsuleGrid(
                     .height(250.dp),
                 isArtistOrSong = true,
                 onClick = {
+                    viewModel.getTopArtist(sessionManager, month, year)
                     navController.navigate("topArtist")
                 }
             )
@@ -85,6 +94,7 @@ fun SoundCapsuleGrid(
                     .height(250.dp),
                 isArtistOrSong = true,
                 onClick = {
+                    viewModel.getTopSong(sessionManager, month, year)
                     navController.navigate("topSong")
                 }
             )

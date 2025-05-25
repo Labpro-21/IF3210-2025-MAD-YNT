@@ -1,6 +1,7 @@
 package com.ynt.purrytify.ui.screen.player
 
 import android.content.ContentResolver
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
@@ -18,7 +19,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -33,6 +37,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.SliderPositions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,14 +51,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
@@ -69,27 +78,44 @@ import com.ynt.purrytify.utils.auth.SessionManager
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SongPlayerSheet(
-    setShowPopupSong: (Boolean)->Unit,
+    setShowPopupSong: (Boolean) -> Unit,
     libraryViewModel: LibraryViewModel,
     sheetState: SheetState,
     playbackViewModel: PlaybackViewModel,
     sessionManager: SessionManager
-){
+) {
     val coroutineScope = rememberCoroutineScope()
-    val interactionSource = remember {MutableInteractionSource()}
-    val duration = if(playbackViewModel.duration.toFloat() >= 0) playbackViewModel.duration.toFloat() else 0f
+    val interactionSource = remember { MutableInteractionSource() }
+    val duration = if (playbackViewModel.duration.toFloat() >= 0) playbackViewModel.duration.toFloat() else 0f
     val currentPosition = playbackViewModel.currentPosition.coerceAtLeast(0).toFloat()
     var sliderPosition by remember { mutableStateOf(currentPosition) }
     var isSliderDragging by remember { mutableStateOf(false) }
     val contentResolver = LocalContext.current.contentResolver
     val imageBitmap = getBitmap(contentResolver, playbackViewModel.currentSong?.image?.toUri())
-    val dominantColor = getDominantColor(
-        bitmap = imageBitmap
-    )
+    val dominantColor = getDominantColor(bitmap = imageBitmap)
     val username = sessionManager.getUser()
     val localSongList by libraryViewModel.getAllSongs(username).observeAsState()
+
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val screenWidth = configuration.screenWidthDp.dp
+
+    val imageSize = if (isLandscape) 160.dp else 300.dp
+    val topSpacer = if (isLandscape) 16.dp else 96.dp
+    val buttonSize = if (isLandscape) 36.dp else 48.dp
+    val sliderThumbHeight = if (isLandscape) 16.dp else 18.dp
+    val sliderThumbWidth = if (isLandscape) 6.dp else 8.dp
+    val titleFontSize = if (isLandscape) 20.sp else 24.sp
+    val artistFontSize = if (isLandscape) 14.sp else 16.sp
+    val likeButtonSize = if (isLandscape) 20.dp else 24.dp
+
+    val imageToLikeSpacer = if (isLandscape) 8.dp else 16.dp
+    val likeToSliderSpacer = if (isLandscape) 0.dp else 16.dp
+    val sliderToControlsSpacer = if (isLandscape) 8.dp else 16.dp
+    val sliderMaxWidth = if (isLandscape) screenWidth * 0.4f else screenWidth * 0.65f
+
     LaunchedEffect(localSongList) {
-        if (playbackViewModel.sourceName=="local") {
+        if (playbackViewModel.sourceName == "local") {
             val list = localSongList
             if (list != null) {
                 playbackViewModel.syncLocal(list)
@@ -111,8 +137,9 @@ fun SongPlayerSheet(
             }
         },
         sheetState = sheetState,
-        containerColor = colorResource(R.color.dark_gray),
+        containerColor = Color.Transparent,
         contentColor = colorResource(R.color.dark_gray),
+        dragHandle = {},
         modifier = Modifier.fillMaxWidth()
     ) {
         Box(
@@ -132,34 +159,47 @@ fun SongPlayerSheet(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Spacer(modifier = Modifier.height(96.dp))
+                Spacer(modifier = Modifier.height(topSpacer))
 
                 Image(
                     painter = rememberAsyncImagePainter(playbackViewModel.currentSong?.image),
                     contentDescription = "Song Cover",
                     modifier = Modifier
-                        .size(300.dp)
+                        .size(imageSize)
                         .clip(RoundedCornerShape(8.dp)),
                     contentScale = ContentScale.Crop
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                Text(playbackViewModel.currentSong?.title ?: "Unknown Title", color = Color.White, fontSize = 24.sp)
-                Text(playbackViewModel.currentSong?.artist ?: "Unknown Artist", color = Color.Gray, fontSize = 16.sp)
+                Text(
+                    playbackViewModel.currentSong?.title ?: "Unknown Title",
+                    color = Color.White,
+                    fontSize = titleFontSize
+                )
+                Text(
+                    playbackViewModel.currentSong?.artist ?: "Unknown Artist",
+                    color = Color.Gray,
+                    fontSize = artistFontSize
+                )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(imageToLikeSpacer))
 
-                IconButton(onClick = {
-                    if(playbackViewModel.sourceName == "local"){
-                        val updatedSong = playbackViewModel.currentSong?.copy(isLiked = if (playbackViewModel.currentSong?.isLiked == 1) 0 else 1)
-                        libraryViewModel.update(updatedSong?:Song())
-                        playbackViewModel.currentSong =  updatedSong
+                IconButton(
+                    modifier = Modifier.size(likeButtonSize),
+                    onClick = {
+                    if (playbackViewModel.sourceName == "local") {
+                        val updatedSong = playbackViewModel.currentSong?.copy(
+                            isLiked = if (playbackViewModel.currentSong?.isLiked == 1) 0 else 1
+                        )
+                        libraryViewModel.update(updatedSong ?: Song())
+                        playbackViewModel.currentSong = updatedSong
                     }
                 }) {
-                    if(playbackViewModel.sourceName=="local"){
+                    if (playbackViewModel.sourceName == "local") {
                         Icon(
                             imageVector = if (playbackViewModel.currentSong?.isLiked == 1) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = null,
@@ -168,75 +208,104 @@ fun SongPlayerSheet(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(likeToSliderSpacer))
 
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     Text(formatTime(currentPosition), color = Color.White, fontSize = 12.sp)
-                    Slider(
-                        value = sliderPosition,
-                        onValueChange = {
-                            sliderPosition = it
-                            isSliderDragging = true
-                        },
-                        onValueChangeFinished = {
-                            isSliderDragging = false
-                            playbackViewModel.seek(sliderPosition.toLong())
-                        },
-                        valueRange = 0f..duration,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 8.dp),
-                        thumb = {
-                            SliderDefaults.Thumb(
-                                interactionSource = interactionSource ,
-                                thumbSize = DpSize(width = 8.dp,height = 24.dp),
-                                colors =  SliderDefaults.colors(
-                                    thumbColor = Color(0xFF1BB452),
-                                ),
-                            )
-                        },
-                        colors = SliderDefaults.colors(
-                            activeTrackColor =  Color(0xFF1BB452),
-                            activeTickColor =  Color(0xFF1BB452),
-                            inactiveTickColor = Color.White,
-                            inactiveTrackColor = Color.White
-                        ),
 
+                    Box(
+                        modifier = Modifier
+                            .width(sliderMaxWidth)
+                            .padding(horizontal = 8.dp)
+                    ) {
+                        Slider(
+                            value = sliderPosition,
+                            onValueChange = {
+                                sliderPosition = it
+                                isSliderDragging = true
+                            },
+                            onValueChangeFinished = {
+                                isSliderDragging = false
+                                playbackViewModel.seek(sliderPosition.toLong())
+                            },
+                            valueRange = 0f..duration,
+                            modifier = Modifier.fillMaxWidth(),
+                            thumb = {
+                                SliderDefaults.Thumb(
+                                    interactionSource = interactionSource,
+                                    thumbSize = DpSize(width = sliderThumbWidth, height = sliderThumbHeight),
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = Color(0xFF1BB452),
+                                    ),
+                                )
+                            },
+                            track = { sliderState ->
+                                SliderDefaults.Track(
+                                    modifier = Modifier.height(5.dp),
+                                    sliderState = sliderState,
+                                    drawStopIndicator = null,
+                                    colors = SliderDefaults.colors(
+                                        activeTrackColor = Color.White,
+                                        activeTickColor = Color.White,
+                                        inactiveTickColor = Color.LightGray,
+                                        inactiveTrackColor = Color.LightGray
+                                    ),
+                                )
+                            },
                         )
+                    }
                     Text(formatTime(duration), color = Color.White, fontSize = 12.sp)
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
 
-                Row(
+                Spacer(modifier = Modifier.height(sliderToControlsSpacer))
+
+                Box(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
+                    contentAlignment = Alignment.Center
                 ) {
-                    IconButton(onClick = {playbackViewModel.previous()}) {
-                        Icon(Icons.Default.SkipPrevious, contentDescription = null, tint = Color.White)
-                    }
-                    IconButton(onClick = {playbackViewModel.playPause()}) {
-                        Icon(
-                            imageVector = if (playbackViewModel.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
-                    IconButton(onClick = {playbackViewModel.next()}) {
-                        Icon(Icons.Default.SkipNext, contentDescription = null, tint = Color.White)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(36.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { playbackViewModel.previous() }) {
+                            Icon(
+                                Icons.Default.SkipPrevious,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(buttonSize)
+                            )
+                        }
+                        IconButton(onClick = { playbackViewModel.playPause() }) {
+                            Icon(
+                                imageVector = if (playbackViewModel.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(buttonSize)
+                            )
+                        }
+                        IconButton(onClick = { playbackViewModel.next() }) {
+                            Icon(
+                                Icons.Default.SkipNext,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(buttonSize)
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
+
+
+
 
 fun formatTime(millis: Float): String {
     val minutes = (millis / 1000) / 60

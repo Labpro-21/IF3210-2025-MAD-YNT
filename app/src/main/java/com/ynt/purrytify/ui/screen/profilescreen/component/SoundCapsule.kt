@@ -59,11 +59,15 @@ fun SoundCapsule(
             if (listTopSong.isNotEmpty() && listTopArtist.isNotEmpty()) {
                 SoundCapsuleGrid(
                     navController = navController,
+                    viewModel = viewModel,
+                    sessionManager = sessionManager,
                     timeListened = timeListened[i].timeListened,
                     songTitle = listTopSong[i].title.toString(),
                     artistName = listTopArtist[i].artist.toString(),
                     songImage = listTopSong[i].image.toString(),
                     artistImage = listTopArtist[i].image.toString(),
+                    month = timeListened[i].month,
+                    year = timeListened[i].year,
                     isStreak = isStreak
                 )
                 isStreak = false

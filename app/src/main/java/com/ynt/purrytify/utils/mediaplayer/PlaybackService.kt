@@ -54,6 +54,7 @@ class PlaybackService : MediaSessionService() {
                 .add(SessionCommand("like", Bundle.EMPTY))
                 .add(SessionCommand("get_current_state", Bundle.EMPTY))
                 .add(SessionCommand("send_user", Bundle.EMPTY))
+                .add(SessionCommand("kill", Bundle.EMPTY))
                 .build()
 
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
@@ -151,6 +152,13 @@ class PlaybackService : MediaSessionService() {
                         currentUser = user
                     }
                     Log.d("PlaybackService","User received: $user")
+                    Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                }
+                "kill"->{
+                    mediaSession.player.stop()
+                    sourceName = ""
+                    currentSong = null
+                    syncPlaylist(listOf<Song>(),"")
                     Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
                 }
                 else -> {
@@ -369,6 +377,8 @@ class PlaybackService : MediaSessionService() {
                             month = month,
                             day = day,
                             songId = song.id.toString(),
+                            title = song.title.toString(),
+                            image = song.image.toString(),
                             artists = song.artist.toString(),
                             timeListened = newTimeListened
                         )

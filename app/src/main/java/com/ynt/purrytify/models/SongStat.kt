@@ -22,8 +22,24 @@ data class SongStat(
     val month: Int,
     val day: Int,
     val songId: String,
+    val title: String,
+    val image: String,
     val artists: String,
     val timeListened: Long = 0,
+)
+
+data class TenTopSong(
+    val title: String,
+    val image: String,
+    val artists: String,
+    val month: Int,
+    val year: Int,
+    val timeListened: Long
+)
+data class TopTenArtist(
+    val artists: String,
+    val totalTime: Long,
+    val image: String
 )
 
 data class TimeListened(
