@@ -1,58 +1,86 @@
 # Tugas Besar Android IF3210 2024/2025
+
 ## Deskripsi Aplikasi - Purrytify
-Purrytify merupakan sebuah aplikasi berbasis Android yang memiliki fungsi sebagai audio player. Fitur yang dimiliki aplikasi ini adalah fitur home, library, profile, auth, serta pemutaran lagu. Fitur home merupakan sebuah fitur menampilkan halaman home yang berisi beberapa lagu yang baru ditambahkan serta beberapa lagu yang terakhir diputar. Fitur library merupakan sebuah fitur yang menampilkan daftar lagu yang telah ditambahkan oleh pengguna. Pengguna dapat menambahkan lagu melalui halaman ini dan melakukan "like" untuk setiap lagu yang telah ditambahkan untuk menandai lagu yang disukai. Fitur profile merupakan fitur yang menampilkan halaman profil dari pengguna yang telah login. Fitur ini menampilkan jumlah lagu yang dimiliiki, jumlah lagu yang disukai, dan jumlah lagu yang telah didengarkan. Fitur auth merupakan sebuah fitur login dan logout dari pengguna. Terakhir, fitur pemutaran lagu berfungsi untuk memutar lagu yang telah ditambahkan melalui library. 
-## Requirement Program
-androidx-core-ktx
 
-androidx-core-splashscreen
+**Purrytify** adalah aplikasi pemutar audio berbasis Android dengan berbagai fitur yang mendukung pengalaman mendengarkan musik secara personal dan interaktif. Aplikasi ini terdiri dari beberapa fitur utama:
 
-androidx-activity-compose
+- **Home**: Menampilkan lagu-lagu terbaru yang ditambahkan serta daftar lagu yang terakhir diputar.
+- **Library**: Menyediakan daftar lagu yang telah ditambahkan pengguna. Pengguna dapat menambahkan lagu baru dan memberikan *like* untuk menandai lagu favorit.
+- **Profile**: Menampilkan informasi pengguna yang telah login, termasuk jumlah lagu yang dimiliki, disukai, dan didengarkan.
+- **Auth**: Fitur untuk login dan logout.
+- **Pemutaran Lagu**: Memutar lagu yang telah ditambahkan pengguna.
+- **Notification Control**: Mengendalikan pemutaran lagu langsung dari notifikasi.
+- **Edit Profile**: Mengubah informasi pengguna, termasuk lokasi.
+- **Online Song**: Menyediakan akses ke lagu secara daring.
+- **Online Song by Region**: Lagu yang tersedia disesuaikan berdasarkan lokasi pengguna.
+- **Download Song**: Mengunduh lagu yang tersedia secara daring.
+- **Sound Capsule**: Rekap bulanan seperti:
+  - Artis & lagu teratas
+  - Total waktu mendengarkan
+  - *Streak* mendengarkan selama sebulan
+- **Audio Routing**: Memungkinkan pemilihan perangkat output audio (misalnya speaker, headset, Bluetooth, dll).
 
-androidx-compose-bom
 
-androidx-ui
+## Library & Dependency yang Digunakan
 
-androidx-ui-graphics
+Purrytify menggunakan berbagai pustaka untuk mendukung fitur-fitur di atas:
 
-androidx-ui-tooling
+### Core Android & Jetpack Compose
+- `androidx-core-ktx`
+- `androidx-core-splashscreen`
+- `androidx-activity-compose`
+- `androidx-compose-bom`
+- `androidx-ui`
+- `androidx-ui-graphics`
+- `androidx-ui-tooling`
+- `androidx-ui-tooling-preview`
+- `androidx-material3`
+- `androidx-material-icons-extended`
+- `androidx-constraintlayout`
+- `androidx-runtime-livedata`
+- `coil-compose`
 
-androidx-ui-tooling-preview
+### Navigation & Lifecycle
+- `androidx-navigation-fragment-ktx`
+- `androidx-navigation-ui-ktx`
+- `androidx-navigation-compose`
+- `androidx-lifecycle-livedata-ktx`
+- `androidx-lifecycle-viewmodel-ktx`
+- `androidx-lifecycle-runtime-ktx`
+- `androidx-lifecycle-viewmodel-compose`
 
-androidx-material3
+### Media & Playback
+- `androidx-media`
+- `androidx-media3-session`
+- `androidx-media3-ui`
+- `androidx-media3-exoplayer`
 
-androidx-material-icons-extended
+### Database & Networking
+- `androidx-room-runtime`
+- `androidx-room-ktx`
+- `room-compiler`
+- `retrofit`
+- `converter-gson`
 
-androidx-navigation-fragment-ktx
+### Asynchronous
+- `kotlinx-coroutines-android`
 
-androidx-navigation-ui-ktx
+### Location & Maps
+- `play-services-location`
+- `play-services-maps`
+- `maps-compose`
 
-androidx-navigation-compose
+### Permissions
+- `accompanist-permissions`
 
-androidx-lifecycle-livedata-ktx
+### WorkManager
+- `androidx-work-runtime-ktx`
 
-androidx-lifecycle-viewmodel-ktx
+## Plugins
 
-androidx-lifecycle-runtime-ktx
-
-androidx-lifecycle-viewmodel-compose
-
-retrofit
-
-converter-gson
-
-androidx-room-runtime
-
-room-compiler
-
-kotlinx-coroutines-android
-
-androidx-security-crypto
-
-coil-compose
-
-material
-
-androidx-constraintlayout
+- `com.android.application`
+- `org.jetbrains.kotlin.android`
+- `org.jetbrains.kotlin.plugin.compose`
 
 ## Screenshot Aplikasi
 ![image](https://github.com/user-attachments/assets/017b8f4f-3719-4293-b301-33d9d3755dc1)
@@ -64,9 +92,9 @@ androidx-constraintlayout
 
 | NIM          | Nama Anggota | Tugas yang Dilakukan                       |
 |--------------|--------------|--------------------------------------------|
-| 13522036      | Akbar Al Fattah    | Login, Logout, Background Service, Pemutaran Lagu |
-| 13522088      | Muhamad Rafli Rasyiidin    | Header, Navbar, Profile, Home|
-| 13522100      | M. Hanief Fatkhan Nashrullah    | Library, Network sensing, Header, Navbar|
+| 13522036      | Akbar Al Fattah    | Login, Logout, Background Service, Pemutaran Lagu, Audio Routing, Deeplink, Share song |
+| 13522088      | Muhamad Rafli Rasyiidin    | Header, Navbar, Profile, Home, Online Song, Download, Edit Profile, Profile Location, Sound Capsule|
+| 13522100      | M. Hanief Fatkhan Nashrullah    | Library, Network sensing, Header, Navbar, Rework (Fully migrate to Jetpack Compose), Exoplayer, Notification Control, Responsive UI, Database Usage Tracker, |
 
 ## Jumlah Jam Persiapan dan Pengerjaan Anggota
 
@@ -74,4 +102,4 @@ androidx-constraintlayout
 |--------------|--------------|-----------|
 | 13522036      | Akbar Al Fattah    |Login(8 Jam), Logout (2 Jam), Background Service (12 Jam), Pemutaran Lagu (12 Jam), Total: 34 Jam |
 | 13522088      | Muhamad Rafli Rasyiidin    | Header (1 jam), Navbar (1 jam), Profile (12 jam), Home (10 jam), Total: 24 jam   |
-| 13522100      | M. Hanief Fatkhan Nashrullah    |  RecyclerView(12 Jam), Setup Room Database(4 Jam), Setup Bottom Navigation Layout (6 Jam), Add Edit Delete Song(10 Jam), Network Sensing (2 Jam), Total: 34 Jam  |
+| 13522100      | M. Hanief Fatkhan Nashrullah    |  RecyclerView(12 Jam), Setup Room Database(4 Jam), Setup Bottom Navigation Layout (6 Jam), Add Edit Delete Song(10 Jam), Network Sensing (2 Jam), Rework (18 Jam), Exoplayer (18 Jam), Notification Control (10 Jam), Responsive UI (5 Jam), Database Usage Tracker (5 Jam) Total: 90 Jam  |
