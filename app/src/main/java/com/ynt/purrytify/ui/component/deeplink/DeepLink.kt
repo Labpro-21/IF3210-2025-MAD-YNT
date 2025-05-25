@@ -15,6 +15,7 @@ fun DeepLinkScreen(
     playbackViewModel: PlaybackViewModel,
     showSongPlayerSheet: MutableState<Boolean>
 ) {
+    playbackViewModel.kill()
     LaunchedEffect(Unit) {
         viewModel.loadSong(songId)
     }
