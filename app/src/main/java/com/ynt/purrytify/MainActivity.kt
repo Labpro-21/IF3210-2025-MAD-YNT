@@ -1,7 +1,5 @@
 package com.ynt.purrytify
 
-import android.app.Application
-import android.content.Intent
 import android.net.Uri
 import android.content.res.Configuration
 import android.os.Bundle
@@ -55,7 +53,7 @@ import androidx.navigation.navDeepLink
 import com.ynt.purrytify.utils.downloadmanager.DownloadHelper
 import com.ynt.purrytify.ui.component.BottomBar
 import com.ynt.purrytify.ui.component.ConnectivityStatusBanner
-import com.ynt.purrytify.ui.screen.DeepLinkScreen
+import com.ynt.purrytify.ui.component.deeplink.DeepLinkScreen
 import com.ynt.purrytify.ui.component.CustomSideBar
 import com.ynt.purrytify.ui.screen.audioroutingscreen.AudioRoutingScreen
 import com.ynt.purrytify.ui.screen.homescreen.HomeScreen
@@ -364,13 +362,15 @@ fun MainApp(
                         arguments = listOf(navArgument("songId") { type = NavType.IntType }),
                         deepLinks = listOf(navDeepLink { uriPattern = "purrytify://song/{songId}" })
                     ) { backStackEntry ->
-                        val songId = backStackEntry.arguments?.getInt("songId")
-                        DeepLinkScreen(songId)
+                        val songId = backStackEntry.arguments?.getInt("songId").toString()
+                        DeepLinkScreen(
+                            songId = songId,
+                            playbackViewModel = playbackViewModel,
+                            showSongPlayerSheet = showSongPlayerSheet
+                            )
                     }
                 }
             }
-
-
         }
     }
 
