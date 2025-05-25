@@ -372,10 +372,12 @@ fun MainApp(
                         deepLinks = listOf(navDeepLink { uriPattern = "purrytify://song/{songId}" })
                     ) { backStackEntry ->
                         val songId = backStackEntry.arguments?.getInt("songId").toString()
+
                         DeepLinkScreen(
                             songId = songId,
                             playbackViewModel = playbackViewModel,
-                            showSongPlayerSheet = showSongPlayerSheet
+                            showSongPlayerSheet = showSongPlayerSheet,
+                            navController = navController
                         )
                     }
                     composable(Screen.TopSong.route) {

@@ -8,20 +8,20 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.ui.home.HomeViewModel
 import com.ynt.purrytify.ui.screen.homescreen.component.NewSongs
 import com.ynt.purrytify.ui.screen.homescreen.component.RecentlyPlayed
+import com.ynt.purrytify.ui.screen.homescreen.component.RecommendedSongs
 import com.ynt.purrytify.ui.screen.homescreen.component.TopCharts
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.player.PlaybackViewModel
 import com.ynt.purrytify.utils.auth.SessionManager
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun HomeScreen(
@@ -46,7 +46,23 @@ fun HomeScreen(
 
     val songsList = viewModel.songList.observeAsState(emptyList()).value
     val recentlySong = viewModel.songListRecently.observeAsState(emptyList()).value
+    val recommendedSongs = remember(recentlySong, songsList) {
+        val recentArtists = recentlySong
+            .flatMap { it.artist?.split(", ") ?: emptyList() }
+            .groupingBy { it }
+            .eachCount()
+            .entries
+            .sortedByDescending { it.value }
+            .map { it.key }
 
+        songsList
+            .filter { song ->
+                val songArtists = song.artist?.split(", ") ?: emptyList()
+                songArtists.any { it in recentArtists } && song !in recentlySong
+            }
+            .distinctBy { it.id }
+            .take(3)
+    }
     LazyColumn (
         horizontalAlignment = Alignment.Start
     ) {
@@ -69,7 +85,16 @@ fun HomeScreen(
                 playbackViewModel = playbackViewModel
             )
         }
-
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+        item {
+            RecommendedSongs(
+                songList = recommendedSongs,
+                showSongPlayerSheet = showSongPlayerSheet,
+                playbackViewModel = playbackViewModel
+            )
+        }
         item {
             Spacer(modifier = Modifier.height(20.dp))
         }
