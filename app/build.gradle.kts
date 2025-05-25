@@ -14,8 +14,8 @@ android {
         applicationId = "com.ynt.purrytify"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -43,7 +43,7 @@ android {
 }
 
 dependencies {
-
+    implementation("androidx.mediarouter:mediarouter:1.7.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -69,9 +69,13 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.core.splashscreen)
+
+    implementation(libs.androidx.media)
+
     // Retrofit and Gson
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
@@ -82,6 +86,20 @@ dependencies {
     // Lifecycle ViewModel + LiveData (if needed)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation(libs.androidx.work.runtime.ktx)
+    // Permissions
+    implementation(libs.accompanist.permissions)
+    // Location
+    implementation(libs.play.services.location)
+    implementation(libs.maps.compose)
+    implementation((libs.play.services.maps))
     ksp(libs.room.compiler)
+
+    // Exoplayer
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.session)
+
+    //QR Code
+    implementation ("com.google.zxing:core:3.5.2")
 }
