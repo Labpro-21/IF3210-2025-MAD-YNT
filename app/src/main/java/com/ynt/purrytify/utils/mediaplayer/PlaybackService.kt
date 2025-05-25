@@ -7,7 +7,6 @@ import android.media.AudioManager
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.OptIn
-import androidx.compose.runtime.MutableState
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -24,6 +23,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.ynt.purrytify.MainActivity
 import com.ynt.purrytify.R
 import com.ynt.purrytify.database.SongRepository
+import com.ynt.purrytify.models.MaxStreak
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.SongStat
 import kotlinx.coroutines.CoroutineScope
@@ -216,10 +216,19 @@ class PlaybackService : MediaSessionService() {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 currentPlayingSongId = mediaItem?.mediaId
                 currentPlayingIndex = exoPlayer.currentMediaItemIndex
-                currentSong = exoSongs.firstOrNull{ currentPlayingSongId == it.id.toString()}
+                val rawSong = exoSongs.firstOrNull { currentPlayingSongId == it.id.toString() }?.copy()
+                if (rawSong != null) {
+                    val updatedSong = updateStreak(rawSong)
+                    currentSong = updatedSong
+                    if (sourceName == "local") {
+                        mSongRepository.update(updatedSong)
+                        upsertMaxStreakForSongIfHigher(updatedSong, updatedSong.owner ?: "unknown")
+                    }
+                }
                 updateCustomLayout()
                 startPositionUpdates()
             }
+
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 super.onIsPlayingChanged(isPlaying)
                 if (!isPlaying) {
@@ -378,7 +387,7 @@ class PlaybackService : MediaSessionService() {
                             day = day,
                             songId = song.id.toString(),
                             artists = song.artist.toString(),
-                            timeListened = newTimeListened
+                            timeListened = newTimeListened,
                         )
                         mSongRepository.insert(newStat)
                     } catch (e: Exception) {
@@ -388,6 +397,58 @@ class PlaybackService : MediaSessionService() {
             }
         }
     }
+
+    private fun updateStreak(song: Song): Song {
+        val now = System.currentTimeMillis()
+        val oneDayMillis = 24 * 60 * 60 * 1000L
+        if (song.streakStart == 0L || song.lastPlayed == 0L) {
+            song.streakStart = now
+            song.lastPlayed = now
+            return song
+        }
+        val calLastPlayed = Calendar.getInstance().apply { timeInMillis = song.lastPlayed }
+        val calNow = Calendar.getInstance().apply { timeInMillis = now }
+        if (calNow.get(Calendar.YEAR) != calLastPlayed.get(Calendar.YEAR) ||
+            calNow.get(Calendar.MONTH) != calLastPlayed.get(Calendar.MONTH)) {
+            song.streakStart = now
+            song.lastPlayed = now
+            return song
+        }
+        val daysSinceLastPlayed = (now - song.lastPlayed) / oneDayMillis
+        if (daysSinceLastPlayed > 1) {
+            song.streakStart = now
+            song.lastPlayed = now
+        } else if (daysSinceLastPlayed == 1L) {
+            song.lastPlayed = now
+        }
+        return song
+    }
+
+    private fun upsertMaxStreakForSongIfHigher(song: Song, user: String) {
+        val cal = Calendar.getInstance().apply {
+            timeInMillis = System.currentTimeMillis()
+        }
+        val year = cal.get(Calendar.YEAR)
+        val month = cal.get(Calendar.MONTH) + 1
+        val currentStreak = ((song.lastPlayed - song.streakStart) / (24 * 60 * 60 * 1000L)).toInt() + 1
+        val existing = mSongRepository.getMaxStreak(user, year, month)
+        if (existing == null || currentStreak > existing.maxStreak) {
+            val maxStreakEntry = MaxStreak(
+                year = year,
+                month = month,
+                user = user,
+                songId = song.id.toString(),
+                title = song.title ?: "",
+                artists = song.artist ?: "",
+                maxStreak = currentStreak,
+                image = song.image ?: "",
+            )
+            mSongRepository.insert(maxStreakEntry)
+        }
+    }
+
+
+
 
     override fun onDestroy() {
         mediaSession.release()

@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.ynt.purrytify.database.SongRepository
+import com.ynt.purrytify.models.MaxStreak
 import com.ynt.purrytify.models.ProfileResponse
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.TimeListened
@@ -28,6 +29,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     val topArtists = MutableLiveData<List<TopArtist>>()
     var listTopSong = MutableLiveData<List<Song>>()
     val listTopArtist = MutableLiveData<List<Song>>()
+    val longestStreakSong = MutableLiveData<List<MaxStreak>>()
     private val songRepo = SongRepository(application = application)
     private val _data = MutableLiveData<Result<ProfileResponse?>>()
     val data: LiveData<Result<ProfileResponse?>> = _data
@@ -62,7 +64,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         val user = sessionManager.getUser()
         viewModelScope.launch {
             val count = songRepo.songStatCountForUser(user)
-            Log.d("ProfileViewModel","The Count is $count")
+            Log.d("ProfileViewModel", "The Count is $count")
             if (count > 0) {
                 val monthlyTimeListened = songRepo.getMonthlyTimeListened(user)
                 timeListened.postValue(monthlyTimeListened)
@@ -76,15 +78,19 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 val artists = monthlyArtistCount.map { it.artists }
                 val oneSongByArtist = songRepo.getOneSongByArtist(user, artists)
                 listTopArtist.postValue(oneSongByArtist)
+                val longestActiveStreakSong = songRepo.getMonthlyMaxStreaksForUser(user)
+                longestStreakSong.postValue(longestActiveStreakSong)
             } else {
                 timeListened.postValue(emptyList())
                 listTopSong.postValue(emptyList())
                 topSongs.postValue(emptyList())
                 listTopArtist.postValue(emptyList())
                 topArtists.postValue(emptyList())
+                longestStreakSong.postValue(emptyList())
             }
         }
     }
+
 
 
     fun getCsv() : List<List<String>> {

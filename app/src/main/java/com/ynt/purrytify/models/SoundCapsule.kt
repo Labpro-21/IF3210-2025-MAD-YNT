@@ -7,5 +7,5 @@ data class SoundCapsule (
     val topArtists: Song,
     val topSong: Song,
     val month: Month,
-    val year: Year
+    val year: Year,
 )

@@ -1,19 +1,24 @@
 package com.ynt.purrytify.ui.screen.profilescreen.component
 
 import android.util.Log
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ynt.purrytify.models.MaxStreak
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileViewModel
 import com.ynt.purrytify.utils.auth.SessionManager
@@ -33,14 +38,26 @@ fun SoundCapsule(
     val topArtists by viewModel.topArtists.observeAsState(emptyList())
     val listTopSong by viewModel.listTopSong.observeAsState(emptyList())
     val listTopArtist by viewModel.listTopArtist.observeAsState(emptyList())
+    val longestStreakSong by viewModel.longestStreakSong.observeAsState(emptyList())
     Log.d("Time Listened Count", timeListened.size.toString())
     Log.d("Top Songs", topSongs.size.toString())
     Log.d("Top Artist Count", topArtists.size.toString())
 
     if (timeListened.isEmpty()) {
-        Text("No Data Available", color = Color.White)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No Data Available",
+                color = Color.LightGray,
+                fontSize = 18.sp,
+                textAlign = TextAlign.Center
+            )
+        }
     } else {
-        var isStreak: Boolean = true
         for (i in timeListened.indices) {
             Text(
                 text = "${
@@ -61,9 +78,8 @@ fun SoundCapsule(
                     artistName = listTopArtist[i].artist.toString(),
                     songImage = listTopSong[i].image.toString(),
                     artistImage = listTopArtist[i].image.toString(),
-                    isStreak = isStreak
+                    longestStreakSong = longestStreakSong?.get(i),
                 )
-                isStreak = false
             }
         }
     }

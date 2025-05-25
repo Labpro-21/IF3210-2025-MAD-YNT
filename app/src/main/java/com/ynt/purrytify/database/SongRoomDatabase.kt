@@ -4,10 +4,11 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.ynt.purrytify.models.MaxStreak
 import com.ynt.purrytify.models.Song
 import com.ynt.purrytify.models.SongStat
 
-@Database(entities = [Song::class, SongStat::class], version = 2)
+@Database(entities = [Song::class, SongStat::class, MaxStreak::class], version = 2)
 abstract class SongRoomDatabase : RoomDatabase(){
     abstract fun songDao(): Dao
     companion object {

@@ -45,3 +45,15 @@ data class TopArtist(
     val year: Int,
     val totalTime: Long
 )
+
+@Entity(primaryKeys = ["year","month","user"])
+data class MaxStreak(
+    val year: Int,
+    val month: Int,
+    val user: String,
+    val songId: String,
+    val title: String,
+    val artists: String,
+    val maxStreak: Int,
+    val image: String
+)

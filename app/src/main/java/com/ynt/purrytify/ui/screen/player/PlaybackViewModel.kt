@@ -91,8 +91,7 @@ class PlaybackViewModel(application: Application) : AndroidViewModel(application
                     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                         currentMediaTitle = mediaItem?.mediaMetadata?.title?.toString()
                         currentMediaId = mediaItem?.mediaId?.toInt() ?: -1
-                        currentSong = songList.firstOrNull { it.id == currentMediaId }?.copy(lastPlayed = System.currentTimeMillis())
-                        if(sourceName=="local") mSongRepository.update(currentSong!!)
+                        currentSong = songList.firstOrNull { it.id == currentMediaId }
                     }
 
                     override fun onPlaybackStateChanged(state: Int) {
