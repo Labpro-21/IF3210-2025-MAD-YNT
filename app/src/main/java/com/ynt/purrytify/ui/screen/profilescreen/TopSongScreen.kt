@@ -1,8 +1,30 @@
 package com.ynt.purrytify.ui.screen.profilescreen
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.ynt.purrytify.ui.screen.topchartscreen.component.BackButtonIcon
 import com.ynt.purrytify.utils.auth.SessionManager
 
 @Composable
@@ -11,5 +33,88 @@ fun TopSongScreen(
     viewModel: ProfileViewModel = viewModel(),
     sessionManager: SessionManager,
 ) {
+    Scaffold(
+        containerColor = Color.Black,
+        topBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+            ) {
+                BackButtonIcon(
+                    onClick = {
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier
+                        .align(Alignment.CenterStart),
+                )
 
+                Text(
+                    text = "Top Songs",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .align(Alignment.Center),
+                    fontSize = 15.sp
+                )
+            }
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            contentPadding = innerPadding,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 16.dp, start = 22.dp, end = 22.dp, bottom = 16.dp)
+        ) {
+            item {
+                Text(
+                    text = "April 2025",
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.height(15.dp))
+            }
+
+            item {
+                val styledText = buildAnnotatedString {
+                    withStyle(style = SpanStyle(color = Color.White)) {
+                        append("You played ")
+                    }
+
+                    withStyle(style = SpanStyle(color = Color.Yellow)) {
+                        append("0 different songs")
+                    }
+
+                    withStyle(style = SpanStyle(color = Color.White)) {
+                        append(" this month.")
+                    }
+                }
+
+                Text(
+                    text = styledText,
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+                HorizontalDivider(thickness = 1.dp, color = Color.Gray)
+            }
+
+            item {
+                LaunchedEffect(Unit) {
+                    viewModel.getTopSong(sessionManager)
+                }
+                val listTopSong = viewModel.listTopTenSong.observeAsState(emptyList()).value
+                if (listTopSong.isNotEmpty())
+                    listTopSong.forEach { song ->
+                        Text(
+                            text = song.title.toString(),
+                            color = Color.White
+                        )
+                    }
+                    HorizontalDivider(thickness = 1.dp, color = Color.Gray)
+            }
+        }
+    }
 }

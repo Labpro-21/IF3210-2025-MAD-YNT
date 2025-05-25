@@ -82,4 +82,9 @@ class SongRepository(application: Application) {
         return mSongsDao.getOneSongById(user, songId)
     }
 
+    fun getTenTopSong(user: String, month: List<Int>, year: List<Int>) : LiveData<List<Song>> {
+        return mSongsDao.getTenTopSong(user, month, year)
+    }
+
+
 }

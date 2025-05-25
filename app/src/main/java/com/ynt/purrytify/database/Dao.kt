@@ -97,4 +97,16 @@ interface Dao {
 
     @Query("SELECT * FROM song WHERE owner = :username ORDER BY date_added DESC")
     fun getAllSongsRaw(username: String): List<Song>
+
+    @Query("""
+        SELECT s.*
+        FROM song AS s
+        JOIN songstat AS ss
+            ON s.id = ss.songId
+        WHERE owner = :user AND month = (:month) AND year = (:year) AND timeListened != 0
+        GROUP BY s.id, month, year
+        ORDER BY MAX(SUM(timeListened)), month, year DESC
+        LIMIT 10
+    """)
+    fun getTenTopSong(user: String, month: List<Int>, year: List<Int>) : LiveData<List<Song>>
 }

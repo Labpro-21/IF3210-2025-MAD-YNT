@@ -35,6 +35,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     val topArtists = MutableLiveData<List<TopArtist>>()
     var listTopSong = MutableLiveData<List<Song>>()
     val listTopArtist = MutableLiveData<List<Song>>()
+    val listTopTenSong = MutableLiveData<List<Song>>()
+    val listTopTenArtist = MutableLiveData<List<Song>>()
     private val songRepo = SongRepository(application = application)
     private val _data = MutableLiveData<Result<ProfileResponse?>>()
     val data: LiveData<Result<ProfileResponse?>> = _data
@@ -114,5 +116,16 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             }
         }
         return data
+    }
+
+    fun getTopSong(sessionManager: SessionManager) {
+        val user = sessionManager.getUser()
+        val listMonth = topSongs.value?.map { it.month }
+        val listYear = topSongs.value?.map { it.year }
+        if (listMonth != null && listYear != null) {
+            songRepo.getTenTopSong(user, listMonth, listYear).observeForever { result ->
+                listTopTenSong.postValue(result)
+            }
+        }
     }
 }

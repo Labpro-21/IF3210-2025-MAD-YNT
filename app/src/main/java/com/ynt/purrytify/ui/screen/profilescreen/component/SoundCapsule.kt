@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.ynt.purrytify.ui.screen.libraryscreen.LibraryViewModel
 import com.ynt.purrytify.ui.screen.profilescreen.ProfileViewModel
 import com.ynt.purrytify.utils.auth.SessionManager
@@ -21,6 +22,7 @@ import java.time.Month
 
 @Composable
 fun SoundCapsule(
+    navController: NavController,
     viewModel: ProfileViewModel,
     sessionManager: SessionManager,
 ) {
@@ -56,6 +58,7 @@ fun SoundCapsule(
 
             if (listTopSong.isNotEmpty() && listTopArtist.isNotEmpty()) {
                 SoundCapsuleGrid(
+                    navController = navController,
                     timeListened = timeListened[i].timeListened,
                     songTitle = listTopSong[i].title.toString(),
                     artistName = listTopArtist[i].artist.toString(),

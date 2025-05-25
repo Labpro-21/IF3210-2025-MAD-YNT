@@ -24,11 +24,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.ynt.purrytify.models.TimeListened
 
 @Composable
 fun SoundCapsuleGrid(
+    navController: NavController,
     timeListened: Long,
     songTitle: String,
     artistName: String,
@@ -46,7 +48,10 @@ fun SoundCapsuleGrid(
             image = null,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp)
+                .height(100.dp),
+            onClick = {
+                navController.navigate("timeListened")
+            }
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -62,7 +67,10 @@ fun SoundCapsuleGrid(
                 modifier = Modifier
                     .weight(1f)
                     .height(250.dp),
-                isArtistOrSong = true
+                isArtistOrSong = true,
+                onClick = {
+                    navController.navigate("topArtist")
+                }
             )
 
             Spacer(modifier = Modifier.width(10.dp))
@@ -75,7 +83,10 @@ fun SoundCapsuleGrid(
                 modifier = Modifier
                     .weight(1f)
                     .height(250.dp),
-                isArtistOrSong = true
+                isArtistOrSong = true,
+                onClick = {
+                    navController.navigate("topSong")
+                }
             )
         }
 

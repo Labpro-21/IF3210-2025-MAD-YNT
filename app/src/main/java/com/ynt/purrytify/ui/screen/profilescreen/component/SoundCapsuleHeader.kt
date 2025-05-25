@@ -54,7 +54,7 @@ fun SoundCapsuleHeader(
         IconButton(
             onClick = {
                 downloadHelper.saveToCsv(viewModel.getCsv())
-                Toast.makeText(context, "Downloading File", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "File Downloaded", Toast.LENGTH_SHORT).show()
             },
             modifier = Modifier.size(30.dp)
         ) {

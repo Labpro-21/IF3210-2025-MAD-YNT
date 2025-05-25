@@ -123,7 +123,7 @@ fun ProfileScreen(
                     ) {
                         Column() {
                             SoundCapsuleHeader(viewModel, downloadHelper)
-                            SoundCapsule(viewModel, sessionManager)
+                            SoundCapsule(navController, viewModel, sessionManager)
                         }
 
                     }
