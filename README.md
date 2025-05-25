@@ -100,7 +100,7 @@ Purrytify menggunakan berbagai pustaka untuk mendukung fitur-fitur di atas:
 
 | NIM          | Nama Anggota | Tugas yang Dilakukan                       |
 |--------------|--------------|--------------------------------------------|
-| 13522036      | Akbar Al Fattah    | Login, Logout, Background Service, Pemutaran Lagu, Audio Routing, Deeplink, Share song |
+| 13522036      | Akbar Al Fattah    | Login, Logout, Background Service, Pemutaran Lagu, Audio Routing, Deeplink, Share song, Recommendation |
 | 13522088      | Muhamad Rafli Rasyiidin    | Header, Navbar, Profile, Home, Online Song, Download, Edit Profile, Profile Location, Sound Capsule|
 | 13522100      | M. Hanief Fatkhan Nashrullah    | Library, Network sensing, Header, Navbar, Rework (Fully migrate to Jetpack Compose), Exoplayer, Notification Control, Responsive UI, Database Usage Tracker, |
 
@@ -108,6 +108,6 @@ Purrytify menggunakan berbagai pustaka untuk mendukung fitur-fitur di atas:
 
 | NIM          | Nama Anggota | Jam Pengerjaan |
 |--------------|--------------|-----------|
-| 13522036      | Akbar Al Fattah    |Login(8 Jam), Logout (2 Jam), Background Service (12 Jam), Pemutaran Lagu (12 Jam), Total: 34 Jam |
+| 13522036      | Akbar Al Fattah    |Login(8 Jam), Logout (2 Jam), Background Service (12 Jam), Pemutaran Lagu (12 Jam), Audio Routing & Output Device (6 Jam), Share Song & Deeplink (12 Jam), Share Song QR (8 Jam), Recommendation (8 Jam) Total: 68 Jam |
 | 13522088      | Muhamad Rafli Rasyiidin    | Header (1 jam), Navbar (1 jam), Profile (12 jam), Home (10 jam), Total: 24 jam   |
-| 13522100      | M. Hanief Fatkhan Nashrullah    |  RecyclerView(12 Jam), Setup Room Database(4 Jam), Setup Bottom Navigation Layout (6 Jam), Add Edit Delete Song(10 Jam), Network Sensing (2 Jam), Rework (18 Jam), Exoplayer (18 Jam), Notification Control (10 Jam), Responsive UI (5 Jam), Database Usage Tracker (5 Jam) Total: 90 Jam  |
+| 13522100      | M. Hanief Fatkhan Nashrullah    |  RecyclerView(12 Jam), Setup Room Database(4 Jam), Setup Bottom Navigation Layout (6 Jam), Add Edit Delete Song(10 Jam), Network Sensing (2 Jam), Rework (18 Jam), Exoplayer (18 Jam), Responsive UI (5 Jam), Database Usage Tracker (5 Jam) Total: 80 Jam  |
